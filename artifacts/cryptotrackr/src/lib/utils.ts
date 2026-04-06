@@ -50,68 +50,68 @@ const MATRIX: Record<SizeKey, Record<RiskKey, MilestoneTier>> = {
   starter: {
     conservative: {
       pcts:       [50, 100, 200, 400, 600],
-      bonusPcts:  [ 6,   8,  10,  13,  18],
+      bonusPcts:  [ 1,   2,   3,   4,   5],
       portfolioLabel: "Starter", riskLabel: "Conservative", maxReturnLabel: "7x",
     },
     moderate: {
       pcts:       [100, 200, 400, 700, 1000],
-      bonusPcts:  [  6,   8,  10,  13,   18],
+      bonusPcts:  [  1,   2,   3,   4,    5],
       portfolioLabel: "Starter", riskLabel: "Moderate", maxReturnLabel: "11x",
     },
     aggressive: {
       pcts:       [150, 300, 500, 750, 1000],
-      bonusPcts:  [  6,   8,  10,  13,   18],
+      bonusPcts:  [  1,   2,   3,   4,    5],
       portfolioLabel: "Starter", riskLabel: "Aggressive", maxReturnLabel: "11x",
     },
   },
   core: {
     conservative: {
-      pcts:       [25,  50, 100, 200, 300],
-      bonusPcts:  [ 4,   6,   8,  10,  13],
+      pcts:       [25, 50, 100, 200, 300],
+      bonusPcts:  [ 1,  2,   3,   4,   5],
       portfolioLabel: "Core", riskLabel: "Conservative", maxReturnLabel: "4x",
     },
     moderate: {
       pcts:       [50, 100, 200, 400, 600],
-      bonusPcts:  [ 4,   6,   8,  10,  13],
+      bonusPcts:  [ 1,   2,   3,   4,   5],
       portfolioLabel: "Core", riskLabel: "Moderate", maxReturnLabel: "7x",
     },
     aggressive: {
       pcts:       [100, 200, 400, 700, 900],
-      bonusPcts:  [  4,   6,   8,  10,  13],
+      bonusPcts:  [  1,   2,   3,   4,   5],
       portfolioLabel: "Core", riskLabel: "Aggressive", maxReturnLabel: "10x",
     },
   },
   premium: {
     conservative: {
-      pcts:       [15, 25,  50, 100, 150],
-      bonusPcts:  [ 3,  4,   6,   8,  10],
+      pcts:       [15, 25, 50, 100, 150],
+      bonusPcts:  [ 1,  2,  3,   4,   5],
       portfolioLabel: "Premium", riskLabel: "Conservative", maxReturnLabel: "2.5x",
     },
     moderate: {
-      pcts:       [25,  50, 100, 200, 300],
-      bonusPcts:  [ 3,   4,   6,   8,  10],
+      pcts:       [25, 50, 100, 200, 300],
+      bonusPcts:  [ 1,  2,   3,   4,   5],
       portfolioLabel: "Premium", riskLabel: "Moderate", maxReturnLabel: "4x",
     },
     aggressive: {
       pcts:       [50, 100, 200, 400, 600],
-      bonusPcts:  [ 3,   4,   6,   8,  10],
+      bonusPcts:  [ 1,   2,   3,   4,   5],
       portfolioLabel: "Premium", riskLabel: "Aggressive", maxReturnLabel: "7x",
     },
   },
   elite: {
     conservative: {
-      pcts:       [10, 20,  50,  75, 100],
-      bonusPcts:  [ 2,  3,   4,   5,   7],
+      pcts:       [10, 20, 50, 75, 100],
+      bonusPcts:  [ 1,  2,  3,  4,   5],
       portfolioLabel: "Elite", riskLabel: "Conservative", maxReturnLabel: "2x",
     },
     moderate: {
-      pcts:       [15, 25,  50, 100, 150],
-      bonusPcts:  [ 2,  3,   4,   5,   7],
+      pcts:       [15, 25, 50, 100, 150],
+      bonusPcts:  [ 1,  2,  3,   4,   5],
       portfolioLabel: "Elite", riskLabel: "Moderate", maxReturnLabel: "2.5x",
     },
     aggressive: {
-      pcts:       [25,  50, 100, 200, 300],
-      bonusPcts:  [ 2,   3,   4,   5,   7],
+      pcts:       [25, 50, 100, 200, 300],
+      bonusPcts:  [ 1,  2,   3,   4,   5],
       portfolioLabel: "Elite", riskLabel: "Aggressive", maxReturnLabel: "4x",
     },
   },
