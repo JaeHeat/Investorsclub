@@ -5,11 +5,13 @@ import LoginPage from "@/pages/login";
 import OnboardingPage from "@/pages/onboarding";
 import PortalIndex from "@/pages/portal/index";
 import MilestonesPage from "@/pages/portal/milestones";
+import CyclePage from "@/pages/portal/cycle";
 import RoadmapPage from "@/pages/portal/roadmap";
 import ReportsPage from "@/pages/portal/reports";
 import NotesPage from "@/pages/portal/notes";
 import AdminDashboard from "@/pages/admin/index";
 import AdminClients from "@/pages/admin/clients";
+import CycleIntelligence from "@/pages/admin/cycle";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +70,9 @@ function AppRoutes() {
       <Route path="/portal/milestones">
         <ProtectedRoute requireRole="client"><MilestonesPage /></ProtectedRoute>
       </Route>
+      <Route path="/portal/cycle">
+        <ProtectedRoute requireRole="client"><CyclePage /></ProtectedRoute>
+      </Route>
       <Route path="/portal/roadmap">
         <ProtectedRoute requireRole="client"><RoadmapPage /></ProtectedRoute>
       </Route>
@@ -83,6 +88,9 @@ function AppRoutes() {
       </Route>
       <Route path="/admin/clients">
         <ProtectedRoute requireRole="admin"><AdminClients /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/cycle">
+        <ProtectedRoute requireRole="admin"><CycleIntelligence /></ProtectedRoute>
       </Route>
 
       <Route><Redirect to="/" /></Route>

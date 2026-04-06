@@ -1,11 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
-import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, LogOut, Menu, X } from "lucide-react";
+import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Portfolio", href: "/portal" },
   { icon: Target, label: "Milestones", href: "/portal/milestones" },
+  { icon: Activity, label: "Cycle Outlook", href: "/portal/cycle" },
   { icon: Map, label: "Roadmap", href: "/portal/roadmap" },
   { icon: FileText, label: "Reports", href: "/portal/reports" },
   { icon: MessageSquare, label: "Notes", href: "/portal/notes" },
