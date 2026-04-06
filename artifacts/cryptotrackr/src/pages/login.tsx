@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bitcoin, Eye, EyeOff, Loader2 } from "lucide-react";
 
@@ -9,8 +8,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { signIn, profile } = useAuth();
-  const [, setLocation] = useLocation();
+  const { signIn } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,16 +23,7 @@ export default function LoginPage() {
       return;
     }
 
-    setLoading(false);
-  }
-
-  if (profile?.role === "admin") {
-    setLocation("/admin");
-    return null;
-  }
-  if (profile?.role === "client") {
-    setLocation("/portal");
-    return null;
+    // Routing is handled by App.tsx once auth state updates
   }
 
   return (
