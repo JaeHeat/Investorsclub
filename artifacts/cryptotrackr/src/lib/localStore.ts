@@ -19,31 +19,31 @@ function uid() {
 
 // ── Seed data on first load ────────────────────────────────────────────────
 
-const SEED_KEY = "cryptotrackr-seeded-v2";
+const SEED_KEY = "cryptotrackr-seeded-v3";
 
 function seedIfEmpty() {
   if (localStorage.getItem(SEED_KEY)) return;
 
-  // Demo client — multi-asset portfolio
-  // BTC 0.85 @ $28,000 = $23,800
-  // ETH 8.0  @ $1,800  = $14,400
-  // SOL 120  @ $95     = $11,400
-  // Total invested: $49,600
+  // Demo client — Core tier ($100K–$500K), Moderate risk
+  // BTC 1.8  @ $35,000 = $63,000
+  // ETH 35   @ $1,800  = $63,000
+  // SOL 250  @ $96     = $24,000
+  // Total invested: $150,000
   const profiles: ClientProfile[] = [
     {
       user_id: "client-1",
       full_name: "Alex Rivera",
       country: "United States",
       timezone: "America/New_York",
-      btc_holdings: 0.85,
-      avg_cost_basis: 28000,
+      btc_holdings: 1.8,
+      avg_cost_basis: 35000,
       investment_goal: "cycle_top_exit",
       risk_tolerance: "moderate",
       time_horizon: "2_3_years",
-      notes: "Looking to exit near the cycle top and re-enter in the bear market.",
+      notes: "Looking to exit near the cycle top and re-enter in the bear market. Comfortable with medium drawdowns but wants to protect the $150K base.",
       onboarding_completed: true,
-      initial_portfolio_value: 49600,
-      high_water_mark: 49600,
+      initial_portfolio_value: 150000,
+      high_water_mark: 150000,
     },
   ];
 
@@ -53,22 +53,22 @@ function seedIfEmpty() {
         coingecko_id: "bitcoin",
         symbol: "BTC",
         name: "Bitcoin",
-        amount: 0.85,
-        avg_cost: 28000,
+        amount: 1.8,
+        avg_cost: 35000,
       },
       {
         coingecko_id: "ethereum",
         symbol: "ETH",
         name: "Ethereum",
-        amount: 8.0,
+        amount: 35,
         avg_cost: 1800,
       },
       {
         coingecko_id: "solana",
         symbol: "SOL",
         name: "Solana",
-        amount: 120,
-        avg_cost: 95,
+        amount: 250,
+        avg_cost: 96,
       },
     ],
   };

@@ -10,8 +10,8 @@ import {
   addRoadmapItem,
   addReport,
 } from "@/lib/localStore";
-import type { ClientProfile, HoldingAsset, Milestone, RoadmapItem, Report } from "@/lib/types";
-import { formatUSD, getBonusPct, MILESTONE_PCTS, getPortfolioTier } from "@/lib/utils";
+import type { ClientProfile, Milestone, RoadmapItem, Report } from "@/lib/types";
+import { formatUSD, getMilestoneTier, getPortfolioTier } from "@/lib/utils";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { usePrices } from "@/hooks/usePrices";
 import DonutChart from "@/components/DonutChart";
@@ -20,7 +20,6 @@ import {
   TrendingUp, TrendingDown, Target, BarChart2, RefreshCw,
 } from "lucide-react";
 
-// Colour palette for assets (BTC and ETH have brand colours; others get generic)
 const ASSET_COLORS: Record<string, string> = {
   bitcoin:  "#F7931A",
   ethereum: "#627EEA",
@@ -30,12 +29,13 @@ const ASSET_COLORS: Record<string, string> = {
   dogecoin: "#C2A633",
 };
 const FALLBACK_COLORS = ["#22c55e", "#06b6d4", "#ec4899", "#f97316", "#a855f7", "#14b8a6"];
-
 function assetColor(id: string, index: number) {
   return ASSET_COLORS[id] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
 }
 
-// ── Small UI helpers ───────────────────────────────────────────────────────
+const BTC_SCENARIOS = [60000, 75000, 90000, 100000, 120000, 150000, 200000];
+
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
@@ -63,7 +63,8 @@ function StatTile({ label, value, sub, color }: { label: string; value: string; 
   );
 }
 
-// ── Client Analytics Detail ────────────────────────────────────────────────
+// ── Client Detail ──────────────────────────────────────────────────────────
+
 function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () => void }) {
   const holdings = useMemo(() => getHoldings(client.user_id), [client.user_id]);
   const coinIds = useMemo(() => holdings.map((h) => h.coingecko_id), [holdings]);
@@ -84,9 +85,10 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
   const [reportForm, setReportForm] = useState({ title: "", content: "", is_global: false });
   const [milestoneForm, setMilestoneForm] = useState({ bonus_amount: "" });
 
-  // ── Portfolio maths (multi-asset) ──────────────────────────────────────
+  // Portfolio maths
   const initialValue = client.initial_portfolio_value ?? 0;
   const tier = getPortfolioTier(initialValue);
+  const milestoneTier = getMilestoneTier(client.risk_tolerance, initialValue);
 
   const assetRows = holdings.map((h, idx) => {
     const price = prices[h.coingecko_id] ?? null;
@@ -105,17 +107,20 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
   const totalReturnPct = totalInvested > 0 && totalPnL !== null ? (totalPnL / totalInvested) * 100 : null;
   const isPositive = totalPnL !== null && totalPnL >= 0;
 
-  // Donut slices — use current value if available, else invested
   const donutSlices = assetRows.map((r) => ({
     label: `${r.symbol} — ${r.name}`,
     value: r.currentValue ?? r.invested,
     color: r.color,
   }));
 
-  // BTC scenarios (BTC-specific, clearly labelled)
-  const BTC_SCENARIOS = [60000, 75000, 90000, 100000, 120000, 150000, 200000];
   const btcHolding = holdings.find((h) => h.coingecko_id === "bitcoin");
   const btcPrice = prices["bitcoin"] ?? null;
+
+  // Milestone modal context — computed once per selected milestone
+  const modalMilestoneIdx = showMilestoneModal !== null
+    ? milestoneTier.pcts.indexOf(showMilestoneModal as never)
+    : -1;
+  const modalBonusPct = modalMilestoneIdx >= 0 ? milestoneTier.bonusPcts[modalMilestoneIdx] : 5;
 
   function saveRoadmapItem() {
     if (!roadmapForm.title || !roadmapForm.content) return;
@@ -144,8 +149,11 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
 
   function markMilestone(pct: number) {
     setSaving(true);
+    const idx = milestoneTier.pcts.indexOf(pct as never);
+    const bonusPct = idx >= 0 ? milestoneTier.bonusPcts[idx] : 5;
+    const targetValue = initialValue * (1 + pct / 100);
+    const gainsAtMilestone = targetValue - initialValue;
     const bonus = parseFloat(milestoneForm.bonus_amount) || null;
-    const bonusPct = getBonusPct(pct, initialValue);
     upsertMilestone({
       user_id: client.user_id,
       milestone_pct: pct,
@@ -199,64 +207,31 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
         </div>
 
         <div className="p-5" style={{ background: "hsl(0 0% 6%)" }}>
-          {/* Summary stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-            <StatTile
-              label="Portfolio Value"
-              value={totalCurrent !== null ? formatUSD(totalCurrent) : "—"}
-              sub={pricesLoading ? "Loading prices..." : undefined}
-              color="#F7931A"
-            />
-            <StatTile
-              label="Total Invested"
-              value={formatUSD(totalInvested)}
-              sub={`${holdings.length} assets`}
-            />
-            <StatTile
-              label="Unrealized P&L"
-              value={totalPnL !== null ? `${isPositive ? "+" : ""}${formatUSD(totalPnL)}` : "—"}
-              sub={totalReturnPct !== null ? `${totalReturnPct >= 0 ? "+" : ""}${totalReturnPct.toFixed(2)}%` : undefined}
-              color={totalPnL === null ? "white" : isPositive ? "#22c55e" : "#ef4444"}
-            />
-            <StatTile
-              label="Total Return"
-              value={totalReturnPct !== null ? `${totalReturnPct >= 0 ? "+" : ""}${totalReturnPct.toFixed(1)}%` : "—"}
-              sub={isPositive ? "In profit" : "Below cost basis"}
-              color={totalReturnPct === null ? "white" : totalReturnPct >= 0 ? "#22c55e" : "#ef4444"}
-            />
+            <StatTile label="Portfolio Value" value={totalCurrent !== null ? formatUSD(totalCurrent) : "—"} sub={pricesLoading ? "Loading…" : undefined} color="#F7931A" />
+            <StatTile label="Total Invested" value={formatUSD(totalInvested)} sub={`${holdings.length} assets`} />
+            <StatTile label="Unrealized P&L" value={totalPnL !== null ? `${isPositive ? "+" : ""}${formatUSD(totalPnL)}` : "—"} sub={totalReturnPct !== null ? `${totalReturnPct >= 0 ? "+" : ""}${totalReturnPct.toFixed(2)}%` : undefined} color={totalPnL === null ? "white" : isPositive ? "#22c55e" : "#ef4444"} />
+            <StatTile label="Total Return" value={totalReturnPct !== null ? `${totalReturnPct >= 0 ? "+" : ""}${totalReturnPct.toFixed(1)}%` : "—"} sub={isPositive ? "In profit" : "Below cost basis"} color={totalReturnPct === null ? "white" : totalReturnPct >= 0 ? "#22c55e" : "#ef4444"} />
           </div>
 
-          {/* Donut chart + asset breakdown side-by-side */}
+          {/* Donut + asset table */}
           <div className="grid lg:grid-cols-2 gap-5 mb-5">
-            {/* Donut */}
             <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 12%)" }}>
               <p className="text-xs font-semibold text-[hsl(0_0%_45%)] uppercase tracking-wide mb-4">Allocation</p>
-              {donutSlices.length > 0 ? (
-                <DonutChart slices={donutSlices} size={160} thickness={40} />
-              ) : (
-                <p className="text-sm text-[hsl(0_0%_35%)]">No holdings recorded</p>
-              )}
+              {donutSlices.length > 0 ? <DonutChart slices={donutSlices} size={160} thickness={40} /> : <p className="text-sm text-[hsl(0_0%_35%)]">No holdings</p>}
             </div>
 
-            {/* Asset breakdown table */}
             <div className="rounded-2xl overflow-hidden" style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 12%)" }}>
               <div className="grid grid-cols-4 gap-2 px-4 py-2.5 text-[11px] text-[hsl(0_0%_35%)] uppercase tracking-wide" style={{ borderBottom: "1px solid hsl(0 0% 12%)" }}>
-                <span className="col-span-2">Asset</span>
-                <span>Value</span>
-                <span>P&L</span>
+                <span className="col-span-2">Asset</span><span>Value</span><span>P&L</span>
               </div>
               {assetRows.map((row) => (
-                <div
-                  key={row.coingecko_id}
-                  className="grid grid-cols-4 gap-2 px-4 py-3 items-center"
-                  style={{ borderBottom: "1px solid hsl(0 0% 9%)" }}
-                  data-testid={`asset-row-${row.coingecko_id}`}
-                >
+                <div key={row.coingecko_id} className="grid grid-cols-4 gap-2 px-4 py-3 items-center" style={{ borderBottom: "1px solid hsl(0 0% 9%)" }} data-testid={`asset-row-${row.coingecko_id}`}>
                   <div className="col-span-2 flex items-center gap-2.5">
                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: row.color }} />
                     <div>
                       <p className="text-sm font-medium text-white leading-tight">{row.symbol}</p>
-                      <p className="text-[11px] text-[hsl(0_0%_38%)]">{row.amount} units · {formatUSD(row.avg_cost)} avg</p>
+                      <p className="text-[11px] text-[hsl(0_0%_38%)]">{row.amount} · {formatUSD(row.avg_cost)} avg</p>
                     </div>
                   </div>
                   <div>
@@ -266,48 +241,26 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
                   <div>
                     {row.pnl !== null ? (
                       <>
-                        <p className="text-sm font-medium" style={{ color: row.pnl >= 0 ? "#22c55e" : "#ef4444" }}>
-                          {row.pnl >= 0 ? "+" : ""}{formatUSD(row.pnl)}
-                        </p>
-                        <p className="text-[11px]" style={{ color: row.pnl >= 0 ? "#22c55e" : "#ef4444" }}>
-                          {row.pnlPct !== null ? `${row.pnlPct >= 0 ? "+" : ""}${row.pnlPct.toFixed(1)}%` : ""}
-                        </p>
+                        <p className="text-sm font-medium" style={{ color: row.pnl >= 0 ? "#22c55e" : "#ef4444" }}>{row.pnl >= 0 ? "+" : ""}{formatUSD(row.pnl)}</p>
+                        <p className="text-[11px]" style={{ color: row.pnl >= 0 ? "#22c55e" : "#ef4444" }}>{row.pnlPct !== null ? `${row.pnlPct >= 0 ? "+" : ""}${row.pnlPct.toFixed(1)}%` : ""}</p>
                       </>
-                    ) : (
-                      <p className="text-sm text-[hsl(0_0%_35%)]">—</p>
-                    )}
+                    ) : <p className="text-sm text-[hsl(0_0%_35%)]">—</p>}
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Overall P&L bar */}
+          {/* P&L bar */}
           {totalCurrent !== null && totalInvested > 0 && (
-            <div
-              className="mb-5 rounded-xl p-4 flex items-center gap-4"
-              style={{
-                background: isPositive ? "rgba(34,197,94,0.05)" : "rgba(239,68,68,0.05)",
-                border: `1px solid ${isPositive ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)"}`,
-              }}
-            >
-              {isPositive ? (
-                <TrendingUp className="w-5 h-5 shrink-0" style={{ color: "#22c55e" }} />
-              ) : (
-                <TrendingDown className="w-5 h-5 shrink-0" style={{ color: "#ef4444" }} />
-              )}
+            <div className="mb-5 rounded-xl p-4 flex items-center gap-4" style={{ background: isPositive ? "rgba(34,197,94,0.05)" : "rgba(239,68,68,0.05)", border: `1px solid ${isPositive ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)"}` }}>
+              {isPositive ? <TrendingUp className="w-5 h-5 shrink-0" style={{ color: "#22c55e" }} /> : <TrendingDown className="w-5 h-5 shrink-0" style={{ color: "#ef4444" }} />}
               <div className="flex-1">
                 <p className="text-sm font-medium" style={{ color: isPositive ? "#22c55e" : "#ef4444" }}>
                   Total {isPositive ? "gain" : "loss"} of {formatUSD(Math.abs(totalPnL!))} across all holdings
                 </p>
                 <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(0 0% 14%)" }}>
-                  <div
-                    className="h-1.5 rounded-full"
-                    style={{
-                      width: `${Math.min(100, Math.max(4, (totalCurrent / (totalInvested * 2)) * 100))}%`,
-                      background: isPositive ? "#22c55e" : "#ef4444",
-                    }}
-                  />
+                  <div className="h-1.5 rounded-full" style={{ width: `${Math.min(100, Math.max(4, (totalCurrent / (totalInvested * 2)) * 100))}%`, background: isPositive ? "#22c55e" : "#ef4444" }} />
                 </div>
               </div>
               <div className="text-right shrink-0">
@@ -317,7 +270,7 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
             </div>
           )}
 
-          {/* BTC scenarios — BTC position only */}
+          {/* BTC scenarios */}
           {btcHolding && (
             <div>
               <p className="text-xs font-semibold text-[hsl(0_0%_45%)] uppercase tracking-wide mb-3">
@@ -325,10 +278,7 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
               </p>
               <div className="rounded-xl overflow-hidden" style={{ border: "1px solid hsl(0 0% 12%)" }}>
                 <div className="grid grid-cols-4 gap-2 px-4 py-2 text-[11px] text-[hsl(0_0%_35%)] uppercase tracking-wide" style={{ background: "hsl(0 0% 8%)", borderBottom: "1px solid hsl(0 0% 12%)" }}>
-                  <span>BTC Price</span>
-                  <span>BTC Value</span>
-                  <span>BTC P&L</span>
-                  <span>Return</span>
+                  <span>BTC Price</span><span>BTC Value</span><span>BTC P&L</span><span>Return</span>
                 </div>
                 {BTC_SCENARIOS.map((targetPrice) => {
                   const btcCost = btcHolding.amount * btcHolding.avg_cost;
@@ -336,27 +286,12 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
                   const scenarioPnL = scenarioValue - btcCost;
                   const scenarioReturn = btcCost > 0 ? (scenarioPnL / btcCost) * 100 : 0;
                   const isCurrent = btcPrice ? Math.abs(targetPrice - btcPrice) < 5000 : false;
-
                   return (
-                    <div
-                      key={targetPrice}
-                      className="grid grid-cols-4 gap-2 px-4 py-2.5 text-sm"
-                      style={{
-                        background: isCurrent ? "rgba(247,147,26,0.06)" : "transparent",
-                        borderBottom: "1px solid hsl(0 0% 9%)",
-                        borderLeft: isCurrent ? "2px solid #F7931A" : "2px solid transparent",
-                      }}
-                    >
-                      <span className="font-medium" style={{ color: isCurrent ? "#F7931A" : "hsl(0 0% 80%)" }}>
-                        {formatUSD(targetPrice)}{isCurrent && <span className="ml-1 text-[10px] opacity-70">now</span>}
-                      </span>
+                    <div key={targetPrice} className="grid grid-cols-4 gap-2 px-4 py-2.5 text-sm" style={{ background: isCurrent ? "rgba(247,147,26,0.06)" : "transparent", borderBottom: "1px solid hsl(0 0% 9%)", borderLeft: isCurrent ? "2px solid #F7931A" : "2px solid transparent" }}>
+                      <span className="font-medium" style={{ color: isCurrent ? "#F7931A" : "hsl(0 0% 80%)" }}>{formatUSD(targetPrice)}{isCurrent && <span className="ml-1 text-[10px] opacity-70">now</span>}</span>
                       <span className="text-white">{formatUSD(scenarioValue)}</span>
-                      <span style={{ color: scenarioPnL >= 0 ? "#22c55e" : "#ef4444" }}>
-                        {scenarioPnL >= 0 ? "+" : ""}{formatUSD(scenarioPnL)}
-                      </span>
-                      <span style={{ color: scenarioReturn >= 0 ? "#22c55e" : "#ef4444" }}>
-                        {scenarioReturn >= 0 ? "+" : ""}{scenarioReturn.toFixed(1)}%
-                      </span>
+                      <span style={{ color: scenarioPnL >= 0 ? "#22c55e" : "#ef4444" }}>{scenarioPnL >= 0 ? "+" : ""}{formatUSD(scenarioPnL)}</span>
+                      <span style={{ color: scenarioReturn >= 0 ? "#22c55e" : "#ef4444" }}>{scenarioReturn >= 0 ? "+" : ""}{scenarioReturn.toFixed(1)}%</span>
                     </div>
                   );
                 })}
@@ -385,7 +320,7 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
             ))}
             {client.notes && (
               <div className="pt-2.5" style={{ borderTop: "1px solid hsl(0 0% 12%)" }}>
-                <p className="text-xs text-[hsl(0_0%_40%)] mb-1">Notes from client</p>
+                <p className="text-xs text-[hsl(0_0%_40%)] mb-1">Notes</p>
                 <p className="text-xs text-[hsl(0_0%_60%)] leading-relaxed">{client.notes}</p>
               </div>
             )}
@@ -394,53 +329,47 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
 
         {/* Milestones */}
         <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-start justify-between mb-4">
             <div>
               <h2 className="text-xs font-semibold text-[hsl(0_0%_50%)] uppercase tracking-wide">Milestones</h2>
-              <p className="text-[11px] text-[hsl(0_0%_35%)] mt-0.5">Based on total portfolio value</p>
+              <p className="text-[11px] text-[hsl(0_0%_35%)] mt-0.5">
+                {milestoneTier.portfolioLabel} · {milestoneTier.riskLabel}
+              </p>
             </div>
-            <Target className="w-3.5 h-3.5 text-[hsl(0_0%_35%)]" />
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}>
+                Up to {milestoneTier.maxReturnLabel}
+              </span>
+              <Target className="w-3.5 h-3.5 text-[hsl(0_0%_35%)]" />
+            </div>
           </div>
           <div className="space-y-3">
-            {MILESTONE_PCTS.map((pct) => {
+            {milestoneTier.pcts.map((pct, idx) => {
               const record = milestones.find((m) => m.milestone_pct === pct);
               const isHit = record?.hit ?? false;
               const targetValue = initialValue * (1 + pct / 100);
               const progressPct = totalCurrent && targetValue
                 ? Math.min(100, (totalCurrent / targetValue) * 100)
                 : 0;
-              const bonusPct = getBonusPct(pct, initialValue);
-
+              const bonusPct = milestoneTier.bonusPcts[idx];
               return (
                 <div key={pct} data-testid={`milestone-row-${pct}`}>
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: isHit ? "rgba(34,197,94,0.15)" : "hsl(0 0% 12%)" }}
-                      >
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: isHit ? "rgba(34,197,94,0.15)" : "hsl(0 0% 12%)" }}>
                         {isHit && <Check className="w-3 h-3" style={{ color: "#22c55e" }} />}
                       </div>
                       <span className="text-sm font-medium text-white">{pct}%</span>
-                      <span className="text-xs text-[hsl(0_0%_40%)]">
-                        → {initialValue ? formatUSD(targetValue) : "—"}
-                      </span>
+                      <span className="text-xs text-[hsl(0_0%_40%)]">→ {initialValue ? formatUSD(targetValue) : "—"}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {isHit && record?.bonus_amount ? (
-                        <span className="text-xs font-medium" style={{ color: "#22c55e" }}>
-                          +{formatUSD(record.bonus_amount)}
-                        </span>
+                        <span className="text-xs font-medium" style={{ color: "#22c55e" }}>+{formatUSD(record.bonus_amount)}</span>
                       ) : (
-                        <span className="text-xs text-[hsl(0_0%_40%)]">{bonusPct}% bonus</span>
+                        <span className="text-xs text-[hsl(0_0%_40%)]">{bonusPct}% fee</span>
                       )}
                       {!isHit && (
-                        <button
-                          onClick={() => setShowMilestoneModal(pct)}
-                          className="text-[11px] px-2 py-0.5 rounded-md transition-colors"
-                          style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}
-                          data-testid={`mark-milestone-${pct}`}
-                        >
+                        <button onClick={() => setShowMilestoneModal(pct)} className="text-[11px] px-2 py-0.5 rounded-md" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }} data-testid={`mark-milestone-${pct}`}>
                           Mark
                         </button>
                       )}
@@ -448,10 +377,7 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
                   </div>
                   {!isHit && (
                     <div className="h-1 rounded-full ml-7 overflow-hidden" style={{ background: "hsl(0 0% 12%)" }}>
-                      <div
-                        className="h-1 rounded-full transition-all"
-                        style={{ width: `${progressPct}%`, background: progressPct >= 100 ? "#22c55e" : "#F7931A" }}
-                      />
+                      <div className="h-1 rounded-full transition-all" style={{ width: `${progressPct}%`, background: progressPct >= 100 ? "#22c55e" : "#F7931A" }} />
                     </div>
                   )}
                 </div>
@@ -465,12 +391,7 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
       <div className="rounded-2xl p-5 mb-4" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs font-semibold text-[hsl(0_0%_50%)] uppercase tracking-wide">Roadmap Items</h2>
-          <button
-            onClick={() => setShowRoadmapModal(true)}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-            style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}
-            data-testid="button-add-roadmap"
-          >
+          <button onClick={() => setShowRoadmapModal(true)} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }} data-testid="button-add-roadmap">
             <Plus className="w-3 h-3" /> Add
           </button>
         </div>
@@ -482,16 +403,10 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
               <div key={item.id} className="rounded-xl p-3.5" style={{ background: "hsl(0 0% 10%)" }}>
                 <div className="flex items-start justify-between gap-3 mb-1">
                   <p className="text-sm font-medium text-white">{item.title}</p>
-                  <span className="text-[11px] text-[hsl(0_0%_35%)] shrink-0">
-                    {new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                  </span>
+                  <span className="text-[11px] text-[hsl(0_0%_35%)] shrink-0">{new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                 </div>
                 <p className="text-xs text-[hsl(0_0%_45%)] leading-relaxed line-clamp-2">{item.content}</p>
-                {!item.user_id && (
-                  <span className="inline-block mt-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}>
-                    Global
-                  </span>
-                )}
+                {!item.user_id && <span className="inline-block mt-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}>Global</span>}
               </div>
             ))}
           </div>
@@ -502,12 +417,7 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
       <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs font-semibold text-[hsl(0_0%_50%)] uppercase tracking-wide">Reports</h2>
-          <button
-            onClick={() => setShowReportModal(true)}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-            style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}
-            data-testid="button-add-report"
-          >
+          <button onClick={() => setShowReportModal(true)} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }} data-testid="button-add-report">
             <Plus className="w-3 h-3" /> Publish
           </button>
         </div>
@@ -519,15 +429,9 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
               <div key={report.id} className="flex items-center justify-between py-2" style={{ borderBottom: "1px solid hsl(0 0% 10%)" }}>
                 <div>
                   <p className="text-sm text-white">{report.title}</p>
-                  {report.is_global && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5 inline-block" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}>
-                      Global
-                    </span>
-                  )}
+                  {report.is_global && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5 inline-block" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}>Global</span>}
                 </div>
-                <span className="text-xs text-[hsl(0_0%_40%)] shrink-0">
-                  {new Date(report.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                </span>
+                <span className="text-xs text-[hsl(0_0%_40%)] shrink-0">{new Date(report.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
               </div>
             ))}
           </div>
@@ -547,7 +451,7 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
               <textarea value={roadmapForm.content} onChange={(e) => setRoadmapForm({ ...roadmapForm, content: e.target.value })} placeholder="Cycle stage notes..." rows={4} className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none resize-none" style={inputStyle} data-testid="input-roadmap-content" />
             </div>
             <button onClick={saveRoadmapItem} disabled={saving} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "#F7931A", color: "#0A0A0A" }} data-testid="button-save-roadmap">
-              {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving...</> : "Save"}
+              {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving…</> : "Save"}
             </button>
           </div>
         </Modal>
@@ -569,7 +473,7 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
               <span className="text-sm text-[hsl(0_0%_65%)]">Send to all clients</span>
             </label>
             <button onClick={saveReport} disabled={saving} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "#F7931A", color: "#0A0A0A" }} data-testid="button-save-report">
-              {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Publishing...</> : "Publish Report"}
+              {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Publishing…</> : "Publish Report"}
             </button>
           </div>
         </Modal>
@@ -584,8 +488,8 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
                 <span className="text-white font-medium">{showMilestoneModal}% return on portfolio</span>
               </div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-[hsl(0_0%_50%)]">Bonus rate</span>
-                <span style={{ color: "#F7931A" }}>{getBonusPct(showMilestoneModal, initialValue)}% of gains</span>
+                <span className="text-[hsl(0_0%_50%)]">Performance fee</span>
+                <span style={{ color: "#F7931A" }}>{modalBonusPct}% of gains at this level</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-[hsl(0_0%_50%)]">Target portfolio value</span>
@@ -593,14 +497,14 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[hsl(0_0%_55%)] mb-1.5 uppercase tracking-wide">Bonus Amount Paid (USD)</label>
+              <label className="block text-xs font-medium text-[hsl(0_0%_55%)] mb-1.5 uppercase tracking-wide">Amount Paid (USD)</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
                 <input type="number" value={milestoneForm.bonus_amount} onChange={(e) => setMilestoneForm({ bonus_amount: e.target.value })} placeholder="0" className="w-full pl-7 pr-4 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} data-testid="input-bonus-amount" />
               </div>
             </div>
             <button onClick={() => markMilestone(showMilestoneModal)} disabled={saving} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "#F7931A", color: "#0A0A0A" }} data-testid="button-confirm-milestone">
-              {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving...</> : "Mark as Hit"}
+              {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving…</> : "Mark as Hit"}
             </button>
           </div>
         </Modal>
@@ -657,7 +561,8 @@ export default function AdminClients() {
       ) : (
         <div className="space-y-2">
           {clients.map((client) => {
-            const tier = getPortfolioTier(client.initial_portfolio_value ?? 0);
+            const portfolioTier = getPortfolioTier(client.initial_portfolio_value ?? 0);
+            const milestoneTier = getMilestoneTier(client.risk_tolerance, client.initial_portfolio_value ?? 0);
             const holdings = getHoldings(client.user_id);
             return (
               <button
@@ -667,16 +572,13 @@ export default function AdminClients() {
                 style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}
                 data-testid={`client-card-${client.user_id}`}
               >
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-sm font-semibold"
-                  style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}
-                >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-sm font-semibold" style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}>
                   {client.full_name?.charAt(0) || "?"}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-white">{client.full_name || "Unnamed"}</p>
                   <p className="text-xs text-[hsl(0_0%_40%)] mt-0.5">
-                    {client.country}{client.country ? " · " : ""}{tier}
+                    {portfolioTier} · {milestoneTier.riskLabel} · up to {milestoneTier.maxReturnLabel}
                     {holdings.length > 0 && ` · ${holdings.map((h) => h.symbol).join(", ")}`}
                   </p>
                 </div>
