@@ -3,6 +3,7 @@ import { formatUSD, getPortfolioTier } from "@/lib/utils";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Users, TrendingUp, Target, DollarSign } from "lucide-react";
 import { useBtcPrice } from "@/hooks/useBtcPrice";
+import { useLocation } from "wouter";
 
 function SummaryCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
   return (
@@ -16,13 +17,14 @@ function SummaryCard({ icon: Icon, label, value }: { icon: React.ElementType; la
         </div>
         <p className="text-xs text-[hsl(0_0%_45%)] uppercase tracking-wide">{label}</p>
       </div>
-      <p className="text-2xl font-semibold text-white" data-testid={`admin-stat-${label.toLowerCase().replace(/\s+/g,"-")}`}>{value}</p>
+      <p className="text-2xl font-semibold text-white" data-testid={`admin-stat-${label.toLowerCase().replace(/\s+/g, "-")}`}>{value}</p>
     </div>
   );
 }
 
 export default function AdminDashboard() {
   const { price } = useBtcPrice();
+  const [, navigate] = useLocation();
   const clients = getAllClientProfiles();
   const allMilestones = clients.flatMap((c) => getMilestones(c.user_id));
 
@@ -53,15 +55,19 @@ export default function AdminDashboard() {
       <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid hsl(0 0% 13%)" }}>
         <div className="px-5 py-4" style={{ background: "hsl(0 0% 7%)", borderBottom: "1px solid hsl(0 0% 11%)" }}>
           <h2 className="text-sm font-semibold text-white">All Clients</h2>
+          <p className="text-xs text-[hsl(0_0%_40%)] mt-0.5">Click a row to view analytics</p>
         </div>
 
         {clients.length === 0 ? (
-          <div className="p-12 text-center">
+          <div className="p-12 text-center" style={{ background: "hsl(0 0% 6%)" }}>
             <p className="text-sm text-[hsl(0_0%_40%)]">No clients yet</p>
           </div>
         ) : (
           <div style={{ background: "hsl(0 0% 6%)" }}>
-            <div className="grid grid-cols-5 gap-4 px-5 py-2.5 text-xs text-[hsl(0_0%_40%)] uppercase tracking-wide" style={{ borderBottom: "1px solid hsl(0 0% 10%)" }}>
+            <div
+              className="grid grid-cols-5 gap-4 px-5 py-2.5 text-xs text-[hsl(0_0%_40%)] uppercase tracking-wide"
+              style={{ borderBottom: "1px solid hsl(0 0% 10%)" }}
+            >
               <span className="col-span-2">Name</span>
               <span>Portfolio</span>
               <span>Return</span>
@@ -69,22 +75,32 @@ export default function AdminDashboard() {
             </div>
             {clients.map((client) => {
               const currentValue = price && client.btc_holdings ? client.btc_holdings * price : null;
-              const costBasis = client.btc_holdings && client.avg_cost_basis ? client.btc_holdings * client.avg_cost_basis : 0;
-              const returnPct = costBasis > 0 && currentValue ? ((currentValue - costBasis) / costBasis) * 100 : null;
+              const costBasis = client.btc_holdings && client.avg_cost_basis
+                ? client.btc_holdings * client.avg_cost_basis
+                : 0;
+              const returnPct =
+                costBasis > 0 && currentValue ? ((currentValue - costBasis) / costBasis) * 100 : null;
               const tier = getPortfolioTier(client.initial_portfolio_value ?? 0);
 
               return (
-                <div
+                <button
                   key={client.user_id}
-                  className="grid grid-cols-5 gap-4 px-5 py-3.5 transition-colors"
+                  onClick={() => navigate(`/admin/clients?client=${client.user_id}`)}
+                  className="w-full grid grid-cols-5 gap-4 px-5 py-3.5 text-left transition-colors hover:bg-[rgba(255,255,255,0.03)] cursor-pointer"
                   style={{ borderBottom: "1px solid hsl(0 0% 9%)" }}
                   data-testid={`admin-client-row-${client.user_id}`}
                 >
                   <span className="col-span-2 text-sm font-medium text-white truncate">{client.full_name || "—"}</span>
                   <span className="text-sm text-[hsl(0_0%_65%)]">
-                    {currentValue ? formatUSD(currentValue) : client.initial_portfolio_value ? formatUSD(client.initial_portfolio_value) : "—"}
+                    {currentValue
+                      ? formatUSD(currentValue)
+                      : client.initial_portfolio_value
+                        ? formatUSD(client.initial_portfolio_value)
+                        : "—"}
                   </span>
-                  <span className={`text-sm font-medium ${returnPct !== null && returnPct >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  <span
+                    className={`text-sm font-medium ${returnPct !== null && returnPct >= 0 ? "text-green-400" : "text-red-400"}`}
+                  >
                     {returnPct !== null ? `${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(1)}%` : "—"}
                   </span>
                   <span
@@ -93,7 +109,7 @@ export default function AdminDashboard() {
                   >
                     {tier}
                   </span>
-                </div>
+                </button>
               );
             })}
           </div>
