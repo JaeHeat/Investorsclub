@@ -1,0 +1,78 @@
+Build me an MVP of a client consultation portal called CryptoTrackr.
+This is a platform for a Bitcoin cycle consultation business. There are two types of users: an admin (me) and clients.
+Tech stack:
+
+Next.js 14 with App Router
+Supabase for database and auth (I already have a Supabase project set up)
+Tailwind CSS for styling
+Dark theme throughout, primary accent color #F7931A (Bitcoin orange)
+Use @supabase/ssr for auth, NOT @supabase/auth-helpers-nextjs
+Keep auth simple: use Supabase client-side auth with createBrowserClient, store session in localStorage, no middleware cookie handling
+Do NOT use Next.js Server Actions for the login form. Use a regular client-side form with useState and supabase.auth.signInWithPassword() directly in the component
+
+
+SUPABASE SETUP
+I already have these tables created in Supabase:
+
+profiles (id, role)
+client_profiles (user_id, full_name, country, timezone, btc_holdings, avg_cost_basis, investment_goal, risk_tolerance, time_horizon, notes, onboarding_completed, initial_portfolio_value, high_water_mark)
+milestones
+roadmap_items
+reports
+
+After login, check the user's role from the profiles table and redirect accordingly:
+
+role = 'admin' → /admin/dashboard
+role = 'client' → /portal
+
+
+CLIENT ONBOARDING FLOW
+When a client logs in for the first time and onboarding_completed is false, walk them through a multi-step onboarding form:
+
+Full name, country, timezone
+Total BTC holdings (amount of BTC + average cost basis in USD)
+Investment goals (long-term hold, cycle top exit, partial exits, other)
+Risk tolerance (conservative, moderate, aggressive)
+Time horizon (1 year, 2-3 years, 4+ years)
+Any notes or context they want to share
+
+
+CLIENT PORTAL (what the client sees)
+
+Portfolio overview card showing: current BTC value (pull live BTC price from CoinGecko free API), their total holdings value, cost basis, current return % and dollar gain/loss
+Milestone tracker showing their milestone targets (25%, 50%, 100%, 150%, 200%+), which ones are hit, which is next, and the estimated bonus amount at each milestone based on their portfolio size
+Roadmap section showing targets and cycle stage notes added by the admin
+Monthly reports section showing a list of reports the admin has published
+A notes section where they can see updates and messages from the admin
+
+
+ADMIN DASHBOARD (what I see)
+
+List of all clients with their name, portfolio size, current return %, tier (Tier 1 / Tier 2 / Tier 3), and milestone status
+Click into any client to see their full profile, portfolio details, milestone progress, and onboarding answers
+Ability to add roadmap notes and cycle stage updates per client
+Ability to write and publish monthly reports either per client or global to all clients
+Ability to manually mark milestones as hit and log the bonus amount
+A dashboard summary showing total clients, total AUM across all clients, and milestones hit this month
+
+
+MILESTONE BONUS LOGIC
+Bonus % is based on return milestone reached plus portfolio size at the start of the engagement:
+MilestoneUnder $100K$100K-$500K$500K-$1M$1M+25%1%0.75%0.5%0.25%50%1.5%1.25%1%0.75%100%2.5%2%1.75%1.5%150%3.5%3%2.5%2%200%+5%4%3.5%3%
+Bonus is calculated on gains above the milestone threshold only. High water mark logic applies. If they go to cash during a bear market and re-enter, the milestone clock resets from their re-entry point.
+
+DESIGN
+
+Think Apple. Clean, minimal, lots of breathing room
+Dark background (#0A0A0A)
+Bitcoin orange (#F7931A) used sparingly as an accent, not everywhere
+Inter as the font
+Generous whitespace, nothing feels cramped
+Cards with subtle borders (#1A1A1A or #222222), no heavy shadows
+Typography does the heavy lifting, not gradients or decorations
+Smooth transitions on interactions
+Mobile first, feels native on both desktop and mobile
+Reference points: Stripe, Linear, and Apple. Clean fintech meets Bitcoin orange accent
+
+
+Build the whole thing in one shot. Start with auth, then client portal, then admin dashboard. Make sure login works completely before moving on.
