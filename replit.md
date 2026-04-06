@@ -16,6 +16,24 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
+## Artifacts
+
+### CryptoTrackr (`artifacts/cryptotrackr`)
+A Bitcoin cycle consultation portal with:
+- **Auth**: Supabase client-side auth (`@supabase/supabase-js`), session in localStorage
+- **Role routing**: `admin` → `/admin`, `client` → `/portal` (post-onboarding)
+- **Client portal**: Portfolio overview (live BTC price from CoinGecko), milestone tracker, roadmap, monthly reports, notes
+- **Admin dashboard**: Client list with AUM/returns/tier, per-client detail view, add roadmap items, publish reports, mark milestones hit
+- **Milestone bonus logic**: Tiered by portfolio size (Under $100K → Tier 1, $100K-$500K → Tier 2, etc.)
+- **Design**: Dark theme (#0A0A0A bg), Bitcoin orange (#F7931A) accent, Inter font
+
+### Supabase Tables Required
+- `profiles` (id, role)
+- `client_profiles` (user_id, full_name, country, timezone, btc_holdings, avg_cost_basis, investment_goal, risk_tolerance, time_horizon, notes, onboarding_completed, initial_portfolio_value, high_water_mark)
+- `milestones` (id, user_id, milestone_pct, hit, hit_at, bonus_amount, bonus_pct)
+- `roadmap_items` (id, user_id, title, content, created_at)
+- `reports` (id, user_id, title, content, published_at, is_global)
+
 ## Key Commands
 
 - `pnpm run typecheck` — full typecheck across all packages

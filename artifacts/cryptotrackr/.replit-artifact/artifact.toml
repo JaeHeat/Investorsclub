@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "CryptoTrackr"
+version = "1.0.0"
+id = "artifacts/cryptotrackr"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20831
+
+[services.development]
+run = "pnpm --filter @workspace/cryptotrackr run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cryptotrackr", "run", "build" ]
+publicDir = "artifacts/cryptotrackr/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20831"
+BASE_PATH = "/"

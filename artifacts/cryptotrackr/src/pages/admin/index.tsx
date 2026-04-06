@@ -1,0 +1,138 @@
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { formatUSD, getPortfolioTier } from "@/lib/utils";
+import AdminLayout from "@/components/layout/AdminLayout";
+import { Users, TrendingUp, Target, DollarSign } from "lucide-react";
+import { useBtcPrice } from "@/hooks/useBtcPrice";
+
+interface ClientRow {
+  user_id: string;
+  full_name: string | null;
+  btc_holdings: number | null;
+  avg_cost_basis: number | null;
+  initial_portfolio_value: number | null;
+}
+
+interface MilestoneRow {
+  user_id: string;
+  hit: boolean;
+  hit_at: string | null;
+}
+
+function SummaryCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+  return (
+    <div
+      className="rounded-2xl p-5"
+      style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}
+    >
+      <div className="flex items-center gap-2.5 mb-3">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(247,147,26,0.08)" }}>
+          <Icon className="w-4 h-4" style={{ color: "#F7931A" }} />
+        </div>
+        <p className="text-xs text-[hsl(0_0%_45%)] uppercase tracking-wide">{label}</p>
+      </div>
+      <p className="text-2xl font-semibold text-white" data-testid={`admin-stat-${label.toLowerCase().replace(/\s+/g,"-")}`}>{value}</p>
+    </div>
+  );
+}
+
+export default function AdminDashboard() {
+  const { price } = useBtcPrice();
+  const [clients, setClients] = useState<ClientRow[]>([]);
+  const [milestones, setMilestones] = useState<MilestoneRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from("client_profiles").select("user_id, full_name, btc_holdings, avg_cost_basis, initial_portfolio_value"),
+      supabase.from("milestones").select("user_id, hit, hit_at"),
+    ]).then(([{ data: cp }, { data: ms }]) => {
+      if (cp) setClients(cp as ClientRow[]);
+      if (ms) setMilestones(ms as MilestoneRow[]);
+      setLoading(false);
+    });
+  }, []);
+
+  const totalClients = clients.length;
+  const totalAUM = clients.reduce((sum, c) => {
+    if (price && c.btc_holdings) return sum + c.btc_holdings * price;
+    return sum + (c.initial_portfolio_value ?? 0);
+  }, 0);
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const milestonesThisMonth = milestones.filter((m) => m.hit && m.hit_at && m.hit_at >= startOfMonth).length;
+
+  return (
+    <AdminLayout>
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
+        <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Overview of all clients and activity</p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+        <SummaryCard icon={Users} label="Total Clients" value={loading ? "—" : String(totalClients)} />
+        <SummaryCard icon={DollarSign} label="Total AUM" value={loading ? "—" : formatUSD(totalAUM)} />
+        <SummaryCard icon={Target} label="Milestones Hit" value={loading ? "—" : String(milestones.filter((m) => m.hit).length)} />
+        <SummaryCard icon={TrendingUp} label="This Month" value={loading ? "—" : String(milestonesThisMonth)} />
+      </div>
+
+      <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid hsl(0 0% 13%)" }}>
+        <div className="px-5 py-4" style={{ background: "hsl(0 0% 7%)", borderBottom: "1px solid hsl(0 0% 11%)" }}>
+          <h2 className="text-sm font-semibold text-white">All Clients</h2>
+        </div>
+
+        {loading ? (
+          <div className="p-5 space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-14 rounded-xl animate-pulse" style={{ background: "hsl(0 0% 9%)" }} />
+            ))}
+          </div>
+        ) : clients.length === 0 ? (
+          <div className="p-12 text-center">
+            <p className="text-sm text-[hsl(0_0%_40%)]">No clients yet</p>
+          </div>
+        ) : (
+          <div style={{ background: "hsl(0 0% 6%)" }}>
+            <div className="grid grid-cols-5 gap-4 px-5 py-2.5 text-xs text-[hsl(0_0%_40%)] uppercase tracking-wide" style={{ borderBottom: "1px solid hsl(0 0% 10%)" }}>
+              <span className="col-span-2">Name</span>
+              <span>Portfolio</span>
+              <span>Return</span>
+              <span>Tier</span>
+            </div>
+            {clients.map((client) => {
+              const currentValue = price && client.btc_holdings ? client.btc_holdings * price : null;
+              const costBasis = client.btc_holdings && client.avg_cost_basis ? client.btc_holdings * client.avg_cost_basis : 0;
+              const returnPct = costBasis > 0 && currentValue ? ((currentValue - costBasis) / costBasis) * 100 : null;
+              const tier = getPortfolioTier(client.initial_portfolio_value ?? 0);
+
+              return (
+                <div
+                  key={client.user_id}
+                  className="grid grid-cols-5 gap-4 px-5 py-3.5 transition-colors"
+                  style={{ borderBottom: "1px solid hsl(0 0% 9%)" }}
+                  data-testid={`admin-client-row-${client.user_id}`}
+                >
+                  <span className="col-span-2 text-sm font-medium text-white truncate">{client.full_name || "—"}</span>
+                  <span className="text-sm text-[hsl(0_0%_65%)]">
+                    {currentValue ? formatUSD(currentValue) : client.initial_portfolio_value ? formatUSD(client.initial_portfolio_value) : "—"}
+                  </span>
+                  <span className={`text-sm font-medium ${returnPct !== null && returnPct >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    {returnPct !== null ? `${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(1)}%` : "—"}
+                  </span>
+                  <span
+                    className="text-xs font-semibold px-2 py-0.5 rounded-full w-fit"
+                    style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}
+                  >
+                    {tier}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+}
