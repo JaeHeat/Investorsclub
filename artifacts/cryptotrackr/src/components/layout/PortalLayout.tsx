@@ -1,12 +1,13 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
-import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, LogOut, Menu, X } from "lucide-react";
+import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, PieChart, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Portfolio", href: "/portal" },
   { icon: Target, label: "Milestones", href: "/portal/milestones" },
   { icon: Activity, label: "Cycle Outlook", href: "/portal/cycle" },
+  { icon: PieChart, label: "Portfolio Plan", href: "/portal/plan" },
   { icon: Map, label: "Roadmap", href: "/portal/roadmap" },
   { icon: FileText, label: "Reports", href: "/portal/reports" },
   { icon: MessageSquare, label: "Notes", href: "/portal/notes" },
@@ -46,7 +47,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                       background: active ? "rgba(247,147,26,0.08)" : "transparent",
                       color: active ? "#F7931A" : "hsl(0 0% 65%)",
                     }}
-                    data-testid={`nav-${label.toLowerCase()}`}
+                    data-testid={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
                     {label}

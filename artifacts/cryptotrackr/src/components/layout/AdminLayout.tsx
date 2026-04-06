@@ -1,12 +1,13 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
-import { Bitcoin, LayoutDashboard, Users, Activity, LogOut, Menu, X } from "lucide-react";
+import { Bitcoin, LayoutDashboard, Users, Activity, PieChart, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
   { icon: Users, label: "Clients", href: "/admin/clients" },
   { icon: Activity, label: "Cycle Intel", href: "/admin/cycle" },
+  { icon: PieChart, label: "Portfolio Plans", href: "/admin/plans" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -43,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       background: active ? "rgba(247,147,26,0.08)" : "transparent",
                       color: active ? "#F7931A" : "hsl(0 0% 65%)",
                     }}
-                    data-testid={`admin-nav-${label.toLowerCase()}`}
+                    data-testid={`admin-nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
                     {label}

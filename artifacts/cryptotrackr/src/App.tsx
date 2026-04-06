@@ -12,6 +12,8 @@ import NotesPage from "@/pages/portal/notes";
 import AdminDashboard from "@/pages/admin/index";
 import AdminClients from "@/pages/admin/clients";
 import CycleIntelligence from "@/pages/admin/cycle";
+import AdminPlans from "@/pages/admin/plans";
+import PlanPage from "@/pages/portal/plan";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +84,9 @@ function AppRoutes() {
       <Route path="/portal/notes">
         <ProtectedRoute requireRole="client"><NotesPage /></ProtectedRoute>
       </Route>
+      <Route path="/portal/plan">
+        <ProtectedRoute requireRole="client"><PlanPage /></ProtectedRoute>
+      </Route>
 
       <Route path="/admin">
         <ProtectedRoute requireRole="admin"><AdminDashboard /></ProtectedRoute>
@@ -91,6 +96,9 @@ function AppRoutes() {
       </Route>
       <Route path="/admin/cycle">
         <ProtectedRoute requireRole="admin"><CycleIntelligence /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/plans">
+        <ProtectedRoute requireRole="admin"><AdminPlans /></ProtectedRoute>
       </Route>
 
       <Route><Redirect to="/" /></Route>
