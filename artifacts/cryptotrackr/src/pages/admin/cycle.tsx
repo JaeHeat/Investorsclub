@@ -5,7 +5,7 @@ import { formatUSD } from "@/lib/utils";
 import {
   HALVING_CYCLES,
   BEAR_SCENARIOS,
-  FIVE_PHASES,
+  CYCLE_PHASES,
   BOTTOM_SIGNALS,
   DCA_SCHEDULE,
   DCA_BOOSTERS,
@@ -443,11 +443,11 @@ export default function CycleIntelligence() {
           </div>
         </Card>
 
-        {/* 5-Phase detail */}
+        {/* 6-Phase detail */}
         <Card>
-          <SectionHeader icon={Zap} title="The 5-Phase Framework" sub="Confirmed across 3 consecutive cycles — 2016, 2020, 2024" />
+          <SectionHeader icon={Zap} title="The 6-Phase Cycle Framework" sub="Confirmed across 3 consecutive cycles — 2016, 2020, 2024" />
           <div className="space-y-3">
-            {FIVE_PHASES.map((phase) => (
+            {CYCLE_PHASES.map((phase) => (
               <div key={phase.id} className="rounded-xl p-3" style={{ background: "hsl(0 0% 9%)" }}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-[11px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}>

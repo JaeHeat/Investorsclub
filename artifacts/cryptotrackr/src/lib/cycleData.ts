@@ -207,7 +207,7 @@ export const BEAR_SCENARIOS = [
   },
 ];
 
-// ── 5-Phase Framework ─────────────────────────────────────────────────────────
+// ── 6-Phase Cycle Framework ───────────────────────────────────────────────────
 
 export interface CyclePhase {
   id: number;
@@ -220,7 +220,7 @@ export interface CyclePhase {
   example2024: string;
 }
 
-export const FIVE_PHASES: CyclePhase[] = [
+export const CYCLE_PHASES: CyclePhase[] = [
   {
     id: 1,
     name: "Pre-Halving Accumulation",
@@ -271,7 +271,20 @@ export const FIVE_PHASES: CyclePhase[] = [
     duration: "364–550 days",
     example2024: "Sep 2024 → Oct 2025 · $56K → $126K (+125%)",
   },
+  {
+    id: 6,
+    name: "Bear Market",
+    shortName: "Bear Market",
+    description: "Post-peak drawdown. Trap rallies fool retail. Capital preserves to buy the next bottom.",
+    action: "Move to cash/stables. Do NOT add long-term positions during trap rallies. Map buy levels.",
+    signal: "'Crypto is dead' headlines. ETF outflows. Miner capitulation. Sustained fear.",
+    duration: "~12 months",
+    example2024: "Oct 2025 → ~Oct 2026 · $126K → projected $38K–$50K (-65% to -72%)",
+  },
 ];
+
+// Backward-compat alias
+export const FIVE_PHASES = CYCLE_PHASES;
 
 // ── Bottom Confirmation Signals ───────────────────────────────────────────────
 

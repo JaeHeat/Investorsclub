@@ -6,7 +6,6 @@ import { usePrices } from "@/hooks/usePrices";
 import { formatUSD, getMilestoneTier } from "@/lib/utils";
 import {
   BEAR_SCENARIOS,
-  FIVE_PHASES,
   BOTTOM_SIGNALS,
   DCA_SCHEDULE,
   KEY_DATES,
