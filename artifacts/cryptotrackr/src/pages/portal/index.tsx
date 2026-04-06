@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase, Milestone } from "@/lib/supabase";
+import { getMilestones } from "@/lib/localStore";
+import type { Milestone } from "@/lib/types";
 import { useBtcPrice } from "@/hooks/useBtcPrice";
 import { formatUSD, formatBTC, formatPct, getBonusPct, MILESTONE_PCTS } from "@/lib/utils";
 import PortalLayout from "@/components/layout/PortalLayout";
@@ -32,13 +33,7 @@ export default function PortalIndex() {
 
   useEffect(() => {
     if (user) {
-      supabase
-        .from("milestones")
-        .select("*")
-        .eq("user_id", user.id)
-        .then(({ data }) => {
-          if (data) setMilestones(data as Milestone[]);
-        });
+      setMilestones(getMilestones(user.id));
     }
   }, [user]);
 
@@ -51,7 +46,6 @@ export default function PortalIndex() {
   const returnPct = costBasisTotal > 0 && gainLoss !== null ? (gainLoss / costBasisTotal) * 100 : null;
   const isPositive = gainLoss !== null && gainLoss >= 0;
 
-  // Next milestone
   const nextMilestone = MILESTONE_PCTS.find((pct) => {
     const milestone = milestones.find((m) => m.milestone_pct === pct);
     return !milestone?.hit;
@@ -69,7 +63,6 @@ export default function PortalIndex() {
         </p>
       </div>
 
-      {/* BTC price strip */}
       <div
         className="flex items-center gap-2 mb-6 px-4 py-2.5 rounded-xl w-fit"
         style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}
@@ -88,7 +81,6 @@ export default function PortalIndex() {
         <span className="text-xs text-[hsl(0_0%_35%)]">Live</span>
       </div>
 
-      {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <StatCard
           label="Current Value"
@@ -113,7 +105,6 @@ export default function PortalIndex() {
         />
       </div>
 
-      {/* Return card */}
       {returnPct !== null && (
         <div
           className="rounded-2xl p-5 mb-6 flex items-center gap-4"
@@ -139,7 +130,6 @@ export default function PortalIndex() {
         </div>
       )}
 
-      {/* Next milestone */}
       {nextMilestone && nextMilestoneValue && (
         <div
           className="rounded-2xl p-5"

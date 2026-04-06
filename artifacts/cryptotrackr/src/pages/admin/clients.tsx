@@ -1,51 +1,19 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState } from "react";
+import {
+  getAllClientProfiles,
+  getMilestones,
+  upsertMilestone,
+  getRoadmapItems,
+  getAllRoadmapItems,
+  addRoadmapItem,
+  getAllReports,
+  addReport,
+} from "@/lib/localStore";
+import type { ClientProfile, Milestone, RoadmapItem, Report } from "@/lib/types";
 import { formatUSD, getBonusPct, MILESTONE_PCTS, getPortfolioTier } from "@/lib/utils";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useBtcPrice } from "@/hooks/useBtcPrice";
 import { ChevronRight, Check, Loader2, X, Plus } from "lucide-react";
-
-interface ClientData {
-  user_id: string;
-  full_name: string | null;
-  country: string | null;
-  timezone: string | null;
-  btc_holdings: number | null;
-  avg_cost_basis: number | null;
-  investment_goal: string | null;
-  risk_tolerance: string | null;
-  time_horizon: string | null;
-  notes: string | null;
-  onboarding_completed: boolean;
-  initial_portfolio_value: number | null;
-  high_water_mark: number | null;
-}
-
-interface MilestoneData {
-  id: string;
-  user_id: string;
-  milestone_pct: number;
-  hit: boolean;
-  hit_at: string | null;
-  bonus_amount: number | null;
-}
-
-interface RoadmapItem {
-  id: string;
-  user_id: string | null;
-  title: string;
-  content: string;
-  created_at: string;
-}
-
-interface Report {
-  id: string;
-  user_id: string | null;
-  title: string;
-  content: string;
-  published_at: string;
-  is_global: boolean;
-}
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
@@ -65,12 +33,11 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 export default function AdminClients() {
   const { price } = useBtcPrice();
-  const [clients, setClients] = useState<ClientData[]>([]);
-  const [selected, setSelected] = useState<ClientData | null>(null);
-  const [milestones, setMilestones] = useState<MilestoneData[]>([]);
+  const [clients, setClients] = useState<ClientProfile[]>(() => getAllClientProfiles());
+  const [selected, setSelected] = useState<ClientProfile | null>(null);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [roadmapItems, setRoadmapItems] = useState<RoadmapItem[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const [showRoadmapModal, setShowRoadmapModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -81,80 +48,53 @@ export default function AdminClients() {
   const [reportForm, setReportForm] = useState({ title: "", content: "", is_global: false });
   const [milestoneForm, setMilestoneForm] = useState({ bonus_amount: "" });
 
-  useEffect(() => {
-    supabase.from("client_profiles").select("*").then(({ data }) => {
-      if (data) setClients(data as ClientData[]);
-      setLoading(false);
-    });
-  }, []);
-
-  async function selectClient(client: ClientData) {
+  function selectClient(client: ClientProfile) {
     setSelected(client);
-    const [{ data: ms }, { data: ri }, { data: rp }] = await Promise.all([
-      supabase.from("milestones").select("*").eq("user_id", client.user_id),
-      supabase.from("roadmap_items").select("*").or(`user_id.eq.${client.user_id},user_id.is.null`).order("created_at", { ascending: false }),
-      supabase.from("reports").select("*").or(`user_id.eq.${client.user_id},is_global.eq.true`).order("published_at", { ascending: false }),
-    ]);
-    if (ms) setMilestones(ms as MilestoneData[]);
-    if (ri) setRoadmapItems(ri as RoadmapItem[]);
-    if (rp) setReports(rp as Report[]);
+    setMilestones(getMilestones(client.user_id));
+    setRoadmapItems(getRoadmapItems(client.user_id));
+    setReports(getAllReports().filter((r) => r.user_id === client.user_id || r.is_global));
   }
 
-  async function saveRoadmapItem() {
+  function saveRoadmapItem() {
     if (!selected || !roadmapForm.title || !roadmapForm.content) return;
     setSaving(true);
-    await supabase.from("roadmap_items").insert({
-      user_id: selected.user_id,
-      title: roadmapForm.title,
-      content: roadmapForm.content,
-    });
-    const { data } = await supabase.from("roadmap_items").select("*").or(`user_id.eq.${selected.user_id},user_id.is.null`).order("created_at", { ascending: false });
-    if (data) setRoadmapItems(data as RoadmapItem[]);
+    addRoadmapItem({ user_id: selected.user_id, title: roadmapForm.title, content: roadmapForm.content });
+    setRoadmapItems(getRoadmapItems(selected.user_id));
     setRoadmapForm({ title: "", content: "" });
     setShowRoadmapModal(false);
     setSaving(false);
   }
 
-  async function saveReport() {
+  function saveReport() {
     if (!selected || !reportForm.title || !reportForm.content) return;
     setSaving(true);
-    await supabase.from("reports").insert({
+    addReport({
       user_id: reportForm.is_global ? null : selected.user_id,
       title: reportForm.title,
       content: reportForm.content,
       is_global: reportForm.is_global,
-      published_at: new Date().toISOString(),
     });
-    const { data } = await supabase.from("reports").select("*").or(`user_id.eq.${selected.user_id},is_global.eq.true`).order("published_at", { ascending: false });
-    if (data) setReports(data as Report[]);
+    setReports(getAllReports().filter((r) => r.user_id === selected.user_id || r.is_global));
     setReportForm({ title: "", content: "", is_global: false });
     setShowReportModal(false);
     setSaving(false);
   }
 
-  async function markMilestone(pct: number) {
+  function markMilestone(pct: number) {
     if (!selected) return;
     setSaving(true);
     const bonus = parseFloat(milestoneForm.bonus_amount) || null;
-    const existing = milestones.find((m) => m.milestone_pct === pct);
-
-    if (existing) {
-      await supabase.from("milestones").update({ hit: true, hit_at: new Date().toISOString(), bonus_amount: bonus }).eq("id", existing.id);
-    } else {
-      const initialVal = selected.initial_portfolio_value ?? 0;
-      const bonusPct = getBonusPct(pct, initialVal);
-      await supabase.from("milestones").insert({
-        user_id: selected.user_id,
-        milestone_pct: pct,
-        hit: true,
-        hit_at: new Date().toISOString(),
-        bonus_amount: bonus,
-        bonus_pct: bonusPct,
-      });
-    }
-
-    const { data } = await supabase.from("milestones").select("*").eq("user_id", selected.user_id);
-    if (data) setMilestones(data as MilestoneData[]);
+    const initialVal = selected.initial_portfolio_value ?? 0;
+    const bonusPct = getBonusPct(pct, initialVal);
+    upsertMilestone({
+      user_id: selected.user_id,
+      milestone_pct: pct,
+      hit: true,
+      hit_at: new Date().toISOString(),
+      bonus_amount: bonus,
+      bonus_pct: bonusPct,
+    });
+    setMilestones(getMilestones(selected.user_id));
     setMilestoneForm({ bonus_amount: "" });
     setShowMilestoneModal(null);
     setSaving(false);
@@ -163,7 +103,7 @@ export default function AdminClients() {
   const inputStyle = {
     background: "hsl(0 0% 10%)",
     border: "1px solid hsl(0 0% 16%)",
-    color: "white",
+    color: "white" as const,
   };
 
   if (selected) {
@@ -201,7 +141,6 @@ export default function AdminClients() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-4 mb-4">
-          {/* Onboarding answers */}
           <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
             <h2 className="text-xs font-semibold text-[hsl(0_0%_50%)] uppercase tracking-wide mb-4">Profile</h2>
             <div className="space-y-2.5">
@@ -225,7 +164,6 @@ export default function AdminClients() {
             </div>
           </div>
 
-          {/* Milestones */}
           <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xs font-semibold text-[hsl(0_0%_50%)] uppercase tracking-wide">Milestones</h2>
@@ -267,7 +205,6 @@ export default function AdminClients() {
           </div>
         </div>
 
-        {/* Roadmap */}
         <div className="rounded-2xl p-5 mb-4" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xs font-semibold text-[hsl(0_0%_50%)] uppercase tracking-wide">Roadmap</h2>
@@ -295,7 +232,6 @@ export default function AdminClients() {
           )}
         </div>
 
-        {/* Reports */}
         <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xs font-semibold text-[hsl(0_0%_50%)] uppercase tracking-wide">Reports</h2>
@@ -325,7 +261,6 @@ export default function AdminClients() {
           )}
         </div>
 
-        {/* Roadmap Modal */}
         {showRoadmapModal && (
           <Modal title="Add Roadmap Item" onClose={() => setShowRoadmapModal(false)}>
             <div className="space-y-4">
@@ -366,7 +301,6 @@ export default function AdminClients() {
           </Modal>
         )}
 
-        {/* Report Modal */}
         {showReportModal && (
           <Modal title="Publish Report" onClose={() => setShowReportModal(false)}>
             <div className="space-y-4">
@@ -417,7 +351,6 @@ export default function AdminClients() {
           </Modal>
         )}
 
-        {/* Milestone Modal */}
         {showMilestoneModal !== null && (
           <Modal title={`Mark ${showMilestoneModal}% Milestone`} onClose={() => setShowMilestoneModal(null)}>
             <div className="space-y-4">
@@ -462,13 +395,7 @@ export default function AdminClients() {
         <p className="text-sm text-[hsl(0_0%_45%)] mt-1">All client profiles and portfolio details</p>
       </div>
 
-      {loading ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 rounded-2xl animate-pulse" style={{ background: "hsl(0 0% 9%)" }} />
-          ))}
-        </div>
-      ) : clients.length === 0 ? (
+      {clients.length === 0 ? (
         <div className="rounded-2xl p-12 text-center" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
           <p className="text-sm text-[hsl(0_0%_40%)]">No clients have completed onboarding yet</p>
         </div>

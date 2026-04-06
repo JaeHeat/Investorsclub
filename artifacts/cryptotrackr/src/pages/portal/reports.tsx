@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase, Report } from "@/lib/supabase";
+import { getReports } from "@/lib/localStore";
+import type { Report } from "@/lib/types";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { FileText, ChevronRight } from "lucide-react";
 
@@ -8,19 +9,10 @@ export default function ReportsPage() {
   const { user } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
   const [selected, setSelected] = useState<Report | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      supabase
-        .from("reports")
-        .select("*")
-        .or(`user_id.eq.${user.id},is_global.eq.true`)
-        .order("published_at", { ascending: false })
-        .then(({ data }) => {
-          if (data) setReports(data as Report[]);
-          setLoading(false);
-        });
+      setReports(getReports(user.id));
     }
   }, [user]);
 
@@ -48,9 +40,7 @@ export default function ReportsPage() {
               )}
             </div>
           </div>
-          <div className="prose prose-sm prose-invert max-w-none">
-            <p className="text-[hsl(0_0%_65%)] leading-relaxed whitespace-pre-wrap">{selected.content}</p>
-          </div>
+          <p className="text-[hsl(0_0%_65%)] leading-relaxed whitespace-pre-wrap text-sm">{selected.content}</p>
         </div>
       </PortalLayout>
     );
@@ -63,13 +53,7 @@ export default function ReportsPage() {
         <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Updates and analysis from your consultant</p>
       </div>
 
-      {loading ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 rounded-2xl animate-pulse" style={{ background: "hsl(0 0% 9%)" }} />
-          ))}
-        </div>
-      ) : reports.length === 0 ? (
+      {reports.length === 0 ? (
         <div
           className="rounded-2xl p-12 flex flex-col items-center justify-center text-center"
           style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}

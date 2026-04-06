@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { upsertClientProfile } from "@/lib/localStore";
 import { Bitcoin, ChevronRight, ChevronLeft, Check, Loader2 } from "lucide-react";
 
 const STEPS = 3;
@@ -30,7 +30,6 @@ export default function OnboardingPage() {
   const [, setLocation] = useLocation();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -48,40 +47,31 @@ export default function OnboardingPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  async function handleSubmit() {
+  function handleSubmit() {
     if (!user) return;
     setSubmitting(true);
-    setError(null);
 
     const btcHoldings = parseFloat(form.btc_holdings);
     const avgCostBasis = parseFloat(form.avg_cost_basis);
     const initialPortfolioValue = btcHoldings * avgCostBasis;
 
-    const { error: upsertError } = await supabase
-      .from("client_profiles")
-      .upsert({
-        user_id: user.id,
-        full_name: form.full_name,
-        country: form.country,
-        timezone: form.timezone,
-        btc_holdings: btcHoldings || null,
-        avg_cost_basis: avgCostBasis || null,
-        investment_goal: form.investment_goal,
-        risk_tolerance: form.risk_tolerance,
-        time_horizon: form.time_horizon,
-        notes: form.notes,
-        onboarding_completed: true,
-        initial_portfolio_value: initialPortfolioValue || null,
-        high_water_mark: initialPortfolioValue || null,
-      });
+    upsertClientProfile({
+      user_id: user.id,
+      full_name: form.full_name,
+      country: form.country,
+      timezone: form.timezone,
+      btc_holdings: btcHoldings || null,
+      avg_cost_basis: avgCostBasis || null,
+      investment_goal: form.investment_goal,
+      risk_tolerance: form.risk_tolerance,
+      time_horizon: form.time_horizon,
+      notes: form.notes,
+      onboarding_completed: true,
+      initial_portfolio_value: initialPortfolioValue || null,
+      high_water_mark: initialPortfolioValue || null,
+    });
 
-    if (upsertError) {
-      setError("Failed to save your profile. Please try again.");
-      setSubmitting(false);
-      return;
-    }
-
-    await refreshClientProfile();
+    refreshClientProfile();
     setLocation("/portal");
   }
 
@@ -113,7 +103,6 @@ export default function OnboardingPage() {
             <div data-testid="onboarding-step-1">
               <h2 className="text-xl font-semibold text-white mb-1">Tell us about yourself</h2>
               <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Basic info to personalize your portal</p>
-
               <div className="space-y-5">
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">Full Name</label>
@@ -158,7 +147,6 @@ export default function OnboardingPage() {
             <div data-testid="onboarding-step-2">
               <h2 className="text-xl font-semibold text-white mb-1">Your BTC holdings</h2>
               <p className="text-sm text-[hsl(0_0%_50%)] mb-7">This helps us calculate your portfolio value and milestones</p>
-
               <div className="space-y-5">
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">Total BTC holdings</label>
@@ -195,7 +183,6 @@ export default function OnboardingPage() {
                     <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">USD</span>
                   </div>
                 </div>
-
                 {form.btc_holdings && form.avg_cost_basis && (
                   <div className="rounded-xl p-4" style={{ background: "rgba(247,147,26,0.06)", border: "1px solid rgba(247,147,26,0.15)" }}>
                     <p className="text-xs text-[hsl(0_0%_55%)] mb-0.5">Initial portfolio value</p>
@@ -212,7 +199,6 @@ export default function OnboardingPage() {
             <div data-testid="onboarding-step-3">
               <h2 className="text-xl font-semibold text-white mb-1">Investment strategy</h2>
               <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Help us understand your goals</p>
-
               <div className="space-y-6">
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">Investment goal</label>
@@ -293,12 +279,6 @@ export default function OnboardingPage() {
                   />
                 </div>
               </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="mt-4 px-3.5 py-2.5 rounded-lg text-sm text-red-400" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
-              {error}
             </div>
           )}
 

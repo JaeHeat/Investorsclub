@@ -18,12 +18,10 @@ export default function LoginPage() {
     const { error: signInError } = await signIn(email, password);
 
     if (signInError) {
-      setError("Invalid email or password. Please try again.");
+      setError(signInError);
       setLoading(false);
-      return;
     }
-
-    // Routing is handled by App.tsx once auth state updates
+    // On success: App.tsx handles redirect via auth state
   }
 
   return (
@@ -38,12 +36,12 @@ export default function LoginPage() {
             <span className="text-xl font-semibold tracking-tight text-white">CryptoTrackr</span>
           </div>
           <h1 className="text-2xl font-semibold text-white mb-1">Sign in</h1>
-          <p className="text-sm text-[hsl(0_0%_55%)]">Enter your credentials to continue</p>
+          <p className="text-sm text-[hsl(0_0%_45%)]">Enter your credentials to continue</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">
           <div>
-            <label className="block text-xs font-medium text-[hsl(0_0%_65%)] mb-1.5 uppercase tracking-wide">
+            <label className="block text-xs font-medium text-[hsl(0_0%_55%)] mb-1.5 uppercase tracking-wide">
               Email
             </label>
             <input
@@ -53,17 +51,13 @@ export default function LoginPage() {
               required
               placeholder="you@example.com"
               data-testid="input-email"
-              className="w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-[hsl(0_0%_35%)] transition-colors outline-none focus:ring-1"
-              style={{
-                background: "hsl(0 0% 10%)",
-                border: "1px solid hsl(0 0% 16%)",
-                focusRingColor: "#F7931A",
-              }}
+              className="w-full px-3.5 py-2.5 rounded-xl text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none transition-colors"
+              style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[hsl(0_0%_65%)] mb-1.5 uppercase tracking-wide">
+            <label className="block text-xs font-medium text-[hsl(0_0%_55%)] mb-1.5 uppercase tracking-wide">
               Password
             </label>
             <div className="relative">
@@ -74,16 +68,13 @@ export default function LoginPage() {
                 required
                 placeholder="••••••••"
                 data-testid="input-password"
-                className="w-full px-3.5 py-2.5 pr-10 rounded-lg text-sm text-white placeholder-[hsl(0_0%_35%)] transition-colors outline-none"
-                style={{
-                  background: "hsl(0 0% 10%)",
-                  border: "1px solid hsl(0 0% 16%)",
-                }}
+                className="w-full px-3.5 py-2.5 pr-10 rounded-xl text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none"
+                style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(0_0%_45%)] hover:text-[hsl(0_0%_70%)] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(0_0%_40%)] hover:text-[hsl(0_0%_65%)] transition-colors"
                 data-testid="toggle-password"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -93,8 +84,8 @@ export default function LoginPage() {
 
           {error && (
             <div
-              className="px-3.5 py-2.5 rounded-lg text-sm text-red-400"
-              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
+              className="px-3.5 py-2.5 rounded-xl text-sm text-red-400"
+              style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.18)" }}
               data-testid="error-message"
             >
               {error}
@@ -105,7 +96,7 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             data-testid="button-signin"
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-60"
             style={{ background: "#F7931A", color: "#0A0A0A" }}
           >
             {loading ? (
@@ -119,7 +110,18 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-xs text-[hsl(0_0%_35%)] mt-8">
+        <div
+          className="mt-6 px-4 py-3 rounded-xl"
+          style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 13%)" }}
+        >
+          <p className="text-xs font-medium text-[hsl(0_0%_45%)] mb-2">Demo credentials</p>
+          <div className="space-y-1 text-xs text-[hsl(0_0%_40%)]">
+            <p>Admin: <span className="text-[hsl(0_0%_60%)]">admin@cryptotrackr.com / admin123</span></p>
+            <p>Client: <span className="text-[hsl(0_0%_60%)]">client@cryptotrackr.com / client123</span></p>
+          </div>
+        </div>
+
+        <p className="text-center text-xs text-[hsl(0_0%_30%)] mt-6">
           Bitcoin cycle consultation platform
         </p>
       </div>

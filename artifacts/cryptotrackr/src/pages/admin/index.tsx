@@ -1,24 +1,8 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { getAllClientProfiles, getMilestones } from "@/lib/localStore";
 import { formatUSD, getPortfolioTier } from "@/lib/utils";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Users, TrendingUp, Target, DollarSign } from "lucide-react";
 import { useBtcPrice } from "@/hooks/useBtcPrice";
-
-interface ClientRow {
-  user_id: string;
-  full_name: string | null;
-  btc_holdings: number | null;
-  avg_cost_basis: number | null;
-  initial_portfolio_value: number | null;
-}
-
-interface MilestoneRow {
-  user_id: string;
-  hit: boolean;
-  hit_at: string | null;
-}
 
 function SummaryCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
   return (
@@ -39,20 +23,8 @@ function SummaryCard({ icon: Icon, label, value }: { icon: React.ElementType; la
 
 export default function AdminDashboard() {
   const { price } = useBtcPrice();
-  const [clients, setClients] = useState<ClientRow[]>([]);
-  const [milestones, setMilestones] = useState<MilestoneRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([
-      supabase.from("client_profiles").select("user_id, full_name, btc_holdings, avg_cost_basis, initial_portfolio_value"),
-      supabase.from("milestones").select("user_id, hit, hit_at"),
-    ]).then(([{ data: cp }, { data: ms }]) => {
-      if (cp) setClients(cp as ClientRow[]);
-      if (ms) setMilestones(ms as MilestoneRow[]);
-      setLoading(false);
-    });
-  }, []);
+  const clients = getAllClientProfiles();
+  const allMilestones = clients.flatMap((c) => getMilestones(c.user_id));
 
   const totalClients = clients.length;
   const totalAUM = clients.reduce((sum, c) => {
@@ -62,7 +34,7 @@ export default function AdminDashboard() {
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const milestonesThisMonth = milestones.filter((m) => m.hit && m.hit_at && m.hit_at >= startOfMonth).length;
+  const milestonesThisMonth = allMilestones.filter((m) => m.hit && m.hit_at && m.hit_at >= startOfMonth).length;
 
   return (
     <AdminLayout>
@@ -72,10 +44,10 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-        <SummaryCard icon={Users} label="Total Clients" value={loading ? "—" : String(totalClients)} />
-        <SummaryCard icon={DollarSign} label="Total AUM" value={loading ? "—" : formatUSD(totalAUM)} />
-        <SummaryCard icon={Target} label="Milestones Hit" value={loading ? "—" : String(milestones.filter((m) => m.hit).length)} />
-        <SummaryCard icon={TrendingUp} label="This Month" value={loading ? "—" : String(milestonesThisMonth)} />
+        <SummaryCard icon={Users} label="Total Clients" value={String(totalClients)} />
+        <SummaryCard icon={DollarSign} label="Total AUM" value={formatUSD(totalAUM)} />
+        <SummaryCard icon={Target} label="Milestones Hit" value={String(allMilestones.filter((m) => m.hit).length)} />
+        <SummaryCard icon={TrendingUp} label="This Month" value={String(milestonesThisMonth)} />
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid hsl(0 0% 13%)" }}>
@@ -83,13 +55,7 @@ export default function AdminDashboard() {
           <h2 className="text-sm font-semibold text-white">All Clients</h2>
         </div>
 
-        {loading ? (
-          <div className="p-5 space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-14 rounded-xl animate-pulse" style={{ background: "hsl(0 0% 9%)" }} />
-            ))}
-          </div>
-        ) : clients.length === 0 ? (
+        {clients.length === 0 ? (
           <div className="p-12 text-center">
             <p className="text-sm text-[hsl(0_0%_40%)]">No clients yet</p>
           </div>

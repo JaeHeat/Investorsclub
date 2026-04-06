@@ -1,34 +1,17 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { getRoadmapItems } from "@/lib/localStore";
+import type { RoadmapItem } from "@/lib/types";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { MessageSquare } from "lucide-react";
 
-interface Note {
-  id: string;
-  user_id: string | null;
-  title: string;
-  content: string;
-  created_at: string;
-  is_global: boolean;
-}
-
 export default function NotesPage() {
   const { user } = useAuth();
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [notes, setNotes] = useState<RoadmapItem[]>([]);
 
   useEffect(() => {
     if (user) {
-      supabase
-        .from("roadmap_items")
-        .select("*")
-        .or(`user_id.eq.${user.id},user_id.is.null`)
-        .order("created_at", { ascending: false })
-        .then(({ data }) => {
-          if (data) setNotes(data as Note[]);
-          setLoading(false);
-        });
+      setNotes(getRoadmapItems(user.id));
     }
   }, [user]);
 
@@ -39,13 +22,7 @@ export default function NotesPage() {
         <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Updates and messages from your consultant</p>
       </div>
 
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 rounded-2xl animate-pulse" style={{ background: "hsl(0 0% 9%)" }} />
-          ))}
-        </div>
-      ) : notes.length === 0 ? (
+      {notes.length === 0 ? (
         <div
           className="rounded-2xl p-12 flex flex-col items-center justify-center text-center"
           style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}

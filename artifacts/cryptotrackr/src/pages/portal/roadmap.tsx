@@ -1,25 +1,17 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase, RoadmapItem } from "@/lib/supabase";
+import { getRoadmapItems } from "@/lib/localStore";
+import type { RoadmapItem } from "@/lib/types";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { Map } from "lucide-react";
 
 export default function RoadmapPage() {
   const { user } = useAuth();
   const [items, setItems] = useState<RoadmapItem[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      supabase
-        .from("roadmap_items")
-        .select("*")
-        .or(`user_id.eq.${user.id},user_id.is.null`)
-        .order("created_at", { ascending: false })
-        .then(({ data }) => {
-          if (data) setItems(data as RoadmapItem[]);
-          setLoading(false);
-        });
+      setItems(getRoadmapItems(user.id));
     }
   }, [user]);
 
@@ -30,13 +22,7 @@ export default function RoadmapPage() {
         <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Cycle targets and stage notes from your consultant</p>
       </div>
 
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 rounded-2xl animate-pulse" style={{ background: "hsl(0 0% 9%)" }} />
-          ))}
-        </div>
-      ) : items.length === 0 ? (
+      {items.length === 0 ? (
         <div
           className="rounded-2xl p-12 flex flex-col items-center justify-center text-center"
           style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}
