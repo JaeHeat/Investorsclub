@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import {
   getAllClientProfiles,
+  getHoldings,
   getMilestones,
   upsertMilestone,
   getRoadmapItems,
@@ -9,17 +10,32 @@ import {
   addRoadmapItem,
   addReport,
 } from "@/lib/localStore";
-import type { ClientProfile, Milestone, RoadmapItem, Report } from "@/lib/types";
+import type { ClientProfile, HoldingAsset, Milestone, RoadmapItem, Report } from "@/lib/types";
 import { formatUSD, getBonusPct, MILESTONE_PCTS, getPortfolioTier } from "@/lib/utils";
 import AdminLayout from "@/components/layout/AdminLayout";
-import { useBtcPrice } from "@/hooks/useBtcPrice";
+import { usePrices } from "@/hooks/usePrices";
+import DonutChart from "@/components/DonutChart";
 import {
   ChevronRight, Check, Loader2, X, Plus,
-  TrendingUp, TrendingDown, Bitcoin, Target, DollarSign, BarChart2,
+  TrendingUp, TrendingDown, Target, BarChart2, RefreshCw,
 } from "lucide-react";
 
-// ── Price scenarios to show in analytics ──────────────────────────────────
-const PRICE_SCENARIOS = [60000, 75000, 90000, 100000, 120000, 150000, 200000];
+// Colour palette for assets (BTC and ETH have brand colours; others get generic)
+const ASSET_COLORS: Record<string, string> = {
+  bitcoin:  "#F7931A",
+  ethereum: "#627EEA",
+  solana:   "#9945FF",
+  cardano:  "#0033AD",
+  ripple:   "#00AAE4",
+  dogecoin: "#C2A633",
+};
+const FALLBACK_COLORS = ["#22c55e", "#06b6d4", "#ec4899", "#f97316", "#a855f7", "#14b8a6"];
+
+function assetColor(id: string, index: number) {
+  return ASSET_COLORS[id] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+}
+
+// ── Small UI helpers ───────────────────────────────────────────────────────
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
@@ -48,14 +64,11 @@ function StatTile({ label, value, sub, color }: { label: string; value: string; 
 }
 
 // ── Client Analytics Detail ────────────────────────────────────────────────
-function ClientDetail({
-  client,
-  onBack,
-}: {
-  client: ClientProfile;
-  onBack: () => void;
-}) {
-  const { price } = useBtcPrice();
+function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () => void }) {
+  const holdings = useMemo(() => getHoldings(client.user_id), [client.user_id]);
+  const coinIds = useMemo(() => holdings.map((h) => h.coingecko_id), [holdings]);
+  const { prices, loading: pricesLoading } = usePrices(coinIds);
+
   const [milestones, setMilestones] = useState<Milestone[]>(() => getMilestones(client.user_id));
   const [roadmapItems, setRoadmapItems] = useState<RoadmapItem[]>(() => getRoadmapItems(client.user_id));
   const [reports, setReports] = useState<Report[]>(() =>
@@ -71,16 +84,38 @@ function ClientDetail({
   const [reportForm, setReportForm] = useState({ title: "", content: "", is_global: false });
   const [milestoneForm, setMilestoneForm] = useState({ bonus_amount: "" });
 
-  // Portfolio maths
-  const btc = client.btc_holdings ?? 0;
-  const avgCost = client.avg_cost_basis ?? 0;
-  const costBasis = btc * avgCost;
-  const initialValue = client.initial_portfolio_value ?? costBasis;
-  const currentValue = price ? btc * price : null;
-  const unrealizedPnL = currentValue !== null ? currentValue - costBasis : null;
-  const returnPct = costBasis > 0 && unrealizedPnL !== null ? (unrealizedPnL / costBasis) * 100 : null;
-  const isPositive = unrealizedPnL !== null && unrealizedPnL >= 0;
+  // ── Portfolio maths (multi-asset) ──────────────────────────────────────
+  const initialValue = client.initial_portfolio_value ?? 0;
   const tier = getPortfolioTier(initialValue);
+
+  const assetRows = holdings.map((h, idx) => {
+    const price = prices[h.coingecko_id] ?? null;
+    const invested = h.amount * h.avg_cost;
+    const currentValue = price !== null ? h.amount * price : null;
+    const pnl = currentValue !== null ? currentValue - invested : null;
+    const pnlPct = invested > 0 && pnl !== null ? (pnl / invested) * 100 : null;
+    return { ...h, price, invested, currentValue, pnl, pnlPct, color: assetColor(h.coingecko_id, idx) };
+  });
+
+  const totalInvested = assetRows.reduce((s, r) => s + r.invested, 0);
+  const totalCurrent = assetRows.every((r) => r.currentValue !== null)
+    ? assetRows.reduce((s, r) => s + (r.currentValue ?? 0), 0)
+    : null;
+  const totalPnL = totalCurrent !== null ? totalCurrent - totalInvested : null;
+  const totalReturnPct = totalInvested > 0 && totalPnL !== null ? (totalPnL / totalInvested) * 100 : null;
+  const isPositive = totalPnL !== null && totalPnL >= 0;
+
+  // Donut slices — use current value if available, else invested
+  const donutSlices = assetRows.map((r) => ({
+    label: `${r.symbol} — ${r.name}`,
+    value: r.currentValue ?? r.invested,
+    color: r.color,
+  }));
+
+  // BTC scenarios (BTC-specific, clearly labelled)
+  const BTC_SCENARIOS = [60000, 75000, 90000, 100000, 120000, 150000, 200000];
+  const btcHolding = holdings.find((h) => h.coingecko_id === "bitcoin");
+  const btcPrice = prices["bitcoin"] ?? null;
 
   function saveRoadmapItem() {
     if (!roadmapForm.title || !roadmapForm.content) return;
@@ -129,7 +164,6 @@ function ClientDetail({
 
   return (
     <AdminLayout>
-      {/* Back */}
       <button
         onClick={onBack}
         className="text-xs text-[hsl(0_0%_45%)] hover:text-white flex items-center gap-1 mb-6 transition-colors"
@@ -146,54 +180,110 @@ function ClientDetail({
             {client.country}{client.timezone ? ` · ${client.timezone}` : ""}
           </p>
         </div>
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}>
-          {tier}
-        </span>
+        <div className="flex items-center gap-3">
+          {pricesLoading && <RefreshCw className="w-3.5 h-3.5 animate-spin text-[hsl(0_0%_35%)]" />}
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}>
+            {tier}
+          </span>
+        </div>
       </div>
 
-      {/* ── ANALYTICS SECTION ─────────────────────────────────────────── */}
+      {/* ── ANALYTICS ──────────────────────────────────────────────────────── */}
       <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: "1px solid hsl(0 0% 13%)" }}>
         <div className="px-5 py-3.5 flex items-center gap-2" style={{ background: "hsl(0 0% 7%)", borderBottom: "1px solid hsl(0 0% 11%)" }}>
           <BarChart2 className="w-4 h-4" style={{ color: "#F7931A" }} />
           <h2 className="text-sm font-semibold text-white">Portfolio Analytics</h2>
-          {price && (
-            <span className="ml-auto flex items-center gap-1.5 text-xs text-[hsl(0_0%_45%)]">
-              <Bitcoin className="w-3 h-3" style={{ color: "#F7931A" }} />
-              Live BTC: <span className="font-medium text-white">{formatUSD(price)}</span>
-            </span>
+          {!pricesLoading && (
+            <span className="ml-auto text-xs text-[hsl(0_0%_40%)]">Live prices · refreshes every 60s</span>
           )}
         </div>
 
         <div className="p-5" style={{ background: "hsl(0 0% 6%)" }}>
-          {/* Top stats row */}
+          {/* Summary stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
             <StatTile
-              label="Current Value"
-              value={currentValue ? formatUSD(currentValue) : "—"}
-              sub={btc ? `${btc} BTC` : undefined}
+              label="Portfolio Value"
+              value={totalCurrent !== null ? formatUSD(totalCurrent) : "—"}
+              sub={pricesLoading ? "Loading prices..." : undefined}
               color="#F7931A"
             />
             <StatTile
-              label="Cost Basis"
-              value={formatUSD(costBasis)}
-              sub={`${formatUSD(avgCost)} avg/BTC`}
+              label="Total Invested"
+              value={formatUSD(totalInvested)}
+              sub={`${holdings.length} assets`}
             />
             <StatTile
               label="Unrealized P&L"
-              value={unrealizedPnL !== null ? `${isPositive ? "+" : ""}${formatUSD(unrealizedPnL)}` : "—"}
-              sub={returnPct !== null ? `${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(2)}%` : undefined}
-              color={unrealizedPnL === null ? "white" : isPositive ? "#22c55e" : "#ef4444"}
+              value={totalPnL !== null ? `${isPositive ? "+" : ""}${formatUSD(totalPnL)}` : "—"}
+              sub={totalReturnPct !== null ? `${totalReturnPct >= 0 ? "+" : ""}${totalReturnPct.toFixed(2)}%` : undefined}
+              color={totalPnL === null ? "white" : isPositive ? "#22c55e" : "#ef4444"}
             />
             <StatTile
               label="Total Return"
-              value={returnPct !== null ? `${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(1)}%` : "—"}
+              value={totalReturnPct !== null ? `${totalReturnPct >= 0 ? "+" : ""}${totalReturnPct.toFixed(1)}%` : "—"}
               sub={isPositive ? "In profit" : "Below cost basis"}
-              color={returnPct === null ? "white" : returnPct >= 0 ? "#22c55e" : "#ef4444"}
+              color={totalReturnPct === null ? "white" : totalReturnPct >= 0 ? "#22c55e" : "#ef4444"}
             />
           </div>
 
-          {/* P&L visual bar */}
-          {currentValue !== null && costBasis > 0 && (
+          {/* Donut chart + asset breakdown side-by-side */}
+          <div className="grid lg:grid-cols-2 gap-5 mb-5">
+            {/* Donut */}
+            <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 12%)" }}>
+              <p className="text-xs font-semibold text-[hsl(0_0%_45%)] uppercase tracking-wide mb-4">Allocation</p>
+              {donutSlices.length > 0 ? (
+                <DonutChart slices={donutSlices} size={160} thickness={40} />
+              ) : (
+                <p className="text-sm text-[hsl(0_0%_35%)]">No holdings recorded</p>
+              )}
+            </div>
+
+            {/* Asset breakdown table */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 12%)" }}>
+              <div className="grid grid-cols-4 gap-2 px-4 py-2.5 text-[11px] text-[hsl(0_0%_35%)] uppercase tracking-wide" style={{ borderBottom: "1px solid hsl(0 0% 12%)" }}>
+                <span className="col-span-2">Asset</span>
+                <span>Value</span>
+                <span>P&L</span>
+              </div>
+              {assetRows.map((row) => (
+                <div
+                  key={row.coingecko_id}
+                  className="grid grid-cols-4 gap-2 px-4 py-3 items-center"
+                  style={{ borderBottom: "1px solid hsl(0 0% 9%)" }}
+                  data-testid={`asset-row-${row.coingecko_id}`}
+                >
+                  <div className="col-span-2 flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: row.color }} />
+                    <div>
+                      <p className="text-sm font-medium text-white leading-tight">{row.symbol}</p>
+                      <p className="text-[11px] text-[hsl(0_0%_38%)]">{row.amount} units · {formatUSD(row.avg_cost)} avg</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-white">{row.currentValue !== null ? formatUSD(row.currentValue) : "—"}</p>
+                    {row.price && <p className="text-[11px] text-[hsl(0_0%_38%)]">{formatUSD(row.price)}</p>}
+                  </div>
+                  <div>
+                    {row.pnl !== null ? (
+                      <>
+                        <p className="text-sm font-medium" style={{ color: row.pnl >= 0 ? "#22c55e" : "#ef4444" }}>
+                          {row.pnl >= 0 ? "+" : ""}{formatUSD(row.pnl)}
+                        </p>
+                        <p className="text-[11px]" style={{ color: row.pnl >= 0 ? "#22c55e" : "#ef4444" }}>
+                          {row.pnlPct !== null ? `${row.pnlPct >= 0 ? "+" : ""}${row.pnlPct.toFixed(1)}%` : ""}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-[hsl(0_0%_35%)]">—</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Overall P&L bar */}
+          {totalCurrent !== null && totalInvested > 0 && (
             <div
               className="mb-5 rounded-xl p-4 flex items-center gap-4"
               style={{
@@ -208,42 +298,44 @@ function ClientDetail({
               )}
               <div className="flex-1">
                 <p className="text-sm font-medium" style={{ color: isPositive ? "#22c55e" : "#ef4444" }}>
-                  {isPositive ? "Gain" : "Loss"} of {formatUSD(Math.abs(unrealizedPnL!))} since entry
+                  Total {isPositive ? "gain" : "loss"} of {formatUSD(Math.abs(totalPnL!))} across all holdings
                 </p>
                 <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(0 0% 14%)" }}>
                   <div
                     className="h-1.5 rounded-full"
                     style={{
-                      width: `${Math.min(100, Math.max(5, (currentValue / (costBasis * 2)) * 100))}%`,
+                      width: `${Math.min(100, Math.max(4, (totalCurrent / (totalInvested * 2)) * 100))}%`,
                       background: isPositive ? "#22c55e" : "#ef4444",
                     }}
                   />
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <p className="text-xs text-[hsl(0_0%_40%)]">Entry</p>
-                <p className="text-sm font-semibold text-white">{formatUSD(costBasis)}</p>
+                <p className="text-xs text-[hsl(0_0%_40%)]">Invested</p>
+                <p className="text-sm font-semibold text-white">{formatUSD(totalInvested)}</p>
               </div>
             </div>
           )}
 
-          {/* Price scenarios table */}
-          {btc > 0 && (
+          {/* BTC scenarios — BTC position only */}
+          {btcHolding && (
             <div>
-              <p className="text-xs font-semibold text-[hsl(0_0%_45%)] uppercase tracking-wide mb-3">Price Scenarios — Portfolio at BTC Target</p>
+              <p className="text-xs font-semibold text-[hsl(0_0%_45%)] uppercase tracking-wide mb-3">
+                BTC Position Scenarios — {btcHolding.amount} BTC at target prices
+              </p>
               <div className="rounded-xl overflow-hidden" style={{ border: "1px solid hsl(0 0% 12%)" }}>
                 <div className="grid grid-cols-4 gap-2 px-4 py-2 text-[11px] text-[hsl(0_0%_35%)] uppercase tracking-wide" style={{ background: "hsl(0 0% 8%)", borderBottom: "1px solid hsl(0 0% 12%)" }}>
                   <span>BTC Price</span>
-                  <span>Portfolio</span>
-                  <span>P&L</span>
+                  <span>BTC Value</span>
+                  <span>BTC P&L</span>
                   <span>Return</span>
                 </div>
-                {PRICE_SCENARIOS.map((targetPrice) => {
-                  const scenarioValue = btc * targetPrice;
-                  const scenarioPnL = scenarioValue - costBasis;
-                  const scenarioReturn = costBasis > 0 ? (scenarioPnL / costBasis) * 100 : 0;
-                  const isCurrent = price ? Math.abs(targetPrice - price) < 5000 : false;
-                  const isAboveCurrent = price ? targetPrice > price : true;
+                {BTC_SCENARIOS.map((targetPrice) => {
+                  const btcCost = btcHolding.amount * btcHolding.avg_cost;
+                  const scenarioValue = btcHolding.amount * targetPrice;
+                  const scenarioPnL = scenarioValue - btcCost;
+                  const scenarioReturn = btcCost > 0 ? (scenarioPnL / btcCost) * 100 : 0;
+                  const isCurrent = btcPrice ? Math.abs(targetPrice - btcPrice) < 5000 : false;
 
                   return (
                     <div
@@ -254,11 +346,9 @@ function ClientDetail({
                         borderBottom: "1px solid hsl(0 0% 9%)",
                         borderLeft: isCurrent ? "2px solid #F7931A" : "2px solid transparent",
                       }}
-                      data-testid={`scenario-${targetPrice}`}
                     >
                       <span className="font-medium" style={{ color: isCurrent ? "#F7931A" : "hsl(0 0% 80%)" }}>
-                        {formatUSD(targetPrice)}
-                        {isCurrent && <span className="ml-1 text-[10px] opacity-70">now</span>}
+                        {formatUSD(targetPrice)}{isCurrent && <span className="ml-1 text-[10px] opacity-70">now</span>}
                       </span>
                       <span className="text-white">{formatUSD(scenarioValue)}</span>
                       <span style={{ color: scenarioPnL >= 0 ? "#22c55e" : "#ef4444" }}>
@@ -276,7 +366,7 @@ function ClientDetail({
         </div>
       </div>
 
-      {/* ── MILESTONES + PROFILE ─────────────────────────────────────────── */}
+      {/* ── MILESTONES + PROFILE ──────────────────────────────────────────── */}
       <div className="grid lg:grid-cols-2 gap-4 mb-4">
         {/* Profile */}
         <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
@@ -286,9 +376,7 @@ function ClientDetail({
               { label: "Investment Goal", value: client.investment_goal?.replace(/_/g, " ") },
               { label: "Risk Tolerance", value: client.risk_tolerance },
               { label: "Time Horizon", value: client.time_horizon?.replace(/_/g, " ") },
-              { label: "Avg Cost Basis", value: client.avg_cost_basis ? formatUSD(client.avg_cost_basis) : null },
-              { label: "BTC Holdings", value: btc ? `${btc} BTC` : null },
-              { label: "Initial Value", value: initialValue ? formatUSD(initialValue) : null },
+              { label: "Initial Portfolio Value", value: initialValue ? formatUSD(initialValue) : null },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between text-sm">
                 <span className="text-[hsl(0_0%_40%)]">{label}</span>
@@ -307,7 +395,10 @@ function ClientDetail({
         {/* Milestones */}
         <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-semibold text-[hsl(0_0%_50%)] uppercase tracking-wide">Milestones</h2>
+            <div>
+              <h2 className="text-xs font-semibold text-[hsl(0_0%_50%)] uppercase tracking-wide">Milestones</h2>
+              <p className="text-[11px] text-[hsl(0_0%_35%)] mt-0.5">Based on total portfolio value</p>
+            </div>
             <Target className="w-3.5 h-3.5 text-[hsl(0_0%_35%)]" />
           </div>
           <div className="space-y-3">
@@ -315,8 +406,8 @@ function ClientDetail({
               const record = milestones.find((m) => m.milestone_pct === pct);
               const isHit = record?.hit ?? false;
               const targetValue = initialValue * (1 + pct / 100);
-              const progressPct = currentValue && targetValue
-                ? Math.min(100, (currentValue / targetValue) * 100)
+              const progressPct = totalCurrent && targetValue
+                ? Math.min(100, (totalCurrent / targetValue) * 100)
                 : 0;
               const bonusPct = getBonusPct(pct, initialValue);
 
@@ -380,8 +471,7 @@ function ClientDetail({
             style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}
             data-testid="button-add-roadmap"
           >
-            <Plus className="w-3 h-3" />
-            Add
+            <Plus className="w-3 h-3" /> Add
           </button>
         </div>
         {roadmapItems.length === 0 ? (
@@ -418,8 +508,7 @@ function ClientDetail({
             style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}
             data-testid="button-add-report"
           >
-            <Plus className="w-3 h-3" />
-            Publish
+            <Plus className="w-3 h-3" /> Publish
           </button>
         </div>
         {reports.length === 0 ? (
@@ -451,35 +540,13 @@ function ClientDetail({
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-[hsl(0_0%_55%)] mb-1.5 uppercase tracking-wide">Title</label>
-              <input
-                type="text"
-                value={roadmapForm.title}
-                onChange={(e) => setRoadmapForm({ ...roadmapForm, title: e.target.value })}
-                placeholder="e.g. Cycle Top Target"
-                className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none"
-                style={inputStyle}
-                data-testid="input-roadmap-title"
-              />
+              <input type="text" value={roadmapForm.title} onChange={(e) => setRoadmapForm({ ...roadmapForm, title: e.target.value })} placeholder="e.g. Cycle Top Target" className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} data-testid="input-roadmap-title" />
             </div>
             <div>
               <label className="block text-xs font-medium text-[hsl(0_0%_55%)] mb-1.5 uppercase tracking-wide">Content</label>
-              <textarea
-                value={roadmapForm.content}
-                onChange={(e) => setRoadmapForm({ ...roadmapForm, content: e.target.value })}
-                placeholder="Cycle stage notes..."
-                rows={4}
-                className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none resize-none"
-                style={inputStyle}
-                data-testid="input-roadmap-content"
-              />
+              <textarea value={roadmapForm.content} onChange={(e) => setRoadmapForm({ ...roadmapForm, content: e.target.value })} placeholder="Cycle stage notes..." rows={4} className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none resize-none" style={inputStyle} data-testid="input-roadmap-content" />
             </div>
-            <button
-              onClick={saveRoadmapItem}
-              disabled={saving}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60"
-              style={{ background: "#F7931A", color: "#0A0A0A" }}
-              data-testid="button-save-roadmap"
-            >
+            <button onClick={saveRoadmapItem} disabled={saving} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "#F7931A", color: "#0A0A0A" }} data-testid="button-save-roadmap">
               {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving...</> : "Save"}
             </button>
           </div>
@@ -491,44 +558,17 @@ function ClientDetail({
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-[hsl(0_0%_55%)] mb-1.5 uppercase tracking-wide">Title</label>
-              <input
-                type="text"
-                value={reportForm.title}
-                onChange={(e) => setReportForm({ ...reportForm, title: e.target.value })}
-                placeholder="e.g. April 2026 Update"
-                className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none"
-                style={inputStyle}
-                data-testid="input-report-title"
-              />
+              <input type="text" value={reportForm.title} onChange={(e) => setReportForm({ ...reportForm, title: e.target.value })} placeholder="e.g. April 2026 Update" className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} data-testid="input-report-title" />
             </div>
             <div>
               <label className="block text-xs font-medium text-[hsl(0_0%_55%)] mb-1.5 uppercase tracking-wide">Content</label>
-              <textarea
-                value={reportForm.content}
-                onChange={(e) => setReportForm({ ...reportForm, content: e.target.value })}
-                placeholder="Monthly analysis..."
-                rows={5}
-                className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none resize-none"
-                style={inputStyle}
-                data-testid="input-report-content"
-              />
+              <textarea value={reportForm.content} onChange={(e) => setReportForm({ ...reportForm, content: e.target.value })} placeholder="Monthly analysis..." rows={5} className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none resize-none" style={inputStyle} data-testid="input-report-content" />
             </div>
             <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={reportForm.is_global}
-                onChange={(e) => setReportForm({ ...reportForm, is_global: e.target.checked })}
-                data-testid="checkbox-global"
-              />
+              <input type="checkbox" checked={reportForm.is_global} onChange={(e) => setReportForm({ ...reportForm, is_global: e.target.checked })} data-testid="checkbox-global" />
               <span className="text-sm text-[hsl(0_0%_65%)]">Send to all clients</span>
             </label>
-            <button
-              onClick={saveReport}
-              disabled={saving}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60"
-              style={{ background: "#F7931A", color: "#0A0A0A" }}
-              data-testid="button-save-report"
-            >
+            <button onClick={saveReport} disabled={saving} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "#F7931A", color: "#0A0A0A" }} data-testid="button-save-report">
               {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Publishing...</> : "Publish Report"}
             </button>
           </div>
@@ -541,14 +581,14 @@ function ClientDetail({
             <div className="rounded-xl p-3.5" style={{ background: "hsl(0 0% 10%)" }}>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-[hsl(0_0%_50%)]">Milestone</span>
-                <span className="text-white font-medium">{showMilestoneModal}% return</span>
+                <span className="text-white font-medium">{showMilestoneModal}% return on portfolio</span>
               </div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-[hsl(0_0%_50%)]">Bonus rate</span>
                 <span style={{ color: "#F7931A" }}>{getBonusPct(showMilestoneModal, initialValue)}% of gains</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-[hsl(0_0%_50%)]">Target value</span>
+                <span className="text-[hsl(0_0%_50%)]">Target portfolio value</span>
                 <span className="text-white">{initialValue ? formatUSD(initialValue * (1 + showMilestoneModal / 100)) : "—"}</span>
               </div>
             </div>
@@ -556,24 +596,10 @@ function ClientDetail({
               <label className="block text-xs font-medium text-[hsl(0_0%_55%)] mb-1.5 uppercase tracking-wide">Bonus Amount Paid (USD)</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
-                <input
-                  type="number"
-                  value={milestoneForm.bonus_amount}
-                  onChange={(e) => setMilestoneForm({ bonus_amount: e.target.value })}
-                  placeholder="0"
-                  className="w-full pl-7 pr-4 py-2.5 rounded-lg text-sm outline-none"
-                  style={inputStyle}
-                  data-testid="input-bonus-amount"
-                />
+                <input type="number" value={milestoneForm.bonus_amount} onChange={(e) => setMilestoneForm({ bonus_amount: e.target.value })} placeholder="0" className="w-full pl-7 pr-4 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} data-testid="input-bonus-amount" />
               </div>
             </div>
-            <button
-              onClick={() => markMilestone(showMilestoneModal)}
-              disabled={saving}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60"
-              style={{ background: "#F7931A", color: "#0A0A0A" }}
-              data-testid="button-confirm-milestone"
-            >
+            <button onClick={() => markMilestone(showMilestoneModal)} disabled={saving} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "#F7931A", color: "#0A0A0A" }} data-testid="button-confirm-milestone">
               {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving...</> : "Mark as Hit"}
             </button>
           </div>
@@ -585,20 +611,15 @@ function ClientDetail({
 
 // ── Client List ────────────────────────────────────────────────────────────
 export default function AdminClients() {
-  const { price } = useBtcPrice();
   const [location] = useLocation();
   const [clients] = useState<ClientProfile[]>(() => getAllClientProfiles());
   const [selected, setSelected] = useState<ClientProfile | null>(() => {
-    // Auto-select from URL query param: /admin/clients?client=client-1
     const params = new URLSearchParams(window.location.search);
     const clientId = params.get("client");
-    if (clientId) {
-      return getAllClientProfiles().find((c) => c.user_id === clientId) ?? null;
-    }
+    if (clientId) return getAllClientProfiles().find((c) => c.user_id === clientId) ?? null;
     return null;
   });
 
-  // Re-sync with URL query param when location changes
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const clientId = params.get("client");
@@ -636,11 +657,8 @@ export default function AdminClients() {
       ) : (
         <div className="space-y-2">
           {clients.map((client) => {
-            const currentValue = price && client.btc_holdings ? client.btc_holdings * price : null;
-            const costBasis = client.btc_holdings && client.avg_cost_basis ? client.btc_holdings * client.avg_cost_basis : 0;
-            const returnPct = costBasis > 0 && currentValue ? ((currentValue - costBasis) / costBasis) * 100 : null;
             const tier = getPortfolioTier(client.initial_portfolio_value ?? 0);
-
+            const holdings = getHoldings(client.user_id);
             return (
               <button
                 key={client.user_id}
@@ -659,17 +677,14 @@ export default function AdminClients() {
                   <p className="text-sm font-medium text-white">{client.full_name || "Unnamed"}</p>
                   <p className="text-xs text-[hsl(0_0%_40%)] mt-0.5">
                     {client.country}{client.country ? " · " : ""}{tier}
+                    {holdings.length > 0 && ` · ${holdings.map((h) => h.symbol).join(", ")}`}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-semibold text-white">
-                    {currentValue ? formatUSD(currentValue) : client.initial_portfolio_value ? formatUSD(client.initial_portfolio_value) : "—"}
+                    {client.initial_portfolio_value ? formatUSD(client.initial_portfolio_value) : "—"}
                   </p>
-                  {returnPct !== null && (
-                    <p className={`text-xs mt-0.5 font-medium ${returnPct >= 0 ? "text-green-400" : "text-red-400"}`}>
-                      {returnPct >= 0 ? "+" : ""}{returnPct.toFixed(1)}%
-                    </p>
-                  )}
+                  <p className="text-xs text-[hsl(0_0%_40%)] mt-0.5">{holdings.length} asset{holdings.length !== 1 ? "s" : ""}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-[hsl(0_0%_30%)] shrink-0" />
               </button>

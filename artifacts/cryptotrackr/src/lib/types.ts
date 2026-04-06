@@ -1,5 +1,13 @@
 export type UserRole = "admin" | "client";
 
+export interface HoldingAsset {
+  coingecko_id: string;  // e.g. "bitcoin", "ethereum", "solana"
+  symbol: string;        // e.g. "BTC", "ETH", "SOL"
+  name: string;          // e.g. "Bitcoin", "Ethereum", "Solana"
+  amount: number;        // quantity held
+  avg_cost: number;      // average entry price in USD
+}
+
 export interface ClientProfile {
   user_id: string;
   full_name: string | null;

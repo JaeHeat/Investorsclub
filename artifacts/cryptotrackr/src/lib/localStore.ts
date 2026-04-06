@@ -1,4 +1,4 @@
-import type { ClientProfile, Milestone, RoadmapItem, Report } from "./types";
+import type { ClientProfile, HoldingAsset, Milestone, RoadmapItem, Report } from "./types";
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -19,12 +19,16 @@ function uid() {
 
 // ── Seed data on first load ────────────────────────────────────────────────
 
-const SEED_KEY = "cryptotrackr-seeded-v1";
+const SEED_KEY = "cryptotrackr-seeded-v2";
 
 function seedIfEmpty() {
   if (localStorage.getItem(SEED_KEY)) return;
 
-  // Demo client profile
+  // Demo client — multi-asset portfolio
+  // BTC 0.85 @ $28,000 = $23,800
+  // ETH 8.0  @ $1,800  = $14,400
+  // SOL 120  @ $95     = $11,400
+  // Total invested: $49,600
   const profiles: ClientProfile[] = [
     {
       user_id: "client-1",
@@ -38,10 +42,36 @@ function seedIfEmpty() {
       time_horizon: "2_3_years",
       notes: "Looking to exit near the cycle top and re-enter in the bear market.",
       onboarding_completed: true,
-      initial_portfolio_value: 23800,
-      high_water_mark: 23800,
+      initial_portfolio_value: 49600,
+      high_water_mark: 49600,
     },
   ];
+
+  const holdings: Record<string, HoldingAsset[]> = {
+    "client-1": [
+      {
+        coingecko_id: "bitcoin",
+        symbol: "BTC",
+        name: "Bitcoin",
+        amount: 0.85,
+        avg_cost: 28000,
+      },
+      {
+        coingecko_id: "ethereum",
+        symbol: "ETH",
+        name: "Ethereum",
+        amount: 8.0,
+        avg_cost: 1800,
+      },
+      {
+        coingecko_id: "solana",
+        symbol: "SOL",
+        name: "Solana",
+        amount: 120,
+        avg_cost: 95,
+      },
+    ],
+  };
 
   const roadmapItems: RoadmapItem[] = [
     {
@@ -55,9 +85,9 @@ function seedIfEmpty() {
     {
       id: uid(),
       user_id: "client-1",
-      title: "Personal Target: Begin scaling out at $90K",
+      title: "Personal Target: Begin scaling out at $90K BTC",
       content:
-        "Given your moderate risk profile and cycle top exit strategy, we recommend beginning to scale out 20–25% of your position around the $90K level, with additional tranches at $100K and $110K.",
+        "Given your moderate risk profile and cycle top exit strategy, we recommend beginning to scale out 20–25% of your BTC and ETH position around the $90K BTC level, with additional tranches at $100K and $110K.",
       created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     },
   ];
@@ -75,6 +105,7 @@ function seedIfEmpty() {
   ];
 
   write("ct-profiles", profiles);
+  write("ct-holdings", holdings);
   write("ct-roadmap", roadmapItems);
   write("ct-reports", reports);
   write("ct-milestones", [] as Milestone[]);
@@ -104,6 +135,19 @@ export function upsertClientProfile(profile: ClientProfile): ClientProfile {
   }
   write("ct-profiles", all);
   return profile;
+}
+
+// ── Holdings ───────────────────────────────────────────────────────────────
+
+export function getHoldings(userId: string): HoldingAsset[] {
+  const all = read<Record<string, HoldingAsset[]>>("ct-holdings", {});
+  return all[userId] ?? [];
+}
+
+export function setHoldings(userId: string, holdings: HoldingAsset[]): void {
+  const all = read<Record<string, HoldingAsset[]>>("ct-holdings", {});
+  all[userId] = holdings;
+  write("ct-holdings", all);
 }
 
 // ── Milestones ─────────────────────────────────────────────────────────────
