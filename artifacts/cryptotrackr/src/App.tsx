@@ -9,11 +9,18 @@ import CyclePage from "@/pages/portal/cycle";
 import RoadmapPage from "@/pages/portal/roadmap";
 import ReportsPage from "@/pages/portal/reports";
 import NotesPage from "@/pages/portal/notes";
+import PlanPage from "@/pages/portal/plan";
+import ExitStrategyPage from "@/pages/portal/exit";
+import DcaPage from "@/pages/portal/dca";
+import WatchlistPage from "@/pages/portal/watchlist";
+import BearProtectionPage from "@/pages/portal/bear";
+import SettingsPage from "@/pages/portal/settings";
 import AdminDashboard from "@/pages/admin/index";
 import AdminClients from "@/pages/admin/clients";
 import CycleIntelligence from "@/pages/admin/cycle";
 import AdminPlans from "@/pages/admin/plans";
-import PlanPage from "@/pages/portal/plan";
+import BroadcastPage from "@/pages/admin/broadcast";
+import AnalyticsPage from "@/pages/admin/analytics";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +94,21 @@ function AppRoutes() {
       <Route path="/portal/plan">
         <ProtectedRoute requireRole="client"><PlanPage /></ProtectedRoute>
       </Route>
+      <Route path="/portal/exit">
+        <ProtectedRoute requireRole="client"><ExitStrategyPage /></ProtectedRoute>
+      </Route>
+      <Route path="/portal/dca">
+        <ProtectedRoute requireRole="client"><DcaPage /></ProtectedRoute>
+      </Route>
+      <Route path="/portal/watchlist">
+        <ProtectedRoute requireRole="client"><WatchlistPage /></ProtectedRoute>
+      </Route>
+      <Route path="/portal/bear">
+        <ProtectedRoute requireRole="client"><BearProtectionPage /></ProtectedRoute>
+      </Route>
+      <Route path="/portal/settings">
+        <ProtectedRoute requireRole="client"><SettingsPage /></ProtectedRoute>
+      </Route>
 
       <Route path="/admin">
         <ProtectedRoute requireRole="admin"><AdminDashboard /></ProtectedRoute>
@@ -99,6 +121,12 @@ function AppRoutes() {
       </Route>
       <Route path="/admin/plans">
         <ProtectedRoute requireRole="admin"><AdminPlans /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/broadcast">
+        <ProtectedRoute requireRole="admin"><BroadcastPage /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/analytics">
+        <ProtectedRoute requireRole="admin"><AnalyticsPage /></ProtectedRoute>
       </Route>
 
       <Route><Redirect to="/" /></Route>

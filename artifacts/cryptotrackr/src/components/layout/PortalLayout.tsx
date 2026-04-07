@@ -1,16 +1,21 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
-import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, PieChart, LogOut, Menu, X } from "lucide-react";
+import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, PieChart, LogOut, Menu, X, TrendingDown, RefreshCw, Eye, Shield, Settings } from "lucide-react";
 import { useState } from "react";
 
 const NAV_ITEMS = [
-  { icon: LayoutDashboard, label: "Portfolio", href: "/portal" },
-  { icon: Target, label: "Milestones", href: "/portal/milestones" },
-  { icon: Activity, label: "Cycle Outlook", href: "/portal/cycle" },
-  { icon: PieChart, label: "Portfolio Plan", href: "/portal/plan" },
-  { icon: Map, label: "Roadmap", href: "/portal/roadmap" },
-  { icon: FileText, label: "Reports", href: "/portal/reports" },
-  { icon: MessageSquare, label: "Notes", href: "/portal/notes" },
+  { icon: LayoutDashboard, label: "Portfolio",       href: "/portal" },
+  { icon: Target,          label: "Milestones",      href: "/portal/milestones" },
+  { icon: Activity,        label: "Cycle Outlook",   href: "/portal/cycle" },
+  { icon: PieChart,        label: "Portfolio Plan",  href: "/portal/plan" },
+  { icon: TrendingDown,    label: "Exit Strategy",   href: "/portal/exit" },
+  { icon: RefreshCw,       label: "DCA Planner",     href: "/portal/dca" },
+  { icon: Eye,             label: "Watchlist",       href: "/portal/watchlist" },
+  { icon: Shield,          label: "Bear Protection", href: "/portal/bear" },
+  { icon: Map,             label: "Roadmap",         href: "/portal/roadmap" },
+  { icon: FileText,        label: "Reports",         href: "/portal/reports" },
+  { icon: MessageSquare,   label: "Notes",           href: "/portal/notes" },
+  { icon: Settings,        label: "Settings",        href: "/portal/settings" },
 ];
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {

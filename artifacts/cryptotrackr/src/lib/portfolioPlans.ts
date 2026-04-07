@@ -436,6 +436,105 @@ export const INVESTMENT_GOALS: InvestmentGoal[] = [
   { value: "25x", multiple: 25, label: "25x Target", description: "25x+ — maximum cycle upside" },
 ];
 
+// ── Exit Strategy ─────────────────────────────────────────────────────────
+
+export interface ExitTranche {
+  phaseId: number;
+  phaseLabel: string;
+  btcSellPct: number;
+  ethSellPct: number;
+  solSellPct: number;
+  altsSellPct: number;
+  action: string;
+  urgency: "hold" | "watch" | "reduce" | "exit";
+}
+
+export const EXIT_TRANCHES: ExitTranche[] = [
+  {
+    phaseId: 1,
+    phaseLabel: "Accumulation",
+    btcSellPct: 0,
+    ethSellPct: 0,
+    solSellPct: 0,
+    altsSellPct: 0,
+    action: "Hold all positions. DCA into BTC if below cost basis. Do not sell.",
+    urgency: "hold",
+  },
+  {
+    phaseId: 2,
+    phaseLabel: "Early Bull",
+    btcSellPct: 0,
+    ethSellPct: 0,
+    solSellPct: 0,
+    altsSellPct: 0,
+    action: "Hold all. Consider adding to alts with any free capital. Let the bull run develop.",
+    urgency: "hold",
+  },
+  {
+    phaseId: 3,
+    phaseLabel: "Bull Run",
+    btcSellPct: 0,
+    ethSellPct: 0,
+    solSellPct: 0,
+    altsSellPct: 25,
+    action: "Reduce high-risk alts by 25%. Rotate profits into BTC/ETH. Begin watching exit levels.",
+    urgency: "watch",
+  },
+  {
+    phaseId: 4,
+    phaseLabel: "Late Bull",
+    btcSellPct: 20,
+    ethSellPct: 25,
+    solSellPct: 25,
+    altsSellPct: 50,
+    action: "Sell 20% BTC, 25% ETH/SOL, 50% remaining alts. Move proceeds to stablecoin.",
+    urgency: "reduce",
+  },
+  {
+    phaseId: 5,
+    phaseLabel: "Peak / Distribution",
+    btcSellPct: 50,
+    ethSellPct: 60,
+    solSellPct: 60,
+    altsSellPct: 100,
+    action: "Exit all alts. Sell 50% BTC, 60% ETH/SOL. Protect capital — cycle top is near.",
+    urgency: "exit",
+  },
+  {
+    phaseId: 6,
+    phaseLabel: "Bear Market",
+    btcSellPct: 30,
+    ethSellPct: 100,
+    solSellPct: 100,
+    altsSellPct: 100,
+    action: "Exit remaining ETH/SOL/alts. Reduce BTC another 30%. Prepare stablecoin for re-entry.",
+    urgency: "exit",
+  },
+];
+
+export function getExitPlan(
+  holdings: { btcValue: number; ethValue: number; solValue: number; altsValue: number },
+  currentPhaseId: number
+): Array<ExitTranche & { btcSellUsd: number; ethSellUsd: number; solSellUsd: number; altsSellUsd: number; totalSellUsd: number; cumulativeBtcSoldPct: number }> {
+  let cumulativeBtcSold = 0;
+  return EXIT_TRANCHES.map((t) => {
+    const btcSellUsd = (holdings.btcValue * t.btcSellPct) / 100;
+    const ethSellUsd = (holdings.ethValue * t.ethSellPct) / 100;
+    const solSellUsd = (holdings.solValue * t.solSellPct) / 100;
+    const altsSellUsd = (holdings.altsValue * t.altsSellPct) / 100;
+    cumulativeBtcSold = Math.min(100, cumulativeBtcSold + t.btcSellPct);
+    return {
+      ...t,
+      btcSellUsd,
+      ethSellUsd,
+      solSellUsd,
+      altsSellUsd,
+      totalSellUsd: btcSellUsd + ethSellUsd + solSellUsd + altsSellUsd,
+      cumulativeBtcSoldPct: cumulativeBtcSold,
+    };
+  });
+}
+
 export function getInvestmentGoal(value: string | null | undefined): InvestmentGoal | null {
   return INVESTMENT_GOALS.find((g) => g.value === value) ?? null;
 }

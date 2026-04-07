@@ -50,3 +50,23 @@ export interface Report {
   published_at: string;
   is_global: boolean;
 }
+
+export interface Broadcast {
+  id: string;
+  title: string;
+  content: string;
+  phase_tag: string | null;
+  created_at: string;
+}
+
+export interface PortfolioSnapshot {
+  date: string;
+  value: number;
+}
+
+export interface WatchlistItem {
+  coingecko_id: string;
+  symbol: string;
+  name: string;
+  added_at: string;
+}

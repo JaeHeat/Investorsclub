@@ -212,6 +212,66 @@ export default function PlanPage() {
 
   const projectionMax = projectionValues[projectionValues.length - 1].value;
 
+  // ── Rebalancing Calculator ───────────────────────────────────────────────
+  const btcPrice  = prices["bitcoin"]  ?? 0;
+  const ethPrice  = prices["ethereum"] ?? 0;
+  const solPrice  = prices["solana"]   ?? 0;
+
+  // Use cost basis as fallback when live prices haven't loaded yet
+  const costBasisValues = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const h of holdings) map[h.coingecko_id] = h.amount * h.avg_cost;
+    return map;
+  }, [holdings]);
+  const costBasisTotal = useMemo(() => Object.values(costBasisValues).reduce((a, b) => a + b, 0), [costBasisValues]);
+
+  const rebalanceBase = totalLive > 0 ? totalLive : costBasisTotal;
+  const rebalanceLive = totalLive > 0 ? liveValues : costBasisValues;
+  const rebalancePricesLive = totalLive > 0;
+
+  const rebalanceItems = holdings.length > 0 && rebalanceBase > 0
+    ? [
+        {
+          label: "Bitcoin",
+          color: ASSET_CONFIG.BTC.color,
+          targetPct: plan.btcPct,
+          currentValue: rebalanceLive["bitcoin"] ?? 0,
+          targetValue: rebalanceBase * plan.btcPct / 100,
+          unitPrice: btcPrice,
+          symbol: "BTC",
+        },
+        {
+          label: "Ethereum",
+          color: ASSET_CONFIG.ETH.color,
+          targetPct: plan.ethPct,
+          currentValue: rebalanceLive["ethereum"] ?? 0,
+          targetValue: rebalanceBase * plan.ethPct / 100,
+          unitPrice: ethPrice,
+          symbol: "ETH",
+        },
+        {
+          label: "Solana",
+          color: ASSET_CONFIG.SOL.color,
+          targetPct: plan.solPct,
+          currentValue: rebalanceLive["solana"] ?? 0,
+          targetValue: rebalanceBase * plan.solPct / 100,
+          unitPrice: solPrice,
+          symbol: "SOL",
+        },
+        {
+          label: "Top-25 Alts",
+          color: ASSET_CONFIG.ALTS.color,
+          targetPct: plan.altsPct,
+          currentValue: Object.entries(rebalanceLive)
+            .filter(([id]) => !["bitcoin", "ethereum", "solana"].includes(id))
+            .reduce((s, [, v]) => s + v, 0),
+          targetValue: rebalanceBase * plan.altsPct / 100,
+          unitPrice: 0,
+          symbol: "",
+        },
+      ]
+    : [];
+
   return (
     <PortalLayout>
       {/* Header */}
@@ -414,6 +474,57 @@ export default function PlanPage() {
                 ))}
               </div>
             </div>
+          </Card>
+        )}
+
+        {/* Rebalancing Calculator */}
+        {rebalanceItems.length > 0 && (
+          <Card>
+            <SectionLabel>Rebalancing Calculator</SectionLabel>
+            <p className="text-xs text-[hsl(0_0%_42%)] mb-4">
+              Exact amounts to buy or sell to reach your target allocation based on live prices.
+            </p>
+            <div className="space-y-2">
+              {rebalanceItems.map((item) => {
+                const delta = item.targetValue - item.currentValue;
+                const absDelta = Math.abs(delta);
+                const action = Math.abs(delta) < item.targetValue * 0.02 ? "on-target" : delta > 0 ? "buy" : "sell";
+                const qty = item.unitPrice > 0 ? absDelta / item.unitPrice : null;
+                const actionColor = action === "on-target" ? "#10b981" : action === "buy" ? "#22c55e" : "#ef4444";
+
+                return (
+                  <div
+                    key={item.label}
+                    className="rounded-xl p-3 flex items-center gap-3"
+                    style={{ background: "hsl(0 0% 9%)" }}
+                  >
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-white">{item.label}</p>
+                      <p className="text-[10px] text-[hsl(0_0%_40%)]">
+                        {formatUSD(item.currentValue)} now → {formatUSD(item.targetValue)} target ({item.targetPct}%)
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold" style={{ color: actionColor }}>
+                        {action === "on-target" ? "On target" : `${action === "buy" ? "+" : "−"}${formatUSD(absDelta)}`}
+                      </p>
+                      {qty !== null && action !== "on-target" && (
+                        <p className="text-[10px] text-[hsl(0_0%_40%)]">
+                          ≈ {qty.toFixed(qty > 10 ? 1 : 4)} {item.symbol}
+                        </p>
+                      )}
+                      {action !== "on-target" && item.label === "Top-25 Alts" && (
+                        <p className="text-[10px] text-[hsl(0_0%_38%)]">across {plan.numAlts} alts</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-[hsl(0_0%_30%)] mt-3 leading-relaxed">
+              On-target = within 2% of allocation target. {rebalancePricesLive ? "Amounts use live CoinGecko prices." : "Live prices loading — showing cost-basis estimates."} Execute rebalancing in tranches during normal trading hours.
+            </p>
           </Card>
         )}
 

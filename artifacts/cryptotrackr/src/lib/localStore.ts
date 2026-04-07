@@ -1,4 +1,4 @@
-import type { ClientProfile, HoldingAsset, Milestone, RoadmapItem, Report } from "./types";
+import type { ClientProfile, HoldingAsset, Milestone, RoadmapItem, Report, Broadcast, PortfolioSnapshot, WatchlistItem } from "./types";
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -19,7 +19,7 @@ function uid() {
 
 // ── Seed data on first load ────────────────────────────────────────────────
 
-const SEED_KEY = "cryptotrackr-seeded-v4";
+const SEED_KEY = "cryptotrackr-seeded-v5";
 
 function seedIfEmpty() {
   if (localStorage.getItem(SEED_KEY)) return;
@@ -104,11 +104,46 @@ function seedIfEmpty() {
     },
   ];
 
+  const broadcasts: Broadcast[] = [
+    {
+      id: uid(),
+      title: "Cycle Update: BTC Consolidating — Alts Rotation Window Open",
+      content:
+        "Bitcoin has been consolidating in the $78K–$88K range for the past 3 weeks following the peak at $126K in October 2025. On-chain data shows long-term holders re-accumulating. This is historically a strong altcoin rotation window — Ethereum and SOL are showing relative strength. If you're underallocated to your target, this is the window to rebalance into alts at discounted prices.",
+      phase_tag: "Bear Market Watch",
+      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: uid(),
+      title: "Action Required: Review Your Exit Strategy",
+      content:
+        "Given the current macro environment and BTC's position relative to the cycle peak, now is the time to review your exit strategy tranches. Log in to your Portfolio Plan and Exit Strategy pages to confirm your sell levels are set. We will be issuing alerts at key price levels as part of your cycle management service.",
+      phase_tag: "Portfolio Action",
+      created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ];
+
+  const snapshots: Record<string, PortfolioSnapshot[]> = {
+    "client-1": Array.from({ length: 12 }, (_, i) => {
+      const daysAgo = (11 - i) * 7;
+      const base = 142000;
+      const growth = [0, 3200, 8100, 5400, 12600, 9800, 18400, 22000, 15300, 31000, 26000, 38000][i];
+      return {
+        date: new Date(Date.now() - daysAgo * 86400000).toISOString().slice(0, 10),
+        value: base + growth,
+      };
+    }),
+  };
+
   write("ct-profiles", profiles);
   write("ct-holdings", holdings);
   write("ct-roadmap", roadmapItems);
   write("ct-reports", reports);
   write("ct-milestones", [] as Milestone[]);
+  write("ct-broadcasts", broadcasts);
+  write("ct-snapshots", snapshots);
+  write("ct-watchlist", {} as Record<string, WatchlistItem[]>);
+  write("ct-bear-checklist", {} as Record<string, Record<string, boolean>>);
   localStorage.setItem(SEED_KEY, "1");
 }
 
@@ -224,4 +259,90 @@ export function addReport(report: Omit<Report, "id" | "published_at">): Report {
   all.unshift(record);
   write("ct-reports", all);
   return record;
+}
+
+// ── Broadcasts ─────────────────────────────────────────────────────────────
+
+export function getBroadcasts(): Broadcast[] {
+  return read<Broadcast[]>("ct-broadcasts", []);
+}
+
+export function addBroadcast(b: Omit<Broadcast, "id" | "created_at">): Broadcast {
+  const all = read<Broadcast[]>("ct-broadcasts", []);
+  const record: Broadcast = { ...b, id: uid(), created_at: new Date().toISOString() };
+  all.unshift(record);
+  write("ct-broadcasts", all);
+  return record;
+}
+
+export function deleteBroadcast(id: string): void {
+  const all = read<Broadcast[]>("ct-broadcasts", []).filter((b) => b.id !== id);
+  write("ct-broadcasts", all);
+}
+
+// ── Portfolio Snapshots ────────────────────────────────────────────────────
+
+export function getPortfolioSnapshots(userId: string): PortfolioSnapshot[] {
+  const all = read<Record<string, PortfolioSnapshot[]>>("ct-snapshots", {});
+  return all[userId] ?? [];
+}
+
+export function savePortfolioSnapshot(userId: string, value: number): void {
+  const all = read<Record<string, PortfolioSnapshot[]>>("ct-snapshots", {});
+  const existing = all[userId] ?? [];
+  const today = new Date().toISOString().slice(0, 10);
+  const withoutToday = existing.filter((s) => s.date !== today);
+  const updated = [...withoutToday, { date: today, value }].slice(-52);
+  all[userId] = updated;
+  write("ct-snapshots", all);
+}
+
+// ── Watchlist ──────────────────────────────────────────────────────────────
+
+export function getWatchlist(userId: string): WatchlistItem[] {
+  const all = read<Record<string, WatchlistItem[]>>("ct-watchlist", {});
+  return all[userId] ?? [];
+}
+
+export function addWatchlistItem(userId: string, item: Omit<WatchlistItem, "added_at">): WatchlistItem {
+  const all = read<Record<string, WatchlistItem[]>>("ct-watchlist", {});
+  const existing = all[userId] ?? [];
+  if (existing.some((w) => w.coingecko_id === item.coingecko_id)) return existing.find((w) => w.coingecko_id === item.coingecko_id)!;
+  const record: WatchlistItem = { ...item, added_at: new Date().toISOString() };
+  all[userId] = [...existing, record];
+  write("ct-watchlist", all);
+  return record;
+}
+
+export function removeWatchlistItem(userId: string, coingecko_id: string): void {
+  const all = read<Record<string, WatchlistItem[]>>("ct-watchlist", {});
+  all[userId] = (all[userId] ?? []).filter((w) => w.coingecko_id !== coingecko_id);
+  write("ct-watchlist", all);
+}
+
+// ── Bear Market Checklist ──────────────────────────────────────────────────
+
+export function getBearChecklist(userId: string): Record<string, boolean> {
+  const all = read<Record<string, Record<string, boolean>>>("ct-bear-checklist", {});
+  return all[userId] ?? {};
+}
+
+export function setBearChecklistItem(userId: string, itemId: string, checked: boolean): void {
+  const all = read<Record<string, Record<string, boolean>>>("ct-bear-checklist", {});
+  all[userId] = { ...(all[userId] ?? {}), [itemId]: checked };
+  write("ct-bear-checklist", all);
+}
+
+// ── Client Settings Update ─────────────────────────────────────────────────
+
+export function updateClientSettings(
+  userId: string,
+  updates: Partial<Pick<ClientProfile, "risk_tolerance" | "investment_goal" | "initial_portfolio_value" | "full_name" | "timezone" | "country">>
+): void {
+  const all = read<ClientProfile[]>("ct-profiles", []);
+  const idx = all.findIndex((p) => p.user_id === userId);
+  if (idx >= 0) {
+    all[idx] = { ...all[idx], ...updates };
+    write("ct-profiles", all);
+  }
 }

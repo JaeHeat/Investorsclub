@@ -1,13 +1,15 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
-import { Bitcoin, LayoutDashboard, Users, Activity, PieChart, LogOut, Menu, X } from "lucide-react";
+import { Bitcoin, LayoutDashboard, Users, Activity, PieChart, LogOut, Menu, X, Radio, BarChart3 } from "lucide-react";
 import { useState } from "react";
 
 const NAV_ITEMS = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-  { icon: Users, label: "Clients", href: "/admin/clients" },
-  { icon: Activity, label: "Cycle Intel", href: "/admin/cycle" },
-  { icon: PieChart, label: "Portfolio Plans", href: "/admin/plans" },
+  { icon: LayoutDashboard, label: "Dashboard",        href: "/admin" },
+  { icon: Users,           label: "Clients",          href: "/admin/clients" },
+  { icon: Activity,        label: "Cycle Intel",      href: "/admin/cycle" },
+  { icon: PieChart,        label: "Portfolio Plans",  href: "/admin/plans" },
+  { icon: Radio,           label: "Broadcasts",       href: "/admin/broadcast" },
+  { icon: BarChart3,       label: "Analytics",        href: "/admin/analytics" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
