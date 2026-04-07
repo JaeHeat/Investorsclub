@@ -3,15 +3,9 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { upsertClientProfile } from "@/lib/localStore";
 import { Bitcoin, ChevronRight, ChevronLeft, Check, Loader2 } from "lucide-react";
+import { INVESTMENT_GOALS } from "@/lib/portfolioPlans";
 
 const STEPS = 3;
-
-const INVESTMENT_GOALS = [
-  { value: "long_term_hold", label: "Long-term hold", description: "Hold through multiple cycles" },
-  { value: "cycle_top_exit", label: "Cycle top exit", description: "Exit near cycle peak" },
-  { value: "partial_exits", label: "Partial exits", description: "Take profits along the way" },
-  { value: "other", label: "Other", description: "Custom strategy" },
-];
 
 const RISK_LEVELS = [
   { value: "conservative", label: "Conservative", description: "Capital preservation first" },
@@ -198,10 +192,10 @@ export default function OnboardingPage() {
           {step === 3 && (
             <div data-testid="onboarding-step-3">
               <h2 className="text-xl font-semibold text-white mb-1">Investment strategy</h2>
-              <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Help us understand your goals</p>
+              <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Help us understand your return goals</p>
               <div className="space-y-6">
                 <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">Investment goal</label>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">Return target this cycle</label>
                   <div className="grid grid-cols-2 gap-2">
                     {INVESTMENT_GOALS.map((g) => (
                       <button
@@ -215,7 +209,7 @@ export default function OnboardingPage() {
                           border: `1px solid ${form.investment_goal === g.value ? "rgba(247,147,26,0.4)" : "hsl(0 0% 16%)"}`,
                         }}
                       >
-                        <p className="text-xs font-medium text-white">{g.label}</p>
+                        <p className="text-sm font-bold" style={{ color: form.investment_goal === g.value ? "#F7931A" : "white" }}>{g.label}</p>
                         <p className="text-[10px] text-[hsl(0_0%_45%)] mt-0.5">{g.description}</p>
                       </button>
                     ))}

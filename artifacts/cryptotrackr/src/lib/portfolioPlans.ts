@@ -360,3 +360,122 @@ export const ASSET_CONFIG = {
   SOL: { color: "#9945FF", label: "Solana", key: "solPct" as const },
   ALTS: { color: "#10b981", label: "Top-25 Alts", key: "altsPct" as const },
 } as const;
+
+// ── Cycle Projection Multipliers ──────────────────────────────────────────────
+// "From current price to projected cycle peak" multipliers per asset class.
+// Conservative = weak cycle (2022-style), Base = historical median, Optimistic = 2020-style run.
+// Based on: BTC $200K-$400K peak projection from current ~$83K; ETH/SOL historically
+// outperform BTC on % in strong cycles but underperform in weak ones.
+
+export interface ScenarioMultipliers {
+  btc: number;
+  eth: number;
+  sol: number;
+  alts: number;
+}
+
+export interface CycleScenario {
+  key: "conservative" | "base" | "optimistic";
+  label: string;
+  color: string;
+  multipliers: ScenarioMultipliers;
+  description: string;
+}
+
+export const CYCLE_SCENARIOS: CycleScenario[] = [
+  {
+    key: "conservative",
+    label: "Conservative",
+    color: "#10b981",
+    multipliers: { btc: 2.5, eth: 2.0, sol: 3.0, alts: 2.0 },
+    description: "Weak cycle — BTC reaches ~$200K, alts underperform. Similar to 2022–2025.",
+  },
+  {
+    key: "base",
+    label: "Base",
+    color: "#F7931A",
+    multipliers: { btc: 3.5, eth: 5.0, sol: 7.0, alts: 5.0 },
+    description: "Historical median — BTC reaches ~$250K–$300K, ETH and SOL outperform.",
+  },
+  {
+    key: "optimistic",
+    label: "Optimistic",
+    color: "#a855f7",
+    multipliers: { btc: 5.0, eth: 8.0, sol: 12.0, alts: 8.0 },
+    description: "Strong cycle — BTC reaches $350K–$400K. ETH and SOL run hard. 2020-style.",
+  },
+];
+
+export function calculateProjection(
+  currentPortfolioValue: number,
+  plan: PortfolioPlan,
+  scenario: CycleScenario
+): number {
+  const m = scenario.multipliers;
+  return (
+    currentPortfolioValue * (plan.btcPct / 100) * m.btc +
+    currentPortfolioValue * (plan.ethPct / 100) * m.eth +
+    currentPortfolioValue * (plan.solPct / 100) * m.sol +
+    currentPortfolioValue * (plan.altsPct / 100) * m.alts
+  );
+}
+
+// ── Investment Goal Targets ───────────────────────────────────────────────────
+
+export interface InvestmentGoal {
+  value: string;
+  multiple: number;
+  label: string;
+  description: string;
+}
+
+export const INVESTMENT_GOALS: InvestmentGoal[] = [
+  { value: "2x", multiple: 2, label: "2x Target", description: "Double my portfolio this cycle" },
+  { value: "5x", multiple: 5, label: "5x Target", description: "5x return by the cycle peak" },
+  { value: "10x", multiple: 10, label: "10x Target", description: "10x — life-changing returns" },
+  { value: "25x", multiple: 25, label: "25x Target", description: "25x+ — maximum cycle upside" },
+];
+
+export function getInvestmentGoal(value: string | null | undefined): InvestmentGoal | null {
+  return INVESTMENT_GOALS.find((g) => g.value === value) ?? null;
+}
+
+// Which scenario achieves the goal multiple?
+export function assessGoal(
+  currentValue: number,
+  plan: PortfolioPlan,
+  goalMultiple: number
+): { achievedIn: CycleScenario["key"] | "none"; message: string; messageColor: string } {
+  const targetValue = currentValue * goalMultiple;
+
+  const conservative = calculateProjection(currentValue, plan, CYCLE_SCENARIOS[0]);
+  const base = calculateProjection(currentValue, plan, CYCLE_SCENARIOS[1]);
+  const optimistic = calculateProjection(currentValue, plan, CYCLE_SCENARIOS[2]);
+
+  if (conservative >= targetValue) {
+    return {
+      achievedIn: "conservative",
+      message: "Achievable even in a weak cycle.",
+      messageColor: "#10b981",
+    };
+  }
+  if (base >= targetValue) {
+    return {
+      achievedIn: "base",
+      message: "On track under base scenario projections.",
+      messageColor: "#F7931A",
+    };
+  }
+  if (optimistic >= targetValue) {
+    return {
+      achievedIn: "optimistic",
+      message: "Requires a strong cycle. Achievable but not guaranteed.",
+      messageColor: "#a855f7",
+    };
+  }
+  return {
+    achievedIn: "none",
+    message: "Target exceeds optimistic projections for this allocation.",
+    messageColor: "#ef4444",
+  };
+}

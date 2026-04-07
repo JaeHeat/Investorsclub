@@ -1,7 +1,11 @@
 import AdminLayout from "@/components/layout/AdminLayout";
 import { getAllClientProfiles } from "@/lib/localStore";
-import { getPortfolioPlan, getCuratedAlts, ASSET_CONFIG, ALT_CATEGORY_COLORS } from "@/lib/portfolioPlans";
-import { PieChart, Shield, TrendingUp, Layers, Users, Info } from "lucide-react";
+import {
+  getPortfolioPlan, getCuratedAlts, ASSET_CONFIG, ALT_CATEGORY_COLORS,
+  CYCLE_SCENARIOS, calculateProjection, getInvestmentGoal,
+} from "@/lib/portfolioPlans";
+import { formatUSD } from "@/lib/utils";
+import { PieChart, Shield, TrendingUp, Layers, Users, Info, Target } from "lucide-react";
 
 function AllocationBar({ btc, eth, sol, alts }: { btc: number; eth: number; sol: number; alts: number }) {
   const segments = [
@@ -154,6 +158,37 @@ export default function AdminPlansPage() {
                   <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[hsl(0_0%_35%)]" />
                   <p className="text-xs text-[hsl(0_0%_48%)] leading-relaxed">{plan.rationale}</p>
                 </div>
+
+                {/* Goal + base projection */}
+                {(() => {
+                  const goal = getInvestmentGoal(client.investment_goal);
+                  const baseValue = client.initial_portfolio_value ?? 0;
+                  const baseProjection = baseValue > 0
+                    ? calculateProjection(baseValue, plan, CYCLE_SCENARIOS[1])
+                    : null;
+                  const baseMultiple = baseProjection && baseValue > 0
+                    ? baseProjection / baseValue
+                    : null;
+                  return (
+                    <div className="flex items-center justify-between gap-3 mb-4 px-3 py-2.5 rounded-xl" style={{ background: "hsl(0 0% 10%)" }}>
+                      <div className="flex items-center gap-2">
+                        <Target className="w-3.5 h-3.5 shrink-0" style={{ color: "#F7931A" }} />
+                        <div>
+                          <p className="text-[11px] font-semibold text-[hsl(0_0%_55%)]">Return goal</p>
+                          <p className="text-xs font-bold text-white">{goal ? goal.label : "Not set"}</p>
+                        </div>
+                      </div>
+                      {baseProjection !== null && (
+                        <div className="text-right">
+                          <p className="text-[11px] text-[hsl(0_0%_45%)]">Base projection</p>
+                          <p className="text-xs font-bold text-white">
+                            {formatUSD(baseProjection)} <span className="text-[hsl(0_0%_50%)] font-normal">({baseMultiple?.toFixed(1)}x)</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* Curated alts */}
                 {alts.length > 0 && (

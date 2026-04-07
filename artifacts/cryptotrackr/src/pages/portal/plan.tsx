@@ -9,12 +9,17 @@ import {
   getCuratedAlts,
   ASSET_CONFIG,
   ALT_CATEGORY_COLORS,
+  CYCLE_SCENARIOS,
+  INVESTMENT_GOALS,
+  calculateProjection,
+  assessGoal,
+  getInvestmentGoal,
   type CuratedAlt,
 } from "@/lib/portfolioPlans";
 import { getCurrentCyclePhase } from "@/lib/cycleData";
 import {
   PieChart, Layers, TrendingUp, Shield, Zap,
-  AlertTriangle, Info, ChevronRight,
+  AlertTriangle, Info, ChevronRight, Target,
 } from "lucide-react";
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -191,6 +196,22 @@ export default function PlanPage() {
 
   const isBearPhase = currentPhase.id === 6;
 
+  // ── Investment goal + cycle projections ─────────────────────────────────────
+  const goal = getInvestmentGoal(clientProfile?.investment_goal);
+  const projectionBase = totalLive > 0 ? totalLive : initialValue;
+
+  const projectionValues = CYCLE_SCENARIOS.map((s) => ({
+    scenario: s,
+    value: calculateProjection(projectionBase, plan, s),
+    multiple: calculateProjection(projectionBase, plan, s) / (projectionBase || 1),
+  }));
+
+  const goalAssessment = goal && projectionBase > 0
+    ? assessGoal(projectionBase, plan, goal.multiple)
+    : null;
+
+  const projectionMax = projectionValues[projectionValues.length - 1].value;
+
   return (
     <PortalLayout>
       {/* Header */}
@@ -210,6 +231,14 @@ export default function PlanPage() {
           >
             {plan.risk}
           </span>
+          {goal && (
+            <span
+              className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}
+            >
+              {goal.label}
+            </span>
+          )}
         </div>
         <p className="text-sm text-[hsl(0_0%_42%)]">
           Your recommended allocation based on portfolio size, risk profile, and 3-cycle data.
@@ -245,6 +274,108 @@ export default function PlanPage() {
             <p className="text-xs text-[hsl(0_0%_48%)] leading-relaxed">{plan.rationale}</p>
           </div>
         </Card>
+
+        {/* Cycle Projections */}
+        {projectionBase > 0 && (
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <SectionLabel>Cycle Projections — 2026 to 2029</SectionLabel>
+              {goal && goalAssessment && (
+                <span
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full mb-3 shrink-0"
+                  style={{ background: `${goalAssessment.messageColor}14`, color: goalAssessment.messageColor }}
+                >
+                  {goal.label}
+                </span>
+              )}
+            </div>
+
+            {/* Goal target line */}
+            {goal && (
+              <div
+                className="rounded-xl p-3 mb-4 flex items-center justify-between gap-3"
+                style={{ background: "hsl(0 0% 9%)", border: "1px solid hsl(0 0% 15%)" }}
+              >
+                <div className="flex items-center gap-2">
+                  <Target className="w-3.5 h-3.5 shrink-0" style={{ color: "#F7931A" }} />
+                  <div>
+                    <p className="text-xs font-semibold text-white">Your goal: {goal.label}</p>
+                    <p className="text-[10px] text-[hsl(0_0%_42%)]">{goal.description}</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-bold text-white">{formatUSD(projectionBase * goal.multiple)}</p>
+                  <p className="text-[10px] text-[hsl(0_0%_40%)]">target value</p>
+                </div>
+              </div>
+            )}
+
+            {/* Scenario rows */}
+            <div className="space-y-3">
+              {projectionValues.map(({ scenario, value, multiple }) => {
+                const barPct = Math.min(100, (value / projectionMax) * 100);
+                const goalTargetValue = goal ? projectionBase * goal.multiple : null;
+                const goalBarPct = goalTargetValue ? Math.min(100, (goalTargetValue / projectionMax) * 100) : null;
+                const achievesGoal = goalTargetValue !== null && value >= goalTargetValue;
+
+                return (
+                  <div key={scenario.key} className="rounded-xl p-3" style={{ background: "hsl(0 0% 9%)" }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: scenario.color }} />
+                        <p className="text-xs font-semibold text-white">{scenario.label}</p>
+                        {achievesGoal && goal && (
+                          <span
+                            className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                            style={{ background: `${scenario.color}18`, color: scenario.color }}
+                          >
+                            Goal achieved
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-white">{formatUSD(value)}</p>
+                        <p className="text-[10px] text-[hsl(0_0%_40%)]">{multiple.toFixed(1)}x</p>
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="h-1.5 rounded-full relative overflow-hidden" style={{ background: "hsl(0 0% 14%)" }}>
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${barPct}%`, background: scenario.color, opacity: 0.75 }}
+                      />
+                      {/* Goal marker line */}
+                      {goalBarPct !== null && (
+                        <div
+                          className="absolute top-0 bottom-0 w-px"
+                          style={{ left: `${goalBarPct}%`, background: "rgba(255,255,255,0.4)" }}
+                        />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-[hsl(0_0%_38%)] mt-1.5">{scenario.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Assessment */}
+            {goalAssessment && (
+              <div
+                className="mt-4 pt-4 flex items-start gap-2"
+                style={{ borderTop: "1px solid hsl(0 0% 12%)" }}
+              >
+                <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: goalAssessment.messageColor }} />
+                <p className="text-xs leading-relaxed" style={{ color: goalAssessment.messageColor }}>
+                  {goalAssessment.message}
+                </p>
+              </div>
+            )}
+
+            <p className="text-[10px] text-[hsl(0_0%_30%)] mt-3 leading-relaxed">
+              Projections are based on {formatUSD(projectionBase)} current portfolio value applying historical per-asset cycle multipliers. Not financial advice — past cycles don't guarantee future results.
+            </p>
+          </Card>
+        )}
 
         {/* Current vs Target */}
         {currentSegments.length > 0 && (

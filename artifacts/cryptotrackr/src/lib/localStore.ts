@@ -19,7 +19,7 @@ function uid() {
 
 // ── Seed data on first load ────────────────────────────────────────────────
 
-const SEED_KEY = "cryptotrackr-seeded-v3";
+const SEED_KEY = "cryptotrackr-seeded-v4";
 
 function seedIfEmpty() {
   if (localStorage.getItem(SEED_KEY)) return;
@@ -37,7 +37,7 @@ function seedIfEmpty() {
       timezone: "America/New_York",
       btc_holdings: 1.8,
       avg_cost_basis: 35000,
-      investment_goal: "cycle_top_exit",
+      investment_goal: "5x",
       risk_tolerance: "moderate",
       time_horizon: "2_3_years",
       notes: "Looking to exit near the cycle top and re-enter in the bear market. Comfortable with medium drawdowns but wants to protect the $150K base.",
