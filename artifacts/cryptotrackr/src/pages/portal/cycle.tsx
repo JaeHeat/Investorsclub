@@ -132,11 +132,27 @@ export default function CyclePage() {
               <div
                 key={s.label}
                 className="rounded-xl p-4"
-                style={{ background: "hsl(0 0% 9%)", borderLeft: `3px solid ${s.color}` }}
+                style={{
+                  background: s.confirmed ? "rgba(6,182,212,0.05)" : "hsl(0 0% 9%)",
+                  borderLeft: `3px solid ${s.color}`,
+                  border: s.confirmed ? `1px solid rgba(6,182,212,0.25)` : undefined,
+                  borderLeftWidth: "3px",
+                  borderLeftColor: s.color,
+                }}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-white">{s.label}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold text-white">{s.label}</p>
+                      {s.confirmed && (
+                        <span
+                          className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide"
+                          style={{ background: "rgba(6,182,212,0.15)", color: "#06b6d4" }}
+                        >
+                          Floor confirmed
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-[hsl(0_0%_42%)] mt-0.5">{s.basis}</p>
                   </div>
                   <div className="text-right shrink-0">
@@ -156,13 +172,14 @@ export default function CyclePage() {
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: "hsl(0 0% 14%)" }}>
                     <div
                       className="h-1 rounded-full"
-                      style={{
-                        width: `${s.probability}%`,
-                        background: s.color,
-                      }}
+                      style={{ width: `${s.probability}%`, background: s.color }}
                     />
                   </div>
-                  <p className="text-[10px] text-[hsl(0_0%_32%)] mt-1">{s.probability}% probability estimate · {s.targetDate}</p>
+                  <p className="text-[10px] text-[hsl(0_0%_32%)] mt-1">
+                    {s.confirmed
+                      ? `${s.probability}% probability · ${s.targetDate}`
+                      : `${s.probability}% probability estimate · ${s.targetDate}`}
+                  </p>
                 </div>
               </div>
             );

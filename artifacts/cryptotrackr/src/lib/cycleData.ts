@@ -179,6 +179,16 @@ export const KEY_DATES = [
 
 export const BEAR_SCENARIOS = [
   {
+    label: "Already Bottomed",
+    drawdownPct: -41,
+    price: Math.round(CURRENT_CYCLE_PEAK * 0.59),
+    targetDate: "Floor set · Q1 2025",
+    basis: "BTC held $74K — structure intact, re-accumulation phase underway",
+    color: "#06b6d4",
+    probability: 35,
+    confirmed: true,
+  },
+  {
     label: "Conservative",
     drawdownPct: -60,
     price: Math.round(CURRENT_CYCLE_PEAK * 0.40),
@@ -186,6 +196,7 @@ export const BEAR_SCENARIOS = [
     basis: "Institutional support holds — StanChart model",
     color: "#22c55e",
     probability: 25,
+    confirmed: false,
   },
   {
     label: "Base Case",
@@ -195,6 +206,7 @@ export const BEAR_SCENARIOS = [
     basis: "Midpoint of historical trend — fits H+30mo timing",
     color: "#F7931A",
     probability: 50,
+    confirmed: false,
   },
   {
     label: "Aggressive",
@@ -204,6 +216,7 @@ export const BEAR_SCENARIOS = [
     basis: "Closer to 2022 pattern (-77%) — macro headwinds",
     color: "#ef4444",
     probability: 25,
+    confirmed: false,
   },
 ];
 
