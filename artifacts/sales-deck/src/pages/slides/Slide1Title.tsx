@@ -26,7 +26,7 @@ export default function Slide1Title() {
           ₿ Application Only · $5,000 / year
         </div>
         <h1 style={{ fontSize: "6.5vw", fontWeight: 900, margin: "0 0 2vh 0", lineHeight: 1.05, letterSpacing: "-0.04em" }}>
-          Bitcoin Daily<br /><span style={{ color: ORANGE }}>Advisory</span>
+          Bitcoin Daily<br /><span style={{ color: ORANGE }}>Consulting</span>
         </h1>
         <p style={{ fontSize: "1.75vw", fontWeight: 300, color: "rgba(255,255,255,0.65)", margin: "0 0 6vh 0", lineHeight: 1.55, maxWidth: "52vw" }}>
           Institutional-grade Bitcoin cycle intelligence, personalized portfolio strategy, and private client access — for those who refuse to leave returns on the table.
@@ -53,7 +53,7 @@ export default function Slide1Title() {
         <div style={{ height: "0.7vw", width: "11vw", backgroundColor: "rgba(255,255,255,0.05)", borderRadius: "0.2vw" }} />
       </div>
 
-      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY ADVISORY, LLC.</div>
+      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
     </div>
   );
 }

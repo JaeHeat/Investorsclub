@@ -17,7 +17,7 @@ export default function Slide11Watchlist() {
         <div style={{ fontSize: "1.1vw", fontWeight: 700 }}>CryptoTrackr</div>
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
-      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY ADVISORY, LLC.</div>
+      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
       <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>11 / 15</div>
 
       <div style={{ position: "relative", zIndex: 10, flex: 1, display: "flex", flexDirection: "column", gap: "3vh", paddingLeft: "7vw" }}>
@@ -26,7 +26,7 @@ export default function Slide11Watchlist() {
           We watch<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>so you don't have to.</span>
         </h2>
         <p style={{ fontSize: "1.3vw", fontWeight: 300, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, maxWidth: "33vw", margin: 0 }}>
-          Your advisor monitors 20+ on-chain metrics and market signals — and interprets them in plain language for your specific portfolio context.
+          Your consultant monitors 20+ on-chain metrics and market signals — and interprets them in plain language for your specific portfolio context.
         </p>
         <div style={{ display: "flex", gap: "1.5vw" }}>
           <div style={{ textAlign: "center" }}>

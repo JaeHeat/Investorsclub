@@ -5,7 +5,7 @@ export default function Slide15Closing() {
     "DCA accumulation model",
     "Bear market protection framework",
     "Private portal — 24/7 access",
-    "Private advisor broadcasts",
+    "Private consultant broadcasts",
     "4× quarterly 1-on-1 sessions",
     "Watchlist & cycle signal monitoring",
     "Annual strategy renewal",
@@ -22,7 +22,7 @@ export default function Slide15Closing() {
         <div style={{ fontSize: "1.1vw", fontWeight: 700 }}>CryptoTrackr</div>
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
-      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY ADVISORY, LLC.</div>
+      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
       <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>15 / 15</div>
 
       <div style={{ position: "relative", zIndex: 10, flex: 1, paddingLeft: "7vw", display: "flex", flexDirection: "column", gap: "3vh" }}>
@@ -33,7 +33,7 @@ export default function Slide15Closing() {
           <div style={{ padding: "1.8vh 3.5vw", backgroundColor: "#F7931A", color: "#0C0F1A", borderRadius: "0.5vw", fontSize: "1.2vw", fontWeight: 700, boxShadow: "0 1vh 3vh rgba(247,147,26,0.3)" }}>Apply Now</div>
           <div style={{ padding: "1.8vh 3.5vw", backgroundColor: "rgba(255,255,255,0.05)", color: "#FFF", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5vw", fontSize: "1.2vw", fontWeight: 500 }}>Schedule a Call</div>
         </div>
-        <div style={{ fontSize: "0.95vw", color: "rgba(255,255,255,0.3)" }}>Acceptance by application only. Limited seats available.</div>
+        <div style={{ fontSize: "0.95vw", color: "rgba(255,255,255,0.3)" }}>Acceptance by application only. Limited seats available. This is educational consultation, not financial advice.</div>
       </div>
 
       <div style={{ position: "relative", zIndex: 10, flex: 1, paddingRight: "7vw" }}>

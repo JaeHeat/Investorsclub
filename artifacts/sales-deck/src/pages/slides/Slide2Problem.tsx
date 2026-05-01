@@ -5,7 +5,7 @@ const HEADER = ({ slide, total }: { slide: string; total: string }) => (
       <div style={{ fontSize: "1.1vw", fontWeight: 700, letterSpacing: "-0.02em" }}>CryptoTrackr</div>
     </div>
     <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)", zIndex: 10 }}>2026</div>
-    <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY ADVISORY, LLC.</div>
+    <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
     <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>{slide} / {total}</div>
   </>
 );
@@ -35,7 +35,7 @@ export default function Slide2Problem() {
           {[
             { stat: "92%", label: "of retail holders", desc: "have no defined exit strategy before a market peak." },
             { stat: "3×", label: "average drawdown", desc: "experienced by those who held through the 2021–2022 cycle without guidance." },
-            { stat: "$0", label: "in structured advice", desc: "is what most people spend on a $100K+ position — until it's too late." },
+            { stat: "$0", label: "in structured guidance", desc: "is what most people spend on a $100K+ position — until it's too late." },
           ].map((item, i) => (
             <div key={i} style={{ flex: 1 }}>
               <div style={{ fontSize: "4vw", fontWeight: 900, color: "#F7931A", lineHeight: 1, marginBottom: "1vh" }}>{item.stat}</div>

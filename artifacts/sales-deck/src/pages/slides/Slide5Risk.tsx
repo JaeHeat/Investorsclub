@@ -31,7 +31,7 @@ export default function Slide5Risk() {
         ))}
       </div>
 
-      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(10,10,10,0.45)", letterSpacing: "0.05em", zIndex: 10 }}>BITCOIN DAILY ADVISORY, LLC.</div>
+      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(10,10,10,0.45)", letterSpacing: "0.05em", zIndex: 10 }}>BITCOIN DAILY CONSULTING, LLC.</div>
     </div>
   );
 }

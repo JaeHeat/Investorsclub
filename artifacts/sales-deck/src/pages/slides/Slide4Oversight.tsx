@@ -15,7 +15,7 @@ export default function Slide4Oversight() {
         <div style={{ fontSize: "1.1vw", fontWeight: 700 }}>CryptoTrackr</div>
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
-      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY ADVISORY, LLC.</div>
+      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
       <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>04 / 15</div>
 
       <div style={{ position: "relative", zIndex: 10, flex: 1, display: "flex", flexDirection: "column", gap: "3vh", paddingLeft: "7vw" }}>
@@ -24,7 +24,7 @@ export default function Slide4Oversight() {
           Ongoing<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>Cycle Oversight</span>
         </h2>
         <p style={{ fontSize: "1.3vw", fontWeight: 300, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, maxWidth: "35vw", margin: 0 }}>
-          Your advisor tracks the market for you — continuously — and delivers structured guidance at every major inflection point.
+          Your consultant tracks the market for you — continuously — and delivers structured guidance at every major inflection point.
         </p>
         <div style={{ display: "flex", gap: "1vw", flexWrap: "wrap" as const }}>
           {["Cycle Phase Alerts", "Position Guidance", "1-on-1 Calls"].map((tag, i) => (

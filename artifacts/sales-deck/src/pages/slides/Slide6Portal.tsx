@@ -3,7 +3,7 @@ export default function Slide6Portal() {
     { icon: "📊", title: "Portfolio Dashboard", desc: "Live holdings summary, allocation view, performance vs cost-basis, and milestone tracking in one place." },
     { icon: "🎯", title: "Exit Strategy Planner", desc: "Your phase-by-phase distribution schedule — when to sell, how much, and at what price targets." },
     { icon: "🔄", title: "DCA Projections", desc: "Dollar-cost averaging modeler showing projected cost basis, accumulation pace, and compound scenarios." },
-    { icon: "📡", title: "Advisor Broadcasts", desc: "Private market commentary and cycle alerts delivered directly to your portal — not email, not Twitter." },
+    { icon: "📡", title: "Consultant Broadcasts", desc: "Private market commentary and cycle alerts delivered directly to your portal — not email, not Twitter." },
   ];
 
   return (
@@ -17,7 +17,7 @@ export default function Slide6Portal() {
         <div style={{ fontSize: "1.1vw", fontWeight: 700 }}>CryptoTrackr</div>
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
-      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY ADVISORY, LLC.</div>
+      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
       <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>06 / 15</div>
 
       <div style={{ position: "relative", zIndex: 10, width: "82vw" }}>

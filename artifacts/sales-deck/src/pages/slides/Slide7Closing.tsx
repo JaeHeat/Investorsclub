@@ -16,7 +16,7 @@ export default function Slide7Closing() {
         <div style={{ fontSize: "1.1vw", fontWeight: 700 }}>CryptoTrackr</div>
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
-      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY ADVISORY, LLC.</div>
+      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
       <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>07 / 15</div>
 
       <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", maxWidth: "65vw", padding: "5vw", backgroundColor: "rgba(19,23,38,0.7)", backdropFilter: "blur(2vw)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "2vw", boxShadow: "0 4vh 8vh rgba(0,0,0,0.5)" }}>
@@ -38,7 +38,7 @@ export default function Slide7Closing() {
           <div style={{ padding: "1.8vh 4vw", backgroundColor: "#F7931A", color: "#0C0F1A", borderRadius: "0.5vw", fontSize: "1.2vw", fontWeight: 700, boxShadow: "0 1vh 3vh rgba(247,147,26,0.3)" }}>Apply Now</div>
           <div style={{ padding: "1.8vh 4vw", backgroundColor: "rgba(255,255,255,0.05)", color: "#FFF", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5vw", fontSize: "1.2vw", fontWeight: 500 }}>Schedule a Call</div>
         </div>
-        <div style={{ marginTop: "2.5vh", fontSize: "0.95vw", color: "rgba(255,255,255,0.35)" }}>Acceptance by application only. Limited seats available.</div>
+        <div style={{ marginTop: "2.5vh", fontSize: "0.95vw", color: "rgba(255,255,255,0.35)" }}>Acceptance by application only. Limited seats available. This is educational consultation, not financial advice.</div>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ export default function Slide14WhyUs() {
     { icon: "🔒", title: "Truly Private", desc: "Your portfolio details, strategy, and communications are never shared. One consultant, one client relationship." },
     { icon: "📝", title: "Written Strategy", desc: "You receive a documented, written plan — not vague verbal guidance. Something you can reference, revise, and execute with confidence." },
     { icon: "⚡", title: "Timely Alerts", desc: "When conditions change materially — price action, on-chain signals, macro — you hear about it within 24 hours, not after the fact." },
-    { icon: "🤝", title: "No Conflicts", desc: "We don't earn commissions, hold your assets, or run a fund. Pure advisory. Our incentive is your outcomes." },
+    { icon: "🤝", title: "No Conflicts", desc: "We don't earn commissions, hold your assets, or run a fund. Pure consultation. Our incentive is your outcomes." },
   ];
 
   return (
@@ -18,7 +18,7 @@ export default function Slide14WhyUs() {
         <div style={{ fontSize: "1.1vw", fontWeight: 700 }}>CryptoTrackr</div>
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
-      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY ADVISORY, LLC.</div>
+      <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
       <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>14 / 15</div>
 
       <div style={{ position: "relative", zIndex: 10, width: "82vw" }}>
