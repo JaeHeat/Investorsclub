@@ -1,0 +1,58 @@
+[
+  {
+    "id": "a1b2c3d4-0001-4000-8000-000000000001",
+    "position": 1,
+    "filepath": "src/pages/slides/Slide1Title.tsx",
+    "title": "Bitcoin Daily Private Portfolio Consulting",
+    "description": "Hero title slide with city skyline image and advisory positioning",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0002-4000-8000-000000000002",
+    "position": 2,
+    "filepath": "src/pages/slides/Slide2Problem.tsx",
+    "title": "Most investors hold without a plan",
+    "description": "Problem statement — no plan, cycle moves fast",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0003-4000-8000-000000000003",
+    "position": 3,
+    "filepath": "src/pages/slides/Slide3Audit.tsx",
+    "title": "Portfolio Audit & Custom Strategy",
+    "description": "Three-column breakdown of the audit and strategy service",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0004-4000-8000-000000000004",
+    "position": 4,
+    "filepath": "src/pages/slides/Slide4Oversight.tsx",
+    "title": "Ongoing Cycle Oversight",
+    "description": "Three-part overview of broadcasts, quarterly sessions, and phase guidance",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0005-4000-8000-000000000005",
+    "position": 5,
+    "filepath": "src/pages/slides/Slide5Risk.tsx",
+    "title": "Risk Management",
+    "description": "Split-panel slide with orange panel and three risk pillars",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0006-4000-8000-000000000006",
+    "position": 6,
+    "filepath": "src/pages/slides/Slide6Portal.tsx",
+    "title": "Your Private Client Portal",
+    "description": "2x2 feature grid of portal capabilities",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0007-4000-8000-000000000007",
+    "position": 7,
+    "filepath": "src/pages/slides/Slide7Closing.tsx",
+    "title": "$5,000 / year",
+    "description": "Closing slide with pricing and application-only CTA",
+    "speakerNotes": ""
+  }
+]

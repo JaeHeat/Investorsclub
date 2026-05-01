@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "mY3ShrtwaJ8s_fLK9Fed5"
+uri = "file://attached_assets/generated_images/btc_hero.png"
+type = "image"
+title = "generated_image"
