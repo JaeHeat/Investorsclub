@@ -1,58 +1,17 @@
 [
-  {
-    "id": "a1b2c3d4-0001-4000-8000-000000000001",
-    "position": 1,
-    "filepath": "src/pages/slides/Slide1Title.tsx",
-    "title": "Bitcoin Daily Private Portfolio Consulting",
-    "description": "Hero title slide with city skyline image and advisory positioning",
-    "speakerNotes": ""
-  },
-  {
-    "id": "a1b2c3d4-0002-4000-8000-000000000002",
-    "position": 2,
-    "filepath": "src/pages/slides/Slide2Problem.tsx",
-    "title": "Most investors hold without a plan",
-    "description": "Problem statement — no plan, cycle moves fast",
-    "speakerNotes": ""
-  },
-  {
-    "id": "a1b2c3d4-0003-4000-8000-000000000003",
-    "position": 3,
-    "filepath": "src/pages/slides/Slide3Audit.tsx",
-    "title": "Portfolio Audit & Custom Strategy",
-    "description": "Three-column breakdown of the audit and strategy service",
-    "speakerNotes": ""
-  },
-  {
-    "id": "a1b2c3d4-0004-4000-8000-000000000004",
-    "position": 4,
-    "filepath": "src/pages/slides/Slide4Oversight.tsx",
-    "title": "Ongoing Cycle Oversight",
-    "description": "Three-part overview of broadcasts, quarterly sessions, and phase guidance",
-    "speakerNotes": ""
-  },
-  {
-    "id": "a1b2c3d4-0005-4000-8000-000000000005",
-    "position": 5,
-    "filepath": "src/pages/slides/Slide5Risk.tsx",
-    "title": "Risk Management",
-    "description": "Split-panel slide with orange panel and three risk pillars",
-    "speakerNotes": ""
-  },
-  {
-    "id": "a1b2c3d4-0006-4000-8000-000000000006",
-    "position": 6,
-    "filepath": "src/pages/slides/Slide6Portal.tsx",
-    "title": "Your Private Client Portal",
-    "description": "2x2 feature grid of portal capabilities",
-    "speakerNotes": ""
-  },
-  {
-    "id": "a1b2c3d4-0007-4000-8000-000000000007",
-    "position": 7,
-    "filepath": "src/pages/slides/Slide7Closing.tsx",
-    "title": "$5,000 / year",
-    "description": "Closing slide with pricing and application-only CTA",
-    "speakerNotes": ""
-  }
+  { "id": "slide-01", "position": 1,  "title": "Title",              "filepath": "src/pages/slides/Slide1Title.tsx",       "description": "Hero title slide introducing Bitcoin Daily Advisory" },
+  { "id": "slide-02", "position": 2,  "title": "The Problem",         "filepath": "src/pages/slides/Slide2Problem.tsx",     "description": "The problem most investors face — no plan, no exit strategy" },
+  { "id": "slide-03", "position": 3,  "title": "Portfolio Audit",     "filepath": "src/pages/slides/Slide3Audit.tsx",      "description": "Portfolio audit and custom strategy — step one of the service" },
+  { "id": "slide-04", "position": 4,  "title": "Cycle Oversight",     "filepath": "src/pages/slides/Slide4Oversight.tsx",  "description": "Ongoing cycle oversight: broadcasts, quarterly sessions, phase guidance" },
+  { "id": "slide-05", "position": 5,  "title": "Risk Management",     "filepath": "src/pages/slides/Slide5Risk.tsx",       "description": "Risk management framework: bear market protection and capital preservation" },
+  { "id": "slide-06", "position": 6,  "title": "Client Portal",       "filepath": "src/pages/slides/Slide6Portal.tsx",     "description": "Private client portal features: dashboard, exit plan, DCA, broadcasts" },
+  { "id": "slide-07", "position": 7,  "title": "What's Included",     "filepath": "src/pages/slides/Slide7Closing.tsx",    "description": "Overview of what's included in the $5,000/year membership" },
+  { "id": "slide-08", "position": 8,  "title": "The Bitcoin Cycle",   "filepath": "src/pages/slides/Slide8Cycle.tsx",      "description": "Four-phase Bitcoin market cycle: accumulation, markup, distribution, markdown" },
+  { "id": "slide-09", "position": 9,  "title": "Exit Strategy",       "filepath": "src/pages/slides/Slide9ExitStrategy.tsx","description": "Tranche-based exit strategy for selling at the right time" },
+  { "id": "slide-10", "position": 10, "title": "DCA Planning",        "filepath": "src/pages/slides/Slide10DCA.tsx",       "description": "Dollar-cost averaging model with projected cost basis and holdings" },
+  { "id": "slide-11", "position": 11, "title": "Signal Monitoring",   "filepath": "src/pages/slides/Slide11Watchlist.tsx", "description": "On-chain signal monitoring: 20+ metrics tracked by your advisor" },
+  { "id": "slide-12", "position": 12, "title": "Bear Scenarios",      "filepath": "src/pages/slides/Slide12BearFloors.tsx","description": "Bear market scenario analysis: four downside floor projections" },
+  { "id": "slide-13", "position": 13, "title": "Onboarding Roadmap",  "filepath": "src/pages/slides/Slide13Roadmap.tsx",   "description": "Four-week onboarding roadmap from intake to ongoing advisory" },
+  { "id": "slide-14", "position": 14, "title": "Why Us",              "filepath": "src/pages/slides/Slide14WhyUs.tsx",     "description": "Six differentiators: Bitcoin-only focus, cycle framework, privacy, no conflicts" },
+  { "id": "slide-15", "position": 15, "title": "Membership & CTA",    "filepath": "src/pages/slides/Slide15Closing.tsx",   "description": "Closing CTA: $5,000/year, all-inclusive, application only" }
 ]

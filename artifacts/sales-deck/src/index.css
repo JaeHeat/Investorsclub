@@ -7,6 +7,8 @@
   --color-text: var(--slide-text);
   --color-muted: var(--slide-muted);
   --color-surface: var(--slide-surface);
+  --color-blue: var(--slide-blue);
+  --color-purple: var(--slide-purple);
   --font-display: var(--font-display-family);
   --font-body: var(--font-body-family);
 }
@@ -14,12 +16,14 @@
 :root {
   --slide-primary: #ffffff;
   --slide-accent: #F7931A;
-  --slide-bg: #0A0A0A;
+  --slide-bg: #0C0F1A;
   --slide-text: #ffffff;
-  --slide-muted: #888888;
-  --slide-surface: #141414;
-  --font-display-family: "Barlow Condensed", sans-serif;
-  --font-body-family: "DM Sans", sans-serif;
+  --slide-muted: rgba(255,255,255,0.5);
+  --slide-surface: #131726;
+  --slide-blue: #4F7FFF;
+  --slide-purple: #7C6BF0;
+  --font-display-family: "Inter", sans-serif;
+  --font-body-family: "Inter", sans-serif;
   color-scheme: dark;
 }
 
@@ -34,6 +38,7 @@ body,
 body {
   background: var(--slide-bg);
   color: var(--slide-text);
+  font-family: "Inter", sans-serif;
 }
 
 .slide {
