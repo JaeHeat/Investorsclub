@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { upsertClientProfile } from "@/lib/localStore";
-import { Bitcoin, ChevronRight, ChevronLeft, Check, Loader2, AlertCircle } from "lucide-react";
+import { Bitcoin, ChevronRight, ChevronLeft, Check, Loader2, AlertCircle, Calendar, ClipboardList, BarChart2 } from "lucide-react";
 import { INVESTMENT_GOALS } from "@/lib/portfolioPlans";
 
 const STEPS = 3;
@@ -42,7 +42,9 @@ function autoDetectCountry(): string {
 export default function OnboardingPage() {
   const { user, refreshClientProfile } = useAuth();
   const [, setLocation] = useLocation();
-  const [step, setStep] = useState(1);
+
+  // step 0 = welcome, 1–3 = form steps, 4 = done
+  const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
 
@@ -127,10 +129,11 @@ export default function OnboardingPage() {
     });
 
     refreshClientProfile();
-    setLocation("/portal");
+    setStep(4);
+    setSubmitting(false);
   }
 
-  const progress = (step / STEPS) * 100;
+  const progress = step >= 1 && step <= 3 ? (step / STEPS) * 100 : step > 3 ? 100 : 0;
 
   const inputClass = "w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none transition-colors";
   const inputStyle = { background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" };
@@ -154,24 +157,66 @@ export default function OnboardingPage() {
           <span className="text-lg font-semibold tracking-tight text-white">CryptoTrackr</span>
         </div>
 
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-xs text-[hsl(0_0%_45%)]">Step {step} of {STEPS}</span>
-            <span className="text-xs text-[hsl(0_0%_45%)]">{Math.round(progress)}%</span>
+        {/* Progress bar — only visible on form steps */}
+        {step >= 1 && step <= 3 && (
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs text-[hsl(0_0%_45%)]">Step {step} of {STEPS}</span>
+              <span className="text-xs text-[hsl(0_0%_45%)]">{Math.round(progress)}%</span>
+            </div>
+            <div className="h-0.5 rounded-full" style={{ background: "hsl(0 0% 13%)" }}>
+              <div
+                className="h-0.5 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%`, background: "#F7931A" }}
+              />
+            </div>
           </div>
-          <div className="h-0.5 rounded-full" style={{ background: "hsl(0 0% 13%)" }}>
-            <div
-              className="h-0.5 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%`, background: "#F7931A" }}
-            />
-          </div>
-        </div>
+        )}
 
         <div className="rounded-2xl p-8" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
+
+          {/* ── STEP 0: Welcome ────────────────────────────────────────────── */}
+          {step === 0 && (
+            <div data-testid="onboarding-welcome">
+              <h2 className="text-xl font-semibold text-white mb-2">Welcome to your client portal</h2>
+              <p className="text-sm text-[hsl(0_0%_50%)] mb-8 leading-relaxed">
+                Before your first audit call, let's set up your profile. This takes about 3 minutes and helps your advisor prepare a personalised strategy for you.
+              </p>
+              <div className="space-y-3 mb-8">
+                {[
+                  { icon: ClipboardList, label: "Your details", desc: "Name, country, and timezone" },
+                  { icon: BarChart2, label: "Your BTC position", desc: "Holdings and average cost basis" },
+                  { icon: Calendar, label: "Your investment goals", desc: "Return target, risk, and time horizon" },
+                ].map(({ icon: Icon, label, desc }) => (
+                  <div key={label} className="flex items-center gap-3 rounded-xl p-3.5" style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 14%)" }}>
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(247,147,26,0.1)" }}>
+                      <Icon className="w-4 h-4" style={{ color: "#F7931A" }} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white">{label}</p>
+                      <p className="text-xs text-[hsl(0_0%_45%)]">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                data-testid="button-start"
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                style={{ background: "#F7931A", color: "#0A0A0A" }}
+              >
+                Get started
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* ── STEP 1: Personal details ───────────────────────────────────── */}
           {step === 1 && (
             <div data-testid="onboarding-step-1">
               <h2 className="text-xl font-semibold text-white mb-1">Tell us about yourself</h2>
-              <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Basic info to personalize your portal</p>
+              <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Basic info to personalise your portal</p>
               <div className="space-y-5">
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
@@ -221,6 +266,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
+          {/* ── STEP 2: BTC holdings ───────────────────────────────────────── */}
           {step === 2 && (
             <div data-testid="onboarding-step-2">
               <h2 className="text-xl font-semibold text-white mb-1">Your BTC holdings</h2>
@@ -279,10 +325,11 @@ export default function OnboardingPage() {
             </div>
           )}
 
+          {/* ── STEP 3: Investment strategy ────────────────────────────────── */}
           {step === 3 && (
             <div data-testid="onboarding-step-3">
               <h2 className="text-xl font-semibold text-white mb-1">Investment strategy</h2>
-              <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Help us understand your return goals</p>
+              <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Help us understand your goals for this cycle</p>
               <div className="space-y-6">
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
@@ -360,11 +407,13 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">Notes (optional)</label>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
+                    Questions for your advisor <span className="text-[hsl(0_0%_40%)] normal-case font-normal">(optional)</span>
+                  </label>
                   <textarea
                     value={form.notes}
                     onChange={(e) => update("notes", e.target.value)}
-                    placeholder="Any context you'd like to share..."
+                    placeholder="Anything you'd like to discuss on the first call..."
                     rows={3}
                     data-testid="input-notes"
                     className="w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none resize-none"
@@ -375,8 +424,45 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          <div className="flex gap-3 mt-8">
-            {step > 1 && (
+          {/* ── STEP 4: Done ───────────────────────────────────────────────── */}
+          {step === 4 && (
+            <div data-testid="onboarding-complete" className="text-center">
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: "rgba(247,147,26,0.12)" }}>
+                <Check className="w-7 h-7" style={{ color: "#F7931A" }} />
+              </div>
+              <h2 className="text-xl font-semibold text-white mb-2">You're all set!</h2>
+              <p className="text-sm text-[hsl(0_0%_50%)] mb-8 leading-relaxed">
+                Your profile is saved. Your advisor will review it before your first call and tailor the session to your portfolio and goals.
+              </p>
+              <div className="space-y-2 mb-8 text-left">
+                {[
+                  "Your advisor reviews your profile",
+                  "You receive a calendar invite for the audit call",
+                  "On the call: strategy, milestones, and cycle plan",
+                  "Your portal is updated after each session",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3 rounded-xl px-4 py-3" style={{ background: "hsl(0 0% 10%)" }}>
+                    <span className="text-xs font-bold mt-0.5 shrink-0" style={{ color: "#F7931A" }}>{i + 1}</span>
+                    <p className="text-sm text-[hsl(0_0%_65%)]">{item}</p>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setLocation("/portal")}
+                data-testid="button-go-to-portal"
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                style={{ background: "#F7931A", color: "#0A0A0A" }}
+              >
+                Go to my portal
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* ── Navigation buttons (steps 1–3 only) ───────────────────────── */}
+          {step >= 1 && step <= 3 && (
+            <div className="flex gap-3 mt-8">
               <button
                 type="button"
                 onClick={() => { setStepErrors({}); setStep(step - 1); }}
@@ -387,41 +473,41 @@ export default function OnboardingPage() {
                 <ChevronLeft className="w-4 h-4" />
                 Back
               </button>
-            )}
-            {step < STEPS ? (
-              <button
-                type="button"
-                onClick={handleNext}
-                data-testid="button-next"
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold transition-all"
-                style={{ background: "#F7931A", color: "#0A0A0A" }}
-              >
-                Continue
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={submitting}
-                data-testid="button-complete"
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-60"
-                style={{ background: "#F7931A", color: "#0A0A0A" }}
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Complete Setup
-                  </>
-                )}
-              </button>
-            )}
-          </div>
+              {step < STEPS ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  data-testid="button-next"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                  style={{ background: "#F7931A", color: "#0A0A0A" }}
+                >
+                  Continue
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  data-testid="button-complete"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-60"
+                  style={{ background: "#F7931A", color: "#0A0A0A" }}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Complete Setup
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

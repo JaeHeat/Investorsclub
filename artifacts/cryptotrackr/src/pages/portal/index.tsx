@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getMilestones, getBroadcasts, getPortfolioSnapshots, savePortfolioSnapshot } from "@/lib/localStore";
 import type { Milestone, Broadcast, PortfolioSnapshot } from "@/lib/types";
 import { useBtcPrice } from "@/hooks/useBtcPrice";
-import { formatUSD, formatBTC, formatPct, getBonusPct, MILESTONE_PCTS } from "@/lib/utils";
+import { formatUSD, formatBTC, formatPct, MILESTONE_PCTS } from "@/lib/utils";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { TrendingUp, TrendingDown, RefreshCw, Bitcoin, X, Radio } from "lucide-react";
 
@@ -234,8 +234,8 @@ export default function PortalIndex() {
               <p className="text-sm text-[hsl(0_0%_50%)] mt-0.5">Target: {formatUSD(nextMilestoneValue)}</p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-[hsl(0_0%_45%)]">Bonus at this milestone</p>
-              <p className="text-base font-semibold mt-0.5" style={{ color: "#F7931A" }}>{getBonusPct(nextMilestone, initialValue)}% of gains</p>
+              <p className="text-xs text-[hsl(0_0%_45%)]">Target value</p>
+              <p className="text-base font-semibold mt-0.5" style={{ color: "#F7931A" }}>{nextMilestoneValue ? formatUSD(nextMilestoneValue) : "—"}</p>
             </div>
           </div>
           {currentValue !== null && nextMilestoneValue && (

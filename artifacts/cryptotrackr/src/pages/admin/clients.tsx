@@ -83,7 +83,6 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
 
   const [roadmapForm, setRoadmapForm] = useState({ title: "", content: "" });
   const [reportForm, setReportForm] = useState({ title: "", content: "", is_global: false });
-  const [milestoneForm, setMilestoneForm] = useState({ bonus_amount: "" });
 
   // Portfolio maths
   const initialValue = client.initial_portfolio_value ?? 0;
@@ -116,12 +115,6 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
   const btcHolding = holdings.find((h) => h.coingecko_id === "bitcoin");
   const btcPrice = prices["bitcoin"] ?? null;
 
-  // Milestone modal context — computed once per selected milestone
-  const modalMilestoneIdx = showMilestoneModal !== null
-    ? milestoneTier.pcts.indexOf(showMilestoneModal as never)
-    : -1;
-  const modalBonusPct = modalMilestoneIdx >= 0 ? milestoneTier.bonusPcts[modalMilestoneIdx] : 5;
-
   function saveRoadmapItem() {
     if (!roadmapForm.title || !roadmapForm.content) return;
     setSaving(true);
@@ -149,21 +142,13 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
 
   function markMilestone(pct: number) {
     setSaving(true);
-    const idx = milestoneTier.pcts.indexOf(pct as never);
-    const bonusPct = idx >= 0 ? milestoneTier.bonusPcts[idx] : 5;
-    const targetValue = initialValue * (1 + pct / 100);
-    const gainsAtMilestone = targetValue - initialValue;
-    const bonus = parseFloat(milestoneForm.bonus_amount) || null;
     upsertMilestone({
       user_id: client.user_id,
       milestone_pct: pct,
       hit: true,
       hit_at: new Date().toISOString(),
-      bonus_amount: bonus,
-      bonus_pct: bonusPct,
     });
     setMilestones(getMilestones(client.user_id));
-    setMilestoneForm({ bonus_amount: "" });
     setShowMilestoneModal(null);
     setSaving(false);
   }
@@ -344,14 +329,13 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
             </div>
           </div>
           <div className="space-y-3">
-            {milestoneTier.pcts.map((pct, idx) => {
+            {milestoneTier.pcts.map((pct) => {
               const record = milestones.find((m) => m.milestone_pct === pct);
               const isHit = record?.hit ?? false;
               const targetValue = initialValue * (1 + pct / 100);
               const progressPct = totalCurrent && targetValue
                 ? Math.min(100, (totalCurrent / targetValue) * 100)
                 : 0;
-              const bonusPct = milestoneTier.bonusPcts[idx];
               return (
                 <div key={pct} data-testid={`milestone-row-${pct}`}>
                   <div className="flex items-center justify-between mb-1">
@@ -363,10 +347,8 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
                       <span className="text-xs text-[hsl(0_0%_40%)]">→ {initialValue ? formatUSD(targetValue) : "—"}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {isHit && record?.bonus_amount ? (
-                        <span className="text-xs font-medium" style={{ color: "#22c55e" }}>+{formatUSD(record.bonus_amount)}</span>
-                      ) : (
-                        <span className="text-xs text-[hsl(0_0%_40%)]">{bonusPct}% fee</span>
+                      {isHit && (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>Hit</span>
                       )}
                       {!isHit && (
                         <button onClick={() => setShowMilestoneModal(pct)} className="text-[11px] px-2 py-0.5 rounded-md" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }} data-testid={`mark-milestone-${pct}`}>
@@ -487,20 +469,9 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
                 <span className="text-[hsl(0_0%_50%)]">Milestone</span>
                 <span className="text-white font-medium">{showMilestoneModal}% return on portfolio</span>
               </div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-[hsl(0_0%_50%)]">Performance fee</span>
-                <span style={{ color: "#F7931A" }}>{modalBonusPct}% of gains at this level</span>
-              </div>
               <div className="flex justify-between text-sm">
                 <span className="text-[hsl(0_0%_50%)]">Target portfolio value</span>
                 <span className="text-white">{initialValue ? formatUSD(initialValue * (1 + showMilestoneModal / 100)) : "—"}</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[hsl(0_0%_55%)] mb-1.5 uppercase tracking-wide">Amount Paid (USD)</label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
-                <input type="number" value={milestoneForm.bonus_amount} onChange={(e) => setMilestoneForm({ bonus_amount: e.target.value })} placeholder="0" className="w-full pl-7 pr-4 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} data-testid="input-bonus-amount" />
               </div>
             </div>
             <button onClick={() => markMilestone(showMilestoneModal)} disabled={saving} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "#F7931A", color: "#0A0A0A" }} data-testid="button-confirm-milestone">

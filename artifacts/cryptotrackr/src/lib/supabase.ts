@@ -44,8 +44,6 @@ export interface Milestone {
   milestone_pct: number;
   hit: boolean;
   hit_at: string | null;
-  bonus_amount: number | null;
-  bonus_pct: number | null;
 }
 
 export interface RoadmapItem {

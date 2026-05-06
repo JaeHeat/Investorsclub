@@ -212,8 +212,6 @@ export function upsertMilestone(milestone: Partial<Milestone> & { user_id: strin
     milestone_pct: milestone.milestone_pct,
     hit: milestone.hit ?? false,
     hit_at: milestone.hit_at ?? null,
-    bonus_amount: milestone.bonus_amount ?? null,
-    bonus_pct: milestone.bonus_pct ?? null,
   };
   if (idx >= 0) {
     all[idx] = record;

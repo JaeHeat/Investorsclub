@@ -28,7 +28,6 @@ export default function MilestonesPage() {
   const coinIds = useMemo(() => holdings.map((h) => h.coingecko_id), [holdings]);
   const { prices } = usePrices(coinIds);
 
-  // Total current portfolio value across all assets
   const totalCurrent = useMemo(() => {
     if (holdings.length === 0) return null;
     const allPriced = holdings.every((h) => prices[h.coingecko_id] != null);
@@ -38,31 +37,28 @@ export default function MilestonesPage() {
 
   const tier = getMilestoneTier(clientProfile?.risk_tolerance, initialValue);
 
-  function getMilestoneData(pct: number, idx: number) {
+  function getMilestoneData(pct: number) {
     const record = milestones.find((m) => m.milestone_pct === pct);
     const targetValue = initialValue * (1 + pct / 100);
-    const gainsAtMilestone = targetValue - initialValue;
-    const bonusPct = tier.bonusPcts[idx];
-    const bonusAmount = gainsAtMilestone * (bonusPct / 100);
     const currentReturnPct = initialValue > 0 && totalCurrent
       ? ((totalCurrent - initialValue) / initialValue) * 100
       : 0;
     const isHit = record?.hit ?? currentReturnPct >= pct;
-    const isNext = !isHit && tier.pcts.filter((p, i) => {
+    const isNext = !isHit && tier.pcts.filter((p) => {
       const r = milestones.find((m) => m.milestone_pct === p);
       const hitByReturn = initialValue > 0 && totalCurrent
         ? ((totalCurrent - initialValue) / initialValue) * 100 >= p
         : false;
       return !(r?.hit ?? hitByReturn);
     })[0] === pct;
-    return { record, targetValue, gainsAtMilestone, bonusPct, bonusAmount, isHit, isNext };
+    return { record, targetValue, isHit, isNext };
   }
 
   return (
     <PortalLayout>
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-white">Milestones</h1>
-        <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Your personalised return targets and performance fees</p>
+        <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Your personalised return targets for this cycle</p>
       </div>
 
       {/* Tier badge */}
@@ -78,8 +74,8 @@ export default function MilestonesPage() {
       </div>
 
       <div className="space-y-3">
-        {tier.pcts.map((pct, idx) => {
-          const { record, targetValue, bonusPct, bonusAmount, isHit, isNext } = getMilestoneData(pct, idx);
+        {tier.pcts.map((pct) => {
+          const { record, targetValue, isHit, isNext } = getMilestoneData(pct);
           const progressPct = totalCurrent && targetValue
             ? Math.min(100, (totalCurrent / targetValue) * 100)
             : 0;
@@ -104,58 +100,40 @@ export default function MilestonesPage() {
               }}
               data-testid={`milestone-${pct}`}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                    style={{
-                      background: isHit
-                        ? "rgba(34,197,94,0.15)"
-                        : isNext
-                          ? "rgba(247,147,26,0.12)"
-                          : "hsl(0 0% 11%)",
-                    }}
-                  >
-                    {isHit ? (
-                      <Check className="w-4 h-4" style={{ color: "#22c55e" }} />
-                    ) : isNext ? (
-                      <TrendingUp className="w-4 h-4" style={{ color: "#F7931A" }} />
-                    ) : (
-                      <Lock className="w-3.5 h-3.5 text-[hsl(0_0%_40%)]" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white">{pct}% Return</p>
-                    <p className="text-xs text-[hsl(0_0%_45%)]">
-                      Target: {initialValue ? formatUSD(targetValue) : "—"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  {isHit && record?.bonus_amount ? (
-                    <div>
-                      <p className="text-xs text-[hsl(0_0%_45%)]">Fee paid</p>
-                      <p className="text-sm font-semibold" style={{ color: "#22c55e" }}>
-                        {formatUSD(record.bonus_amount)}
-                      </p>
-                    </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                  style={{
+                    background: isHit
+                      ? "rgba(34,197,94,0.15)"
+                      : isNext
+                        ? "rgba(247,147,26,0.12)"
+                        : "hsl(0 0% 11%)",
+                  }}
+                >
+                  {isHit ? (
+                    <Check className="w-4 h-4" style={{ color: "#22c55e" }} />
+                  ) : isNext ? (
+                    <TrendingUp className="w-4 h-4" style={{ color: "#F7931A" }} />
                   ) : (
-                    <div>
-                      <p className="text-xs text-[hsl(0_0%_45%)]">Performance fee</p>
-                      <p
-                        className="text-sm font-semibold"
-                        style={{ color: isNext ? "#F7931A" : "hsl(0 0% 55%)" }}
-                      >
-                        {bonusPct}% ({initialValue ? formatUSD(bonusAmount) : "—"})
-                      </p>
-                    </div>
+                    <Lock className="w-3.5 h-3.5 text-[hsl(0_0%_40%)]" />
                   )}
                 </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-white">{pct}% Return</p>
+                  <p className="text-xs text-[hsl(0_0%_45%)]">
+                    Target: {initialValue ? formatUSD(targetValue) : "—"}
+                  </p>
+                </div>
+                {isHit && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
+                    Hit
+                  </span>
+                )}
               </div>
 
               {isNext && (
-                <div>
+                <div className="mt-3">
                   <div className="flex justify-between text-xs text-[hsl(0_0%_40%)] mb-1">
                     <span>Progress to {pct}% target</span>
                     <span>{progressPct.toFixed(0)}%</span>
@@ -170,7 +148,7 @@ export default function MilestonesPage() {
               )}
 
               {isHit && record?.hit_at && (
-                <p className="text-xs text-[hsl(0_0%_40%)] mt-1">
+                <p className="text-xs text-[hsl(0_0%_40%)] mt-2">
                   Hit{" "}
                   {new Date(record.hit_at).toLocaleDateString("en-US", {
                     month: "short",
