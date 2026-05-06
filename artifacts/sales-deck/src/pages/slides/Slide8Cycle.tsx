@@ -1,9 +1,9 @@
 export default function Slide8Cycle() {
   const phases = [
-    { name: "Accumulation", color: "#06b6d4", pct: 25, desc: "Bitcoin consolidates near cycle lows. Smart money builds positions." },
-    { name: "Markup", color: "#F7931A", pct: 35, desc: "Price trends upward. Early adopters see significant unrealized gains." },
-    { name: "Distribution", color: "#a855f7", pct: 20, desc: "Institutions exit. Retail euphoria peaks. Exit signals activate." },
-    { name: "Markdown", color: "#ef4444", pct: 20, desc: "Bear market sets in. Capital preservation becomes the primary goal." },
+    { name: "Accumulation", color: "#06b6d4", pct: 25, desc: "Bitcoin consolidates near cycle lows. This is when we build — quietly and consistently." },
+    { name: "Markup", color: "#F7931A", pct: 35, desc: "Price trends upward. Unrealized gains grow. We hold our position and manage expectations." },
+    { name: "Distribution", color: "#a855f7", pct: 20, desc: "Institutions begin exiting. Retail euphoria peaks. Your exit plan activates in tranches." },
+    { name: "Markdown", color: "#ef4444", pct: 20, desc: "Bear market sets in. Capital preservation becomes the primary objective." },
   ];
 
   return (
@@ -17,12 +17,12 @@ export default function Slide8Cycle() {
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
       <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
-      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>08 / 15</div>
+      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>06 / 12</div>
 
       <div style={{ position: "relative", zIndex: 10, width: "82vw" }}>
         <div style={{ textAlign: "center", marginBottom: "5vh" }}>
-          <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, marginBottom: "2vh", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>The Bitcoin Cycle</div>
-          <h2 style={{ fontSize: "4.5vw", fontWeight: 800, margin: 0, lineHeight: 1.1, letterSpacing: "-0.03em" }}>Four phases.<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>Four different strategies.</span></h2>
+          <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, marginBottom: "2vh", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Our Framework</div>
+          <h2 style={{ fontSize: "4.5vw", fontWeight: 800, margin: 0, lineHeight: 1.1, letterSpacing: "-0.03em" }}>Four phases.<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>A strategy for each.</span></h2>
         </div>
 
         <div style={{ display: "flex", gap: "0", borderRadius: "1vw", overflow: "hidden", marginBottom: "3vh", height: "1vh" }}>

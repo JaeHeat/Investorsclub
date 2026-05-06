@@ -1,9 +1,9 @@
 export default function Slide6Portal() {
   const features = [
-    { icon: "📊", title: "Portfolio Dashboard", desc: "Live holdings summary, allocation view, performance vs cost-basis, and milestone tracking in one place." },
-    { icon: "🎯", title: "Exit Strategy Planner", desc: "Your phase-by-phase distribution schedule — when to sell, how much, and at what price targets." },
-    { icon: "🔄", title: "DCA Projections", desc: "Dollar-cost averaging modeler showing projected cost basis, accumulation pace, and compound scenarios." },
-    { icon: "📡", title: "Consultant Broadcasts", desc: "Private market commentary and cycle alerts delivered directly to your portal — not email, not Twitter." },
+    { icon: "📊", title: "Portfolio Dashboard", desc: "Your live holdings, cost basis, performance tracking, and milestone progress — all in one view. Log in any time." },
+    { icon: "🎯", title: "Exit Strategy Planner", desc: "Your personalized, phase-by-phase distribution schedule lives here. Know exactly when to sell and how much." },
+    { icon: "🔄", title: "DCA Projections", desc: "Model your accumulation pace, projected cost basis, and compound scenarios as you add to your position." },
+    { icon: "📡", title: "Consultant Broadcasts", desc: "When I post an update or alert, it appears here first. Check this whenever you log in — not email, not Twitter." },
   ];
 
   return (
@@ -18,12 +18,12 @@ export default function Slide6Portal() {
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
       <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
-      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>06 / 15</div>
+      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>03 / 12</div>
 
       <div style={{ position: "relative", zIndex: 10, width: "82vw" }}>
         <div style={{ textAlign: "center", marginBottom: "5vh" }}>
-          <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, marginBottom: "2vh", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Your Private Portal</div>
-          <h2 style={{ fontSize: "4.5vw", fontWeight: 800, margin: 0, lineHeight: 1.1, letterSpacing: "-0.03em" }}>Everything you need.<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>In one secure place.</span></h2>
+          <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: "2vw", color: "#22c55e", fontSize: "0.9vw", fontWeight: 600, marginBottom: "2vh", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>● Now Active</div>
+          <h2 style={{ fontSize: "4.5vw", fontWeight: 800, margin: 0, lineHeight: 1.1, letterSpacing: "-0.03em" }}>Your portal is live.<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>Let's walk through it.</span></h2>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2vw" }}>
           {features.map((f, i) => (

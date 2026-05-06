@@ -1,8 +1,8 @@
 export default function Slide4Oversight() {
   const items = [
-    { icon: "📡", title: "Private Broadcasts", desc: "Direct updates delivered to your portal when market conditions shift — not generic alerts, but specific action guidance for your portfolio." },
-    { icon: "📅", title: "Quarterly Sessions", desc: "Four 1-on-1 strategy reviews per year. We revisit your plan, assess where the cycle stands, and update recommendations." },
-    { icon: "🔄", title: "Phase Guidance", desc: "Clear signals for each cycle phase: accumulation, markup, distribution, and markdown — so you always know what posture to hold." },
+    { icon: "📡", title: "Private Broadcasts", desc: "When market conditions shift meaningfully, you'll get a direct update in your portal — specific action guidance for your position, not generic noise." },
+    { icon: "📅", title: "Quarterly 1-on-1 Sessions", desc: "Four strategy reviews per year. We revisit your plan, assess where the cycle stands, and update your recommendations together." },
+    { icon: "🔄", title: "Phase-Based Guidance", desc: "Clear signals for each cycle phase — accumulation, markup, distribution, markdown — so you always know what posture to hold." },
   ];
 
   return (
@@ -16,18 +16,18 @@ export default function Slide4Oversight() {
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
       <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
-      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>04 / 15</div>
+      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>05 / 12</div>
 
       <div style={{ position: "relative", zIndex: 10, flex: 1, display: "flex", flexDirection: "column", gap: "3vh", paddingLeft: "7vw" }}>
-        <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, alignSelf: "flex-start", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Step Two</div>
+        <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, alignSelf: "flex-start", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Our Relationship</div>
         <h2 style={{ fontSize: "4.5vw", fontWeight: 800, margin: 0, lineHeight: 1.1, letterSpacing: "-0.03em" }}>
-          Ongoing<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>Cycle Oversight</span>
+          How we<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>stay in sync.</span>
         </h2>
         <p style={{ fontSize: "1.3vw", fontWeight: 300, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, maxWidth: "35vw", margin: 0 }}>
-          Your consultant tracks the market for you — continuously — and delivers structured guidance at every major inflection point.
+          I track the market continuously so you don't have to. You'll hear from me when something is worth acting on — and we'll review everything together on a regular cadence.
         </p>
         <div style={{ display: "flex", gap: "1vw", flexWrap: "wrap" as const }}>
-          {["Cycle Phase Alerts", "Position Guidance", "1-on-1 Calls"].map((tag, i) => (
+          {["Cycle Phase Alerts", "Position Guidance", "Quarterly Calls"].map((tag, i) => (
             <div key={i} style={{ padding: "0.6vh 1.2vw", backgroundColor: "rgba(79,127,255,0.1)", border: "1px solid rgba(79,127,255,0.25)", borderRadius: "0.3vw", fontSize: "0.9vw", color: "rgba(255,255,255,0.75)" }}>{tag}</div>
           ))}
         </div>

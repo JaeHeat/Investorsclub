@@ -18,15 +18,15 @@ export default function Slide11Watchlist() {
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
       <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
-      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>11 / 15</div>
+      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>09 / 12</div>
 
       <div style={{ position: "relative", zIndex: 10, flex: 1, display: "flex", flexDirection: "column", gap: "3vh", paddingLeft: "7vw" }}>
-        <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, alignSelf: "flex-start", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Signal Monitoring</div>
+        <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, alignSelf: "flex-start", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Active Monitoring</div>
         <h2 style={{ fontSize: "4.5vw", fontWeight: 800, margin: 0, lineHeight: 1.1, letterSpacing: "-0.03em" }}>
-          We watch<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>so you don't have to.</span>
+          I watch<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>so you don't have to.</span>
         </h2>
         <p style={{ fontSize: "1.3vw", fontWeight: 300, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, maxWidth: "33vw", margin: 0 }}>
-          Your consultant monitors 20+ on-chain metrics and market signals — and interprets them in plain language for your specific portfolio context.
+          20+ on-chain metrics and market signals — monitored daily and interpreted in plain language specific to your portfolio context.
         </p>
         <div style={{ display: "flex", gap: "1.5vw" }}>
           <div style={{ textAlign: "center" }}>
@@ -36,7 +36,7 @@ export default function Slide11Watchlist() {
           <div style={{ width: "1px", backgroundColor: "rgba(255,255,255,0.07)" }} />
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: "3vw", fontWeight: 900, color: "#F7931A" }}>24h</div>
-            <div style={{ fontSize: "0.9vw", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Response time</div>
+            <div style={{ fontSize: "0.9vw", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Alert response</div>
           </div>
         </div>
       </div>

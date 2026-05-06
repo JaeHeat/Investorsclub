@@ -1,4 +1,10 @@
 export default function Slide15Closing() {
+  const nextSteps = [
+    { num: "01", title: "Confirm your holdings", desc: "Log into your portal and verify your BTC holdings and cost basis are entered correctly in Settings." },
+    { num: "02", title: "Watch for your first broadcast", desc: "I'll post my current cycle read within the next few days. Check your Broadcasts section when you log in." },
+    { num: "03", title: "Reach out any time", desc: "Use the Notes section to jot questions between sessions. For urgent items, contact me directly." },
+  ];
+
   const included = [
     "Initial portfolio audit & written strategy",
     "Phase-by-phase exit plan",
@@ -8,7 +14,6 @@ export default function Slide15Closing() {
     "Private consultant broadcasts",
     "4× quarterly 1-on-1 sessions",
     "Watchlist & cycle signal monitoring",
-    "Annual strategy renewal",
   ];
 
   return (
@@ -23,22 +28,30 @@ export default function Slide15Closing() {
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
       <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
-      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>15 / 15</div>
+      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>12 / 12</div>
 
       <div style={{ position: "relative", zIndex: 10, flex: 1, paddingLeft: "7vw", display: "flex", flexDirection: "column", gap: "3vh" }}>
-        <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, alignSelf: "flex-start", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Membership</div>
-        <div style={{ fontSize: "8vw", fontWeight: 900, lineHeight: 0.95, letterSpacing: "-0.04em", color: "#F7931A" }}>$5,000</div>
-        <div style={{ fontSize: "2vw", fontWeight: 300, color: "rgba(255,255,255,0.45)" }}>per year · all-inclusive</div>
-        <div style={{ display: "flex", gap: "2vw", marginTop: "1vh" }}>
-          <div style={{ padding: "1.8vh 3.5vw", backgroundColor: "#F7931A", color: "#0C0F1A", borderRadius: "0.5vw", fontSize: "1.2vw", fontWeight: 700, boxShadow: "0 1vh 3vh rgba(247,147,26,0.3)" }}>Apply Now</div>
-          <div style={{ padding: "1.8vh 3.5vw", backgroundColor: "rgba(255,255,255,0.05)", color: "#FFF", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5vw", fontSize: "1.2vw", fontWeight: 500 }}>Schedule a Call</div>
+        <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, alignSelf: "flex-start", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Next Steps</div>
+        <h2 style={{ fontSize: "4vw", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-0.04em", margin: 0 }}>
+          Let's get<br /><span style={{ color: "#F7931A" }}>started.</span>
+        </h2>
+        <div style={{ display: "flex", flexDirection: "column" as const, gap: "2vh", marginTop: "1vh" }}>
+          {nextSteps.map((step, i) => (
+            <div key={i} style={{ display: "flex", gap: "1.5vw", alignItems: "flex-start" }}>
+              <div style={{ fontSize: "0.9vw", fontWeight: 700, color: "#F7931A", flexShrink: 0, marginTop: "0.2vh", width: "2vw" }}>{step.num}</div>
+              <div>
+                <div style={{ fontSize: "1.2vw", fontWeight: 700, marginBottom: "0.4vh" }}>{step.title}</div>
+                <div style={{ fontSize: "1vw", fontWeight: 300, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{step.desc}</div>
+              </div>
+            </div>
+          ))}
         </div>
-        <div style={{ fontSize: "0.95vw", color: "rgba(255,255,255,0.3)" }}>Acceptance by application only. Limited seats available. This is educational consultation, not financial advice.</div>
+        <div style={{ marginTop: "1vh", fontSize: "1.3vw", fontWeight: 500, color: "rgba(255,255,255,0.6)", fontStyle: "italic" }}>Any questions?</div>
       </div>
 
       <div style={{ position: "relative", zIndex: 10, flex: 1, paddingRight: "7vw" }}>
         <div style={{ backgroundColor: "#131726", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1vw", padding: "3vh 2.5vw" }}>
-          <div style={{ fontSize: "1.1vw", fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase" as const, letterSpacing: "0.1em", marginBottom: "2.5vh" }}>Everything included:</div>
+          <div style={{ fontSize: "1.1vw", fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase" as const, letterSpacing: "0.1em", marginBottom: "2.5vh" }}>Your membership includes:</div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: "1.5vh" }}>
             {included.map((item, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: "1.2vw" }}>

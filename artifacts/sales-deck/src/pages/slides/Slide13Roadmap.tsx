@@ -1,9 +1,9 @@
 export default function Slide13Roadmap() {
   const milestones = [
-    { week: "Week 1", title: "Onboarding & Audit", items: ["Complete portfolio intake questionnaire", "Submit holdings for analysis", "Set risk tolerance and goals"] },
-    { week: "Week 2", title: "Strategy Delivery", items: ["Receive written allocation structure", "Review exit plan for current cycle", "Activate private portal access"] },
-    { week: "Week 3–4", title: "Implementation", items: ["Execute any rebalancing moves", "Set up DCA schedule", "Configure watchlist alerts"] },
-    { week: "Ongoing", title: "Consultation Cadence", items: ["Monthly broadcast updates", "Quarterly 1-on-1 sessions", "Ad-hoc guidance on market events"] },
+    { week: "This Week", title: "Audit & Strategy", items: ["Complete your portfolio intake together", "Finalize BTC holdings & cost basis in portal", "Deliver your written allocation strategy"] },
+    { week: "Week 2", title: "Plan Activation", items: ["Review and confirm your exit plan", "Set up your DCA schedule", "Configure watchlist and signal alerts"] },
+    { week: "Week 3–4", title: "Settled In", items: ["First broadcast update in your portal", "Any early questions addressed", "Confirm your check-in cadence"] },
+    { week: "Ongoing", title: "Our Cadence", items: ["Monthly broadcast updates", "Quarterly 1-on-1 strategy reviews", "Ad-hoc guidance on major market events"] },
   ];
 
   return (
@@ -17,13 +17,13 @@ export default function Slide13Roadmap() {
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
       <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
-      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>13 / 15</div>
+      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>11 / 12</div>
 
       <div style={{ position: "relative", zIndex: 10, width: "82vw" }}>
         <div style={{ marginBottom: "4vh" }}>
-          <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, marginBottom: "2vh", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Onboarding Roadmap</div>
+          <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, marginBottom: "2vh", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Your First 30 Days</div>
           <h2 style={{ fontSize: "4.5vw", fontWeight: 800, margin: 0, lineHeight: 1.1, letterSpacing: "-0.03em" }}>
-            Up and running<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>in two weeks.</span>
+            Here's what<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>happens next.</span>
           </h2>
         </div>
 

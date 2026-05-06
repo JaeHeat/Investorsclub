@@ -23,20 +23,16 @@ export default function Slide1Title() {
 
       <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", maxWidth: "70vw" }}>
         <div style={{ display: "inline-flex", alignItems: "center", padding: "0.6vh 1.4vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: ORANGE, fontSize: "0.95vw", fontWeight: 600, marginBottom: "4vh", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
-          ₿ Application Only · $5,000 / year
+          ₿ Client Onboarding · May 2026
         </div>
         <h1 style={{ fontSize: "6.5vw", fontWeight: 900, margin: "0 0 2vh 0", lineHeight: 1.05, letterSpacing: "-0.04em" }}>
-          Bitcoin Daily<br /><span style={{ color: ORANGE }}>Consulting</span>
+          Welcome to<br /><span style={{ color: ORANGE }}>Bitcoin Daily</span>
         </h1>
         <p style={{ fontSize: "1.75vw", fontWeight: 300, color: "rgba(255,255,255,0.65)", margin: "0 0 6vh 0", lineHeight: 1.55, maxWidth: "52vw" }}>
-          Institutional-grade Bitcoin cycle intelligence, personalized portfolio strategy, and private client access — for those who refuse to leave returns on the table.
+          You made the right decision. This session covers everything you need to know to hit the ground running — and what our partnership looks like from here.
         </p>
-        <div style={{ display: "flex", alignItems: "center", gap: "2vw", marginBottom: "7vh" }}>
-          <div style={{ padding: "1.5vh 3vw", backgroundColor: ORANGE, color: BG, borderRadius: "0.5vw", fontSize: "1.1vw", fontWeight: 700, boxShadow: "0 1vh 2.5vh rgba(247,147,26,0.25)" }}>Apply for Membership</div>
-          <div style={{ padding: "1.5vh 3vw", backgroundColor: "transparent", color: "#FFF", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "0.5vw", fontSize: "1.1vw", fontWeight: 500 }}>View Portfolio Audit</div>
-        </div>
         <div style={{ display: "flex", gap: "1.5vw", opacity: 0.8 }}>
-          {[{ label: "Cycle-Timed Entries", icon: "📈" }, { label: "Bear Market Coverage", icon: "🛡️" }, { label: "Private Client Portal", icon: "🔐" }].map((pill, i) => (
+          {[{ label: "Cycle-Timed Guidance", icon: "📈" }, { label: "Bear Market Coverage", icon: "🛡️" }, { label: "Private Client Portal", icon: "🔐" }].map((pill, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.5vw", padding: "0.9vh 1.5vw", backgroundColor: "rgba(255,255,255,0.05)", borderRadius: "0.4vw", fontSize: "0.95vw", color: "rgba(255,255,255,0.8)" }}>
               <span>{pill.icon}</span><span>{pill.label}</span>
             </div>

@@ -8,9 +8,9 @@ const BgGrid = () => (
 
 export default function Slide3Audit() {
   const cols = [
-    { num: "01", title: "Holdings Breakdown", desc: "Full analysis of your current Bitcoin and crypto positions, cost basis, unrealized gains, and concentration risk.", accent: true },
-    { num: "02", title: "Allocation Structure", desc: "We model the optimal position sizing aligned to your stated goals, risk tolerance, and time horizon.", accent: false },
-    { num: "03", title: "Action Plan", desc: "A written, prioritized playbook: what to keep, what to trim, what to accumulate — and when.", accent: false },
+    { num: "01", title: "Holdings Review", desc: "We start by going through your actual positions together — cost basis, unrealized gains, concentration, and anything that needs immediate attention.", accent: true },
+    { num: "02", title: "Allocation Structure", desc: "We model the optimal position sizing for your goals, risk tolerance, and time horizon — and document it as your written strategy.", accent: false },
+    { num: "03", title: "Written Action Plan", desc: "You leave with a clear, prioritized playbook: what to hold, what to trim, what to accumulate — and exactly when to act.", accent: false },
   ];
 
   return (
@@ -22,11 +22,11 @@ export default function Slide3Audit() {
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
       <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
-      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>03 / 15</div>
+      <div style={{ position: "absolute", bottom: "5vh", right: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)" }}>04 / 12</div>
 
       <div style={{ position: "relative", zIndex: 10, width: "82vw" }}>
-        <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, marginBottom: "3vh", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Step One</div>
-        <h2 style={{ fontSize: "4.5vw", fontWeight: 800, margin: "0 0 5vh 0", lineHeight: 1.1, letterSpacing: "-0.03em" }}>Portfolio Audit &amp;<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>Custom Strategy</span></h2>
+        <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, marginBottom: "3vh", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>First Priority</div>
+        <h2 style={{ fontSize: "4.5vw", fontWeight: 800, margin: "0 0 5vh 0", lineHeight: 1.1, letterSpacing: "-0.03em" }}>Portfolio audit &amp;<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>your written strategy.</span></h2>
 
         <div style={{ display: "flex", gap: "2.5vw" }}>
           {cols.map((col, i) => (
