@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Call Brief — Dennis Krasemann</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0a0a0a;
+      color: #e8e8e8;
+      padding: 32px 24px;
+      max-width: 780px;
+      margin: 0 auto;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 20px;
+    }
+    .header-left h1 { font-size: 22px; font-weight: 700; color: #fff; }
+    .header-left p { font-size: 13px; color: #777; margin-top: 2px; }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(247,147,26,0.15);
+      color: #F7931A;
+      border: 1px solid rgba(247,147,26,0.3);
+    }
+
+    /* Client snapshot */
+    .snapshot {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .snap-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .snap-card .label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+    .snap-card .value { font-size: 15px; font-weight: 700; color: #fff; }
+    .snap-card .value.orange { color: #F7931A; }
+    .snap-card .value.red { color: #f87171; }
+    .snap-card .value.green { color: #4ade80; }
+    .snap-card .sub { font-size: 11px; color: #555; margin-top: 2px; }
+
+    /* Sections */
+    .section { margin-bottom: 20px; }
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #F7931A;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title span {
+      font-size: 10px;
+      color: #444;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    /* Call timeline */
+    .timeline { display: flex; flex-direction: column; gap: 8px; }
+    .tl-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .tl-item.active { border-color: rgba(247,147,26,0.3); background: rgba(247,147,26,0.04); }
+    .tl-time {
+      font-size: 11px;
+      font-weight: 700;
+      color: #F7931A;
+      white-space: nowrap;
+      min-width: 42px;
+      padding-top: 1px;
+    }
+    .tl-content { flex: 1; }
+    .tl-title { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .tl-points { list-style: none; }
+    .tl-points li {
+      font-size: 12px;
+      color: #888;
+      padding: 1px 0;
+      padding-left: 12px;
+      position: relative;
+    }
+    .tl-points li::before { content: "·"; position: absolute; left: 2px; color: #444; }
+    .tl-points li strong { color: #ddd; font-weight: 600; }
+    .tl-points li.highlight { color: #F7931A; }
+    .tl-points li.highlight::before { color: #F7931A; }
+
+    /* Key signals */
+    .signals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sig-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .sig-card h4 { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .sig-card p { font-size: 12px; color: #888; line-height: 1.5; }
+    .sig-card p strong { color: #F7931A; }
+    .sig-card.warn { border-color: rgba(251,191,36,0.25); background: rgba(251,191,36,0.04); }
+    .sig-card.warn h4 { color: #fbbf24; }
+    .sig-card.go { border-color: rgba(74,222,128,0.2); background: rgba(74,222,128,0.04); }
+    .sig-card.go h4 { color: #4ade80; }
+
+    /* Checklist */
+    .checklist { display: flex; flex-wrap: wrap; gap: 8px; }
+    .check-item {
+      font-size: 12px;
+      color: #888;
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 6px;
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .check-item::before { content: "☐"; color: #444; font-size: 13px; }
+
+    .divider { height: 1px; background: #1a1a1a; margin: 6px 0 18px; }
+
+    /* Answer box */
+    .answer-box {
+      background: rgba(247,147,26,0.06);
+      border: 1px solid rgba(247,147,26,0.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .answer-box h4 { font-size: 12px; font-weight: 700; color: #F7931A; margin-bottom: 6px; }
+    .answer-box p { font-size: 12px; color: #bbb; line-height: 1.6; }
+
+    @media print {
+      body { background: #fff; color: #111; padding: 20px; }
+      .snap-card, .tl-item, .sig-card, .check-item { border-color: #ddd; background: #f9f9f9; }
+      .section-title, .tl-time, .sig-card.go h4, .sig-card.warn h4 { color: #c47300; }
+      .tl-title, .sig-card h4 { color: #111; }
+      .tl-points li { color: #444; }
+      .answer-box { background: #fff7ed; border-color: #f97316; }
+      .answer-box p { color: #444; }
+      .badge { background: #fff7ed; color: #c47300; border-color: #fed7aa; }
+      .snap-card .value { color: #111; }
+      .snap-card .value.orange { color: #c47300; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-left">
+      <h1>Dennis Krasemann</h1>
+      <p>Onboarding Call · May 6, 2026 · Bitcoin Daily — $7,500 / 12 months</p>
+    </div>
+    <span class="badge">HIGH VALUE LEAD</span>
+  </div>
+
+  <!-- Client snapshot -->
+  <div class="section">
+    <div class="section-title">Client Snapshot</div>
+    <div class="snapshot">
+      <div class="snap-card">
+        <div class="label">Cash Ready to Deploy</div>
+        <div class="value orange">$900K</div>
+        <div class="sub">Sitting on exchange, not invested</div>
+      </div>
+      <div class="snap-card">
+        <div class="label">Existing Portfolio</div>
+        <div class="value">~$250K+</div>
+        <div class="sub">Exchange (Coinbase / Binance)</div>
+      </div>
+      <div class="snap-card">
+        <div class="label">Time in Market</div>
+        <div class="value">2–5 years</div>
+        <div class="sub">2–5 hrs / week available</div>
+      </div>
+      <div class="snap-card">
+        <div class="label">Current Strategy</div>
+        <div class="value red">None</div>
+        <div class="sub">Figuring it out as he goes</div>
+      </div>
+      <div class="snap-card">
+        <div class="label">Primary Goal</div>
+        <div class="value">Long-term growth</div>
+        <div class="sub">12-month horizon</div>
+      </div>
+      <div class="snap-card">
+        <div class="label">Tried Signals Before</div>
+        <div class="value red">Yes — failed</div>
+        <div class="sub">Needs reassurance on this</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- His two questions — answer these, don't forget -->
+  <div class="section">
+    <div class="section-title">His Specific Questions — Answer Before Call Ends</div>
+    <div class="answer-box">
+      <h4>"When should I start?" + "How much should I invest?"</h4>
+      <p>
+        He's sitting on <strong>$900K cash</strong> and doesn't know what to do with it. This is the whole call.
+        Answer: <strong>Start now — the cycle is active.</strong> Recommended approach: deploy in 3 tranches rather than all at once.
+        Given $900K available, even a conservative 30–40% initial deployment ($270K–$360K) into BTC gives him
+        a serious position to work from. Walk him through a tranche plan on the call.
+      </p>
+    </div>
+  </div>
+
+  <!-- Opening hook -->
+  <div class="section">
+    <div class="section-title">Opening Line <span>— say this verbatim or close to it</span></div>
+    <div style="background:#111; border:1px solid #222; border-radius:10px; padding:14px 16px; font-size:13px; color:#ccc; line-height:1.7; font-style:italic;">
+      "Dennis — I went through your form before this call. You've got $900K in cash sitting on the sideline with no clear strategy yet, and you've been in the market 2–5 years without a real system.
+      That's actually the best position to be in — because we're building from scratch, the right way, with the right timing.
+      Today I want to lock in exactly what we're doing with that capital and make sure you leave this call knowing your first move."
+    </div>
+  </div>
+
+  <!-- Key signals / intel -->
+  <div class="section">
+    <div class="section-title">Key Intel to Use on This Call</div>
+    <div class="signals">
+      <div class="sig-card warn">
+        <h4>Tried signals before — didn't work</h4>
+        <p>Address this head-on. "Most signal services post a call with no context — you don't know why, so you can't trust it, so you don't execute consistently. That's why it didn't work. Every signal I post includes the full reasoning. You understand the trade, not just the ticker."</p>
+      </div>
+      <div class="sig-card go">
+        <h4>$900K cash = massive opportunity</h4>
+        <p>He's asking when to start — the answer is <strong>now</strong>, structured correctly. This is the strongest value prop of the call. A tranche deployment plan turns his biggest anxiety into a clear action step he leaves with today.</p>
+      </div>
+      <div class="sig-card">
+        <h4>Biggest blocker: entry & exit points</h4>
+        <p>This is literally what the service is. Don't just mention it — close the loop explicitly: "That's exactly why clients come to me. Entry and exit is what I do all day."</p>
+      </div>
+      <div class="sig-card">
+        <h4>Goal change = "Nothing"</h4>
+        <p>Low urgency / external motivation. Keep the focus on <strong>clarity and control</strong> rather than lifestyle outcomes. He wants to feel like he knows what he's doing — that's the emotional win for this client.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Simplified call flow -->
+  <div class="section">
+    <div class="section-title">Call Flow <span>— ~45 mins total</span></div>
+    <div class="timeline">
+      <div class="tl-item active">
+        <div class="tl-time">0–5m</div>
+        <div class="tl-content">
+          <div class="tl-title">Open — reference the form, set the frame</div>
+          <ul class="tl-points">
+            <li>Use the opening line above</li>
+            <li>Confirm: still $900K cash? Anything changed since the form?</li>
+            <li>Set agenda: "We'll cover your portfolio, how the signals work, and lock in your 12-month plan"</li>
+          </ul>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">5–15m</div>
+        <div class="tl-content">
+          <div class="tl-title">Portfolio Snapshot — confirm and document</div>
+          <ul class="tl-points">
+            <li>What exactly is the $250K+ in — BTC, ETH, alts?</li>
+            <li>$900K cash — all on exchange? Any off-ramp concerns?</li>
+            <li class="highlight">→ Build the tranche deployment plan: 3 phases, tied to market levels</li>
+            <li>"This is the baseline everything else is built from"</li>
+          </ul>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">15–25m</div>
+        <div class="tl-content">
+          <div class="tl-title">The Signal Group — address the failed signals head-on</div>
+          <ul class="tl-points">
+            <li>Acknowledge he's tried this before — then explain the difference</li>
+            <li>Show him exactly what a signal looks like (entry, TP, SL + reasoning)</li>
+            <li>Walk through how to execute on Coinbase / Binance</li>
+            <li class="highlight">→ Turn notifications on together right now</li>
+            <li>30-day job: just execute, don't overthink it</li>
+          </ul>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">25–35m</div>
+        <div class="tl-content">
+          <div class="tl-title">Portfolio Advisory — quarterly structure + communication</div>
+          <ul class="tl-points">
+            <li>4 quarterly reviews — <strong>book all 4 right now on the call</strong></li>
+            <li>Between calls: direct line for portfolio-specific questions</li>
+            <li>Weekly market updates — no need to follow the news yourself</li>
+            <li>"When I reach out between calls — it matters. That's intentional."</li>
+          </ul>
+        </div>
+      </div>
+      <div class="tl-item active">
+        <div class="tl-time">35–45m</div>
+        <div class="tl-content">
+          <div class="tl-title">12-Month Roadmap + Close — answer his questions explicitly</div>
+          <ul class="tl-points">
+            <li class="highlight">→ Answer: "When to start" — now, here's the tranche plan</li>
+            <li class="highlight">→ Answer: "How much to invest" — walk through the allocation split</li>
+            <li>Month 1–3: signals + deploy tranche 1, audit complete</li>
+            <li>Month 3–6: Q1 review, tranche 2 decision based on market</li>
+            <li>Month 6–12: active management, 2 more reviews</li>
+            <li>"Do you feel completely clear on what you're doing tomorrow?" — don't end without this</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Post-call checklist -->
+  <div class="section">
+    <div class="section-title">Post-Call Checklist</div>
+    <div class="checklist">
+      <div class="check-item">Portfolio snapshot confirmed</div>
+      <div class="check-item">Tranche deployment plan agreed</div>
+      <div class="check-item">Discord + notifications set up</div>
+      <div class="check-item">Signal walked through</div>
+      <div class="check-item">4 quarterly calls booked</div>
+      <div class="check-item">12-month roadmap sent</div>
+      <div class="check-item">Both questions answered</div>
+      <div class="check-item">First action step confirmed</div>
+    </div>
+  </div>
+
+</body>
+</html>

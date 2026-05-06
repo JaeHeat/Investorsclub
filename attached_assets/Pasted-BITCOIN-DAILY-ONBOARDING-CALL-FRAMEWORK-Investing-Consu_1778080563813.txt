@@ -1,0 +1,95 @@
+BITCOIN DAILY — ONBOARDING CALL FRAMEWORK
+Investing Consulting | $7,500 | 12 Months
+
+PURPOSE
+Client leaves knowing exactly what the next 12 months look like. Joshua already has full context from the pre-onboarding form before the call starts. This call is purely about clarity, building the roadmap, and setting expectations so the client never needs to ask what they should be doing next.
+
+PRE-CALL PREP — Read The Form First
+Before joining the call Joshua scans for these 5 things:
+1. Portfolio size and what they're holding Determines the depth of the portfolio audit on the call. Larger and more complex portfolios need more time on this section.
+2. Current strategy No strategy → start from scratch with a full audit. Some structure → identify the gaps and build from there.
+3. Primary goal — income, growth, or both Determines how to frame the signal group and portfolio advisory sections. Income focused → lead with signals. Growth focused → lead with long term strategy.
+4. Biggest challenge or frustration Reference this directly in the opening. Makes the client feel heard immediately.
+5. Specific questions flagged Make sure these get answered before the call ends.
+
+Example using a real form response:
+$50-100K portfolio, holding BTC and ETH → focus audit on allocation and risk exposure across those two positions
+No clear strategy → full audit needed, start from scratch
+Goal is both income and growth → present signals and portfolio advisory as two vehicles running simultaneously
+Biggest challenge is knowing when to move — address this directly when explaining the quarterly advisory structure
+Wants to know how Joshua communicates between calls → cover this in the communication section
+
+BEFORE THE CALL
+Joshua reviews:
+Pre-onboarding form from the Discord channel
+Notes from Dan's closing call
+
+CALL STRUCTURE
+
+OPENING — 5 mins
+Reference something specific from their form. Make them feel like Joshua actually read it.
+"I went through your form before this call — [reference something specific]. So I already have a clear picture of where you're at. Today is about building your personal 12 month plan so you leave this call knowing exactly what you're doing at every stage. No guessing. No confusion."
+
+SECTION 1 — Portfolio Snapshot — 10 mins
+Go through exactly what they're holding based on the form. Confirm the details are accurate and up to date.
+What are they holding and how much
+Where is it held — exchange, cold wallet, brokerage
+Is there anything they're uncertain about right now that needs immediate attention
+What's their current allocation strategy if any
+"This is the baseline we're working from for the entire year. The more transparent you are with me here the better I can advise you throughout the program."
+Output: Joshua has a complete snapshot of the portfolio before moving forward. This becomes the reference point for every quarterly review.
+
+SECTION 2 — The Signal Group — 10 mins
+This is the section that makes the investment make immediate sense. Don't rush it.
+"While your long term portfolio is being structured and managed — you're also getting access to my private trading community where I post my exact trades every day with the full reasoning behind each one. You copy the trade. That's it."
+Walk them through the Discord:
+Show them exactly which channel to watch
+Show them what a real signal looks like — entry, TP, SL
+Walk them through how to execute it on their platform or funded account
+Turn notifications on together right now on this call
+The math:
+"I personally average 5-10% a month from my own trading. Even if you only take a handful of trades and capture half of that — you're looking at 3-5% a month. A lot of clients use funded accounts alongside the signals so they're not touching their long term holdings to generate that income. At 3-5% a month on a funded account that's $3,000 to $5,000 a month. At that rate the program pays for itself within 2 months — before I've made a single move on your long term portfolio."
+30 day expectation:
+"Your only job with the signals in the first 30 days is to get comfortable executing. Show up, follow the trade, don't second guess it. The returns follow the consistency."
+
+SECTION 3 — The Portfolio Advisory Structure — 10 mins
+Walk them through exactly how the long term advisory works so there are no surprises throughout the year.
+Quarterly review calls:
+One call every quarter — Q1, Q2, Q3, and a renewal conversation at month 10
+On each call Joshua reviews their current holdings, performance, and positioning
+He tells them what to adjust, what to hold, what to get out of, and what to move into
+Book all four calls right now on this call so the dates are locked in
+Between quarterly calls:
+Joshua reaches out directly when a significant market move is happening and action needs to be taken
+Weekly market updates sent to keep them informed without needing to follow the news themselves
+Direct line to Joshua for portfolio specific questions
+"I'm not going to be in your DMs every day. But when I do reach out — it matters. That's by design."
+
+SECTION 4 — Communication — 5 mins
+Community first — always.
+Goes to community: General market questions, signal questions, questions other clients have likely already asked
+Goes to Joshua directly: Portfolio specific questions that require his personal input before taking action
+Response time: Within 24 hours on weekdays.
+"If something is urgent post it in the community first — someone there may be able to help you faster."
+
+SECTION 5 — The 12 Month Roadmap — 10 mins
+Build this together based on their specific goal from the form.
+Month 1-3: Copy signals consistently. Portfolio audit complete. Custom strategy in place. First action steps on the long term portfolio taken. Focus on executing signals correctly and getting comfortable with the process.
+Month 3-6: First quarterly review. Portfolio repositioned based on market conditions and their goals. Starting to understand the reasoning behind Joshua's decisions not just following them.
+Month 6-9: Second quarterly review. Confidence building. Portfolio actively managed. Signals generating consistent income alongside long term growth.
+Month 9-12: Third quarterly review. Full system in motion. Renewal conversation begins at month 10. Client has a clear picture of where the portfolio is going into year two.
+
+CLOSING — 5 mins
+"Based on everything we just went through — do you feel completely clear on what the next 30 days look like for you?"
+If yes → confirm everything below and end the call. If no → find the confusion and resolve it before ending. Never let a client leave unclear.
+
+POST CALL CHECKLIST
+Portfolio snapshot confirmed and documented
+Discord set up and notifications on
+Signal walked through and executed or ready to execute
+All four quarterly calls booked
+12 month roadmap document sent
+Direct communication channel confirmed
+
+THE ONE THING
+Client hangs up knowing exactly what they're doing tomorrow. If they know their first action step — the onboarding worked.
