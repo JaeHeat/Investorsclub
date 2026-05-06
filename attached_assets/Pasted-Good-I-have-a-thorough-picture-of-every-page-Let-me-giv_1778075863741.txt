@@ -1,0 +1,60 @@
+Good. I have a thorough picture of every page. Let me give you an honest, specific analysis — fresh eyes only, no retreading old ground.
+
+Journey Analysis & QoL Improvements
+Here's what I found across 5 distinct user journeys:
+
+🔴 Critical gaps (launch blockers)
+1. Onboarding has zero validation — you can skip straight through
+Steps 1–3 have no required field enforcement. A user can click Continue/Complete without entering a single thing. The portal then shows a broken dashboard with all zeros and "—" everywhere.
+
+2. No "unsaved changes" guard on Settings
+Users edit their profile, scroll away or navigate out without saving, and lose everything silently. No dirty-state indicator, no warning.
+
+3. The demo credentials box is publicly visible on login
+This will look amateur to real clients. It needs to be hidden or only shown in a dev/demo mode.
+
+4. Onboarding skips btc_holdings validation — 0 BTC is silently accepted
+A client who enters nothing gets a portfolio with 0 BTC and $0 everywhere, with no prompt to fix it.
+
+5. Notes page — no empty state is inviting
+Notes page is completely blank with no prompt to start writing, no placeholder text in the textarea, and no character count. First impression is broken.
+
+🟠 Medium QoL gaps
+6. No active page title in the browser tab
+Every portal page shows "CryptoTrackr" as the tab title — no indication of which section you're in. Disorienting when you have multiple tabs open.
+
+7. Sidebar has 12 items with no grouping
+Portfolio → Milestones → Cycle → Plan → Exit → DCA → Watchlist → Bear → Roadmap → Reports → Notes → Settings is a flat list of 12 with zero visual separation. Users scan past relevant items.
+
+8. Onboarding never auto-detects country
+The timezone is auto-detected via Intl but country is a blank text field. Inconsistent — and users type "US", "USA", "United States" randomly, which would break any future filtering.
+
+9. Admin broadcast composer has no preview
+The admin types markdown/plain text but has no idea how it renders in the client portal before publishing. They publish blind.
+
+10. No confirmation on destructive admin actions
+Deleting a broadcast is instant — one click, gone, no undo. Same for any future client data actions.
+
+11. Settings page doesn't update BTC holdings or cost basis
+The settings page lets you change risk tolerance and goal but NOT your BTC holdings or cost basis — the two numbers that drive every calculation in the app. Users who entered wrong numbers during onboarding have no way to correct them.
+
+🟡 Polish / small details
+12. "Sign in" button has no focus ring on keyboard navigation
+Accessibility issue — tab-navigating users get no visual feedback on which element is focused across inputs and buttons.
+
+13. Roadmap and Reports empty states both say "Your consultant will add X here"
+This is fine for real use but sounds odd during demo. Both should have a seeded example item in the demo data.
+
+14. The portal sparkline chart disappears if there's only 1 snapshot
+First visit, there's always only 1 snapshot — so the chart never shows for a new user. Should show a flat line placeholder.
+
+15. Mobile nav doesn't close on sign-out
+On mobile, tapping Sign Out navigates away but the overlay doesn't close first, causing a flash.
+
+Which ones should we tackle for launch?
+I'd prioritize in this order: 1, 3, 4, 11, 7, 6, 10, 2 — then the polish items. Want me to go ahead and implement all of them now?
+
+
+Worked for 53 seconds
+Free
+implement them all
