@@ -28,7 +28,7 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: "Advisor",
+    label: "Consultant",
     items: [
       { icon: Map,             label: "Roadmap",         href: "/portal/roadmap" },
       { icon: FileText,        label: "Reports",         href: "/portal/reports" },

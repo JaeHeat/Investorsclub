@@ -180,7 +180,7 @@ export default function OnboardingPage() {
             <div data-testid="onboarding-welcome">
               <h2 className="text-xl font-semibold text-white mb-2">Welcome to your client portal</h2>
               <p className="text-sm text-[hsl(0_0%_50%)] mb-8 leading-relaxed">
-                Before your first audit call, let's set up your profile. This takes about 3 minutes and helps your advisor prepare a personalised strategy for you.
+                Before your first audit call, let's set up your profile. This takes about 3 minutes and helps your consultant prepare a personalised strategy for you.
               </p>
               <div className="space-y-3 mb-8">
                 {[
@@ -408,7 +408,7 @@ export default function OnboardingPage() {
 
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
-                    Questions for your advisor <span className="text-[hsl(0_0%_40%)] normal-case font-normal">(optional)</span>
+                    Questions for your consultant <span className="text-[hsl(0_0%_40%)] normal-case font-normal">(optional)</span>
                   </label>
                   <textarea
                     value={form.notes}
@@ -432,11 +432,11 @@ export default function OnboardingPage() {
               </div>
               <h2 className="text-xl font-semibold text-white mb-2">You're all set!</h2>
               <p className="text-sm text-[hsl(0_0%_50%)] mb-8 leading-relaxed">
-                Your profile is saved. Your advisor will review it before your first call and tailor the session to your portfolio and goals.
+                Your profile is saved. Your consultant will review it before your first call and tailor the session to your portfolio and goals.
               </p>
               <div className="space-y-2 mb-8 text-left">
                 {[
-                  "Your advisor reviews your profile",
+                  "Your consultant reviews your profile",
                   "You receive a calendar invite for the audit call",
                   "On the call: strategy, milestones, and cycle plan",
                   "Your portal is updated after each session",
