@@ -52,14 +52,6 @@ export default function RoadmapPage() {
                 </span>
               </div>
               <p className="text-sm text-[hsl(0_0%_55%)] leading-relaxed whitespace-pre-wrap">{item.content}</p>
-              {!item.user_id && (
-                <span
-                  className="inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide"
-                  style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}
-                >
-                  Global
-                </span>
-              )}
             </div>
           ))}
         </div>

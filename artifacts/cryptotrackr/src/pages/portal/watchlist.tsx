@@ -6,7 +6,7 @@ import { formatUSD } from "@/lib/utils";
 import { CURATED_ALTS, ALT_CATEGORY_COLORS } from "@/lib/portfolioPlans";
 import type { WatchlistItem } from "@/lib/types";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { Eye, Plus, Trash2, ChevronDown, TrendingUp } from "lucide-react";
+import { Eye, Plus, Trash2 } from "lucide-react";
 
 export default function WatchlistPage() {
   const { user } = useAuth();
@@ -24,7 +24,7 @@ export default function WatchlistPage() {
   }, [user]);
 
   const allCoinIds = useMemo(() => watchlist.map((w) => w.coingecko_id), [watchlist]);
-  const { prices } = usePrices(allCoinIds);
+  const { prices, changes24h } = usePrices(allCoinIds);
 
   const filteredAlts = useMemo(() =>
     CURATED_ALTS.filter(
@@ -145,6 +145,7 @@ export default function WatchlistPage() {
         <div className="space-y-2">
           {watchlist.map((item) => {
             const price = prices[item.coingecko_id];
+            const change24h = changes24h[item.coingecko_id];
             const info = altInfoMap[item.coingecko_id];
 
             return (
@@ -172,13 +173,16 @@ export default function WatchlistPage() {
                   {info && <p className="text-[10px] text-[hsl(0_0%_38%)] leading-relaxed">{info.rationale}</p>}
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="flex items-center gap-1 justify-end mb-0.5">
-                    <TrendingUp className="w-3 h-3 text-[hsl(0_0%_40%)]" />
-                    <p className="text-sm font-bold text-white">
-                      {price ? formatUSD(price) : <span className="text-[hsl(0_0%_35%)]">—</span>}
+                  <p className="text-sm font-bold text-white">
+                    {price ? formatUSD(price) : <span className="text-[hsl(0_0%_35%)]">—</span>}
+                  </p>
+                  {change24h != null ? (
+                    <p className="text-[11px] font-semibold mt-0.5" style={{ color: change24h >= 0 ? "#22c55e" : "#ef4444" }}>
+                      {change24h >= 0 ? "+" : ""}{change24h.toFixed(2)}%
                     </p>
-                  </div>
-                  <p className="text-[10px] text-[hsl(0_0%_35%)]">Live price</p>
+                  ) : (
+                    <p className="text-[10px] text-[hsl(0_0%_35%)]">Loading...</p>
+                  )}
                 </div>
                 <button
                   onClick={() => handleRemove(item.coingecko_id)}

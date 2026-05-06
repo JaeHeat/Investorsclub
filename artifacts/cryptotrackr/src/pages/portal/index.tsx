@@ -63,6 +63,16 @@ export default function PortalIndex() {
   const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
+  function dismissBroadcast(id: string) {
+    setDismissedIds((prev) => {
+      const next = new Set([...prev, id]);
+      if (user) {
+        try { localStorage.setItem(`broadcast-dismissed-${user.id}`, JSON.stringify([...next])); } catch {}
+      }
+      return next;
+    });
+  }
+
   useEffect(() => {
     document.title = "Portfolio — CryptoTrackr";
     return () => { document.title = "CryptoTrackr"; };
@@ -73,6 +83,10 @@ export default function PortalIndex() {
       setMilestones(getMilestones(user.id));
       setBroadcasts(getBroadcasts());
       setSnapshots(getPortfolioSnapshots(user.id));
+      try {
+        const raw = localStorage.getItem(`broadcast-dismissed-${user.id}`);
+        if (raw) setDismissedIds(new Set(JSON.parse(raw)));
+      } catch {}
     }
   }, [user]);
 
@@ -118,7 +132,7 @@ export default function PortalIndex() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-white">Portfolio Overview</h1>
         <p className="text-sm text-[hsl(0_0%_45%)] mt-1">
-          Welcome back, {clientProfile?.full_name?.split(" ")[0] || ""}
+          Welcome back, {clientProfile?.full_name?.split(" ")[0] || "there"}
         </p>
       </div>
 
@@ -142,7 +156,7 @@ export default function PortalIndex() {
             <p className="text-xs text-[hsl(0_0%_50%)] leading-relaxed line-clamp-2">{b.content}</p>
           </div>
           <button
-            onClick={() => setDismissedIds((prev) => new Set([...prev, b.id]))}
+            onClick={() => dismissBroadcast(b.id)}
             className="shrink-0 text-[hsl(0_0%_35%)] hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
@@ -172,7 +186,7 @@ export default function PortalIndex() {
         <StatCard label="Current Value" value={currentValue ? formatUSD(currentValue) : "—"} sub={btcHoldings ? formatBTC(btcHoldings) : undefined} accent />
         <StatCard label="Cost Basis" value={formatUSD(costBasisTotal)} sub={`${formatUSD(avgCostBasis)} avg/BTC`} />
         <StatCard label="Total Return" value={returnPct !== null ? formatPct(returnPct) : "—"} sub={gainLoss !== null ? `${isPositive ? "+" : ""}${formatUSD(gainLoss)}` : undefined} />
-        <StatCard label="P&L" value={gainLoss !== null ? formatUSD(Math.abs(gainLoss)) : "—"} sub={isPositive ? "Gain" : "Loss"} />
+        <StatCard label="BTC Holdings" value={btcHoldings ? formatBTC(btcHoldings) : "—"} sub={price ? `@ ${formatUSD(price)}` : undefined} />
       </div>
 
       {returnPct !== null && (
@@ -234,8 +248,12 @@ export default function PortalIndex() {
               <p className="text-sm text-[hsl(0_0%_50%)] mt-0.5">Target: {formatUSD(nextMilestoneValue)}</p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-[hsl(0_0%_45%)]">Target value</p>
-              <p className="text-base font-semibold mt-0.5" style={{ color: "#F7931A" }}>{nextMilestoneValue ? formatUSD(nextMilestoneValue) : "—"}</p>
+              <p className="text-xs text-[hsl(0_0%_45%)]">Still needed</p>
+              <p className="text-base font-semibold mt-0.5" style={{ color: "#F7931A" }}>
+                {currentValue !== null && nextMilestoneValue
+                  ? formatUSD(Math.max(0, nextMilestoneValue - currentValue))
+                  : "—"}
+              </p>
             </div>
           </div>
           {currentValue !== null && nextMilestoneValue && (

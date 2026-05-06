@@ -4,7 +4,7 @@ import { getPersonalNotes, savePersonalNotes } from "@/lib/localStore";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { MessageSquare, Save, Check } from "lucide-react";
 
-const MAX_CHARS = 2000;
+const MAX_CHARS = 5000;
 
 export default function NotesPage() {
   const { user } = useAuth();

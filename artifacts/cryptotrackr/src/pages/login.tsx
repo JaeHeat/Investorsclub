@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bitcoin, Eye, EyeOff, Loader2, ChevronDown } from "lucide-react";
+import { Bitcoin, Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showDemo, setShowDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
@@ -109,52 +108,6 @@ export default function LoginPage() {
             )}
           </button>
         </form>
-
-        <div className="mt-6">
-          <button
-            type="button"
-            onClick={() => setShowDemo(!showDemo)}
-            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs text-[hsl(0_0%_40%)] hover:text-[hsl(0_0%_55%)] transition-colors"
-            style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 13%)" }}
-            data-testid="button-demo-toggle"
-          >
-            <span>Demo credentials</span>
-            <ChevronDown
-              className="w-3.5 h-3.5 transition-transform duration-200"
-              style={{ transform: showDemo ? "rotate(180deg)" : "rotate(0deg)" }}
-            />
-          </button>
-          {showDemo && (
-            <div
-              className="mt-1 px-4 py-3 rounded-xl"
-              style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 13%)" }}
-              data-testid="demo-credentials"
-            >
-              <div className="space-y-1.5 text-xs text-[hsl(0_0%_40%)]">
-                <p>
-                  Admin:{" "}
-                  <button
-                    type="button"
-                    className="text-[hsl(0_0%_60%)] hover:text-white transition-colors underline underline-offset-2"
-                    onClick={() => { setEmail("admin@cryptotrackr.com"); setPassword("admin123"); }}
-                  >
-                    admin@cryptotrackr.com / admin123
-                  </button>
-                </p>
-                <p>
-                  Client:{" "}
-                  <button
-                    type="button"
-                    className="text-[hsl(0_0%_60%)] hover:text-white transition-colors underline underline-offset-2"
-                    onClick={() => { setEmail("client@cryptotrackr.com"); setPassword("client123"); }}
-                  >
-                    client@cryptotrackr.com / client123
-                  </button>
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
 
         <p className="text-center text-xs text-[hsl(0_0%_30%)] mt-6">
           Bitcoin cycle consultation platform

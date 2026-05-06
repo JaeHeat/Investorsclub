@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { upsertClientProfile } from "@/lib/localStore";
@@ -40,8 +40,14 @@ function autoDetectCountry(): string {
 }
 
 export default function OnboardingPage() {
-  const { user, refreshClientProfile } = useAuth();
+  const { user, clientProfile, loading, refreshClientProfile } = useAuth();
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!loading && clientProfile?.onboarding_completed) {
+      setLocation("/portal");
+    }
+  }, [loading, clientProfile, setLocation]);
 
   // step 0 = welcome, 1–3 = form steps, 4 = done
   const [step, setStep] = useState(0);

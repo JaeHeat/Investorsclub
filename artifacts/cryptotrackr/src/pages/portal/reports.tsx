@@ -38,11 +38,6 @@ export default function ReportsPage() {
               <p className="text-xs text-[hsl(0_0%_40%)]">
                 {new Date(selected.published_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
               </p>
-              {selected.is_global && (
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 inline-block" style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}>
-                  Global
-                </span>
-              )}
             </div>
           </div>
           <p className="text-[hsl(0_0%_65%)] leading-relaxed whitespace-pre-wrap text-sm">{selected.content}</p>
@@ -54,7 +49,7 @@ export default function ReportsPage() {
   return (
     <PortalLayout>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-white">Monthly Reports</h1>
+        <h1 className="text-2xl font-semibold text-white">Reports</h1>
         <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Updates and analysis from your consultant</p>
       </div>
 
@@ -83,7 +78,6 @@ export default function ReportsPage() {
                   <p className="text-sm font-medium text-white">{report.title}</p>
                   <p className="text-xs text-[hsl(0_0%_40%)] mt-0.5">
                     {new Date(report.published_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                    {report.is_global && " · Global"}
                   </p>
                 </div>
               </div>
