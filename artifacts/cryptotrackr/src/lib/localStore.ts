@@ -102,6 +102,15 @@ function seedIfEmpty() {
       published_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       is_global: true,
     },
+    {
+      id: uid(),
+      user_id: null,
+      title: "February 2026 — Market Structure Analysis",
+      content:
+        "February saw a significant consolidation phase following the January rally. BTC ranged between $72K–$86K, shaking out weak hands while long-term holders continued to accumulate.\n\nOn-chain highlights:\n- Long-term holder supply hit a new all-time high at 14.2M BTC\n- Funding rates normalized after the leverage flush in late January\n- Realized profit/loss ratio stabilized, indicating reduced sell pressure\n\nOutlook: Healthy consolidation. We expect a continuation of the bull market structure into Q2 2026.",
+      published_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
+      is_global: true,
+    },
   ];
 
   const broadcasts: Broadcast[] = [
@@ -337,7 +346,10 @@ export function setBearChecklistItem(userId: string, itemId: string, checked: bo
 
 export function updateClientSettings(
   userId: string,
-  updates: Partial<Pick<ClientProfile, "risk_tolerance" | "investment_goal" | "initial_portfolio_value" | "full_name" | "timezone" | "country">>
+  updates: Partial<Pick<ClientProfile,
+    "risk_tolerance" | "investment_goal" | "initial_portfolio_value" |
+    "full_name" | "timezone" | "country" | "btc_holdings" | "avg_cost_basis"
+  >>
 ): void {
   const all = read<ClientProfile[]>("ct-profiles", []);
   const idx = all.findIndex((p) => p.user_id === userId);
@@ -345,4 +357,14 @@ export function updateClientSettings(
     all[idx] = { ...all[idx], ...updates };
     write("ct-profiles", all);
   }
+}
+
+// ── Personal Notes ─────────────────────────────────────────────────────────
+
+export function getPersonalNotes(userId: string): string {
+  return localStorage.getItem(`ct-personal-notes-${userId}`) ?? "";
+}
+
+export function savePersonalNotes(userId: string, notes: string): void {
+  localStorage.setItem(`ct-personal-notes-${userId}`, notes);
 }

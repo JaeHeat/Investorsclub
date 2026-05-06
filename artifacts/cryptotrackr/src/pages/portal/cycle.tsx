@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHoldings } from "@/lib/localStore";
@@ -30,6 +30,12 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 
 export default function CyclePage() {
   const { user, clientProfile } = useAuth();
+
+  useEffect(() => {
+    document.title = "Cycle Outlook — CryptoTrackr";
+    return () => { document.title = "CryptoTrackr"; };
+  }, []);
+
   const holdings = useMemo(() => getHoldings(user?.id ?? ""), [user?.id]);
   const coinIds = useMemo(() => holdings.map((h) => h.coingecko_id), [holdings]);
   const { prices } = usePrices(["bitcoin", ...coinIds]);

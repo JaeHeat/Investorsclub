@@ -15,6 +15,11 @@ export default function WatchlistPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
+    document.title = "Watchlist — CryptoTrackr";
+    return () => { document.title = "CryptoTrackr"; };
+  }, []);
+
+  useEffect(() => {
     if (user) setWatchlist(getWatchlist(user.id));
   }, [user]);
 

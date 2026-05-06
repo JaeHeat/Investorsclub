@@ -12,6 +12,11 @@ export default function MilestonesPage() {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
 
   useEffect(() => {
+    document.title = "Milestones — CryptoTrackr";
+    return () => { document.title = "CryptoTrackr"; };
+  }, []);
+
+  useEffect(() => {
     if (user) setMilestones(getMilestones(user.id));
   }, [user]);
 

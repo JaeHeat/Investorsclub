@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHoldings } from "@/lib/localStore";
 import { usePrices } from "@/hooks/usePrices";
@@ -11,6 +11,11 @@ export default function DcaPage() {
   const { user, clientProfile } = useAuth();
   const [monthly, setMonthly] = useState(500);
   const [months, setMonths] = useState(18);
+
+  useEffect(() => {
+    document.title = "DCA Planner — CryptoTrackr";
+    return () => { document.title = "CryptoTrackr"; };
+  }, []);
 
   const holdings = useMemo(() => (user ? getHoldings(user.id) : []), [user]);
   const allCoinIds = useMemo(() => [...new Set(holdings.map((h) => h.coingecko_id))], [holdings]);

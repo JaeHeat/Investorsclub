@@ -20,13 +20,23 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string;
 }
 
 function Sparkline({ snapshots }: { snapshots: PortfolioSnapshot[] }) {
-  if (snapshots.length < 2) return null;
+  const W = 280;
+  const H = 56;
+
+  if (snapshots.length === 1) {
+    const midY = H / 2;
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 56 }}>
+        <line x1="0" y1={midY} x2={W} y2={midY} stroke="hsl(0 0% 25%)" strokeWidth="1.5" strokeDasharray="4 4" />
+        <circle cx={W} cy={midY} r="3" fill="hsl(0 0% 40%)" />
+      </svg>
+    );
+  }
+
   const values = snapshots.map((s) => s.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  const W = 280;
-  const H = 56;
   const pts = values.map((v, i) => {
     const x = (i / (values.length - 1)) * W;
     const y = H - ((v - min) / range) * H * 0.85 - H * 0.075;
@@ -52,6 +62,11 @@ export default function PortalIndex() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    document.title = "Portfolio — CryptoTrackr";
+    return () => { document.title = "CryptoTrackr"; };
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -181,27 +196,31 @@ export default function PortalIndex() {
         </div>
       )}
 
-      {/* Portfolio history sparkline */}
-      {snapshots.length >= 2 && (
+      {/* Portfolio history sparkline — shown with 1+ snapshots */}
+      {snapshots.length >= 1 && (
         <div
           className="rounded-2xl p-5 mb-6"
           style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}
         >
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-[hsl(0_0%_45%)] uppercase tracking-wide">Portfolio history ({snapshots.length} snapshots)</p>
-            {portfolioChangePct !== null && (
+            <p className="text-xs text-[hsl(0_0%_45%)] uppercase tracking-wide">
+              Portfolio history ({snapshots.length} snapshot{snapshots.length !== 1 ? "s" : ""})
+            </p>
+            {portfolioChangePct !== null ? (
               <span
                 className="text-xs font-semibold"
                 style={{ color: portfolioChangePct >= 0 ? "#10b981" : "#ef4444" }}
               >
                 {portfolioChangePct >= 0 ? "+" : ""}{portfolioChangePct.toFixed(1)}% over period
               </span>
+            ) : (
+              <span className="text-xs text-[hsl(0_0%_35%)]">First data point captured</span>
             )}
           </div>
           <Sparkline snapshots={snapshots} />
           <div className="flex justify-between text-[10px] text-[hsl(0_0%_30%)] mt-2">
             <span>{snapshots[0]?.date}</span>
-            <span>{snapshots[snapshots.length - 1]?.date}</span>
+            {snapshots.length > 1 && <span>{snapshots[snapshots.length - 1]?.date}</span>}
           </div>
         </div>
       )}

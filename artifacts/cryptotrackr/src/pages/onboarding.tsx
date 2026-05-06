@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { upsertClientProfile } from "@/lib/localStore";
-import { Bitcoin, ChevronRight, ChevronLeft, Check, Loader2 } from "lucide-react";
+import { Bitcoin, ChevronRight, ChevronLeft, Check, Loader2, AlertCircle } from "lucide-react";
 import { INVESTMENT_GOALS } from "@/lib/portfolioPlans";
 
 const STEPS = 3;
@@ -19,15 +19,36 @@ const TIME_HORIZONS = [
   { value: "4_plus_years", label: "4+ years" },
 ];
 
+const COUNTRIES = [
+  "United States", "United Kingdom", "Canada", "Australia", "Germany",
+  "France", "Netherlands", "Switzerland", "Singapore", "Japan",
+  "United Arab Emirates", "Brazil", "India", "South Korea", "Other",
+];
+
+function autoDetectCountry(): string {
+  try {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+    const region = locale.split("-")[1];
+    if (!region) return "";
+    const names = new Intl.DisplayNames(["en"], { type: "region" });
+    const countryName = names.of(region) ?? "";
+    if (COUNTRIES.includes(countryName)) return countryName;
+    return "";
+  } catch {
+    return "";
+  }
+}
+
 export default function OnboardingPage() {
   const { user, refreshClientProfile } = useAuth();
   const [, setLocation] = useLocation();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState({
     full_name: "",
-    country: "",
+    country: autoDetectCountry(),
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     btc_holdings: "",
     avg_cost_basis: "",
@@ -39,9 +60,49 @@ export default function OnboardingPage() {
 
   function update(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
+    setStepErrors((prev) => ({ ...prev, [field]: "" }));
+  }
+
+  function validateStep(s: number): Record<string, string> {
+    const errors: Record<string, string> = {};
+    if (s === 1) {
+      if (!form.full_name.trim()) errors.full_name = "Full name is required";
+      if (!form.country.trim()) errors.country = "Country is required";
+    }
+    if (s === 2) {
+      const btc = parseFloat(form.btc_holdings);
+      if (!form.btc_holdings || isNaN(btc) || btc <= 0) {
+        errors.btc_holdings = "Enter your BTC holdings (must be greater than 0)";
+      }
+      const cost = parseFloat(form.avg_cost_basis);
+      if (!form.avg_cost_basis || isNaN(cost) || cost <= 0) {
+        errors.avg_cost_basis = "Enter your average cost basis";
+      }
+    }
+    if (s === 3) {
+      if (!form.investment_goal) errors.investment_goal = "Select a return target";
+      if (!form.risk_tolerance) errors.risk_tolerance = "Select a risk tolerance";
+      if (!form.time_horizon) errors.time_horizon = "Select a time horizon";
+    }
+    return errors;
+  }
+
+  function handleNext() {
+    const errors = validateStep(step);
+    if (Object.keys(errors).length > 0) {
+      setStepErrors(errors);
+      return;
+    }
+    setStepErrors({});
+    setStep(step + 1);
   }
 
   function handleSubmit() {
+    const errors = validateStep(step);
+    if (Object.keys(errors).length > 0) {
+      setStepErrors(errors);
+      return;
+    }
     if (!user) return;
     setSubmitting(true);
 
@@ -71,6 +132,20 @@ export default function OnboardingPage() {
 
   const progress = (step / STEPS) * 100;
 
+  const inputClass = "w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none transition-colors";
+  const inputStyle = { background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" };
+  const errorStyle = { background: "hsl(0 0% 10%)", border: "1px solid rgba(239,68,68,0.5)" };
+
+  function FieldError({ field }: { field: string }) {
+    if (!stepErrors[field]) return null;
+    return (
+      <div className="flex items-center gap-1.5 mt-1.5">
+        <AlertCircle className="w-3 h-3 text-red-400 shrink-0" />
+        <p className="text-xs text-red-400">{stepErrors[field]}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: "hsl(0 0% 4%)" }}>
       <div className="w-full max-w-lg">
@@ -99,28 +174,37 @@ export default function OnboardingPage() {
               <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Basic info to personalize your portal</p>
               <div className="space-y-5">
                 <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">Full Name</label>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
+                    Full Name <span className="text-red-400">*</span>
+                  </label>
                   <input
                     type="text"
                     value={form.full_name}
                     onChange={(e) => update("full_name", e.target.value)}
                     placeholder="Jane Smith"
                     data-testid="input-full-name"
-                    className="w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none"
-                    style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}
+                    className={inputClass}
+                    style={stepErrors.full_name ? errorStyle : inputStyle}
                   />
+                  <FieldError field="full_name" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">Country</label>
-                  <input
-                    type="text"
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
+                    Country <span className="text-red-400">*</span>
+                  </label>
+                  <select
                     value={form.country}
                     onChange={(e) => update("country", e.target.value)}
-                    placeholder="United States"
                     data-testid="input-country"
-                    className="w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none"
-                    style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}
-                  />
+                    className={inputClass}
+                    style={stepErrors.country ? errorStyle : inputStyle}
+                  >
+                    <option value="">Select your country...</option>
+                    {COUNTRIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <FieldError field="country" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">Timezone</label>
@@ -129,8 +213,8 @@ export default function OnboardingPage() {
                     value={form.timezone}
                     onChange={(e) => update("timezone", e.target.value)}
                     data-testid="input-timezone"
-                    className="w-full px-3.5 py-2.5 rounded-lg text-sm text-white outline-none"
-                    style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}
+                    className={inputClass}
+                    style={inputStyle}
                   />
                 </div>
               </div>
@@ -143,7 +227,9 @@ export default function OnboardingPage() {
               <p className="text-sm text-[hsl(0_0%_50%)] mb-7">This helps us calculate your portfolio value and milestones</p>
               <div className="space-y-5">
                 <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">Total BTC holdings</label>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
+                    Total BTC holdings <span className="text-red-400">*</span>
+                  </label>
                   <div className="relative">
                     <input
                       type="number"
@@ -151,16 +237,19 @@ export default function OnboardingPage() {
                       onChange={(e) => update("btc_holdings", e.target.value)}
                       placeholder="0.5"
                       step="0.0001"
-                      min="0"
+                      min="0.0001"
                       data-testid="input-btc-holdings"
-                      className="w-full px-3.5 py-2.5 pr-14 rounded-lg text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none"
-                      style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}
+                      className={`${inputClass} pr-14`}
+                      style={stepErrors.btc_holdings ? errorStyle : inputStyle}
                     />
                     <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">BTC</span>
                   </div>
+                  <FieldError field="btc_holdings" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">Average cost basis</label>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
+                    Average cost basis <span className="text-red-400">*</span>
+                  </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
                     <input
@@ -169,15 +258,16 @@ export default function OnboardingPage() {
                       onChange={(e) => update("avg_cost_basis", e.target.value)}
                       placeholder="35000"
                       step="1"
-                      min="0"
+                      min="1"
                       data-testid="input-avg-cost"
-                      className="w-full pl-7 pr-14 py-2.5 rounded-lg text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none"
-                      style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}
+                      className={`${inputClass} pl-7 pr-14`}
+                      style={stepErrors.avg_cost_basis ? errorStyle : inputStyle}
                     />
                     <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">USD</span>
                   </div>
+                  <FieldError field="avg_cost_basis" />
                 </div>
-                {form.btc_holdings && form.avg_cost_basis && (
+                {form.btc_holdings && form.avg_cost_basis && parseFloat(form.btc_holdings) > 0 && parseFloat(form.avg_cost_basis) > 0 && (
                   <div className="rounded-xl p-4" style={{ background: "rgba(247,147,26,0.06)", border: "1px solid rgba(247,147,26,0.15)" }}>
                     <p className="text-xs text-[hsl(0_0%_55%)] mb-0.5">Initial portfolio value</p>
                     <p className="text-lg font-semibold" style={{ color: "#F7931A" }}>
@@ -195,7 +285,9 @@ export default function OnboardingPage() {
               <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Help us understand your return goals</p>
               <div className="space-y-6">
                 <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">Return target this cycle</label>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
+                    Return target this cycle <span className="text-red-400">*</span>
+                  </label>
                   <div className="grid grid-cols-2 gap-2">
                     {INVESTMENT_GOALS.map((g) => (
                       <button
@@ -206,7 +298,7 @@ export default function OnboardingPage() {
                         className="p-3 rounded-xl text-left transition-all"
                         style={{
                           background: form.investment_goal === g.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
-                          border: `1px solid ${form.investment_goal === g.value ? "rgba(247,147,26,0.4)" : "hsl(0 0% 16%)"}`,
+                          border: `1px solid ${form.investment_goal === g.value ? "rgba(247,147,26,0.4)" : stepErrors.investment_goal ? "rgba(239,68,68,0.4)" : "hsl(0 0% 16%)"}`,
                         }}
                       >
                         <p className="text-sm font-bold" style={{ color: form.investment_goal === g.value ? "#F7931A" : "white" }}>{g.label}</p>
@@ -214,10 +306,13 @@ export default function OnboardingPage() {
                       </button>
                     ))}
                   </div>
+                  <FieldError field="investment_goal" />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">Risk tolerance</label>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
+                    Risk tolerance <span className="text-red-400">*</span>
+                  </label>
                   <div className="flex gap-2">
                     {RISK_LEVELS.map((r) => (
                       <button
@@ -228,7 +323,7 @@ export default function OnboardingPage() {
                         className="flex-1 p-3 rounded-xl text-center transition-all"
                         style={{
                           background: form.risk_tolerance === r.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
-                          border: `1px solid ${form.risk_tolerance === r.value ? "rgba(247,147,26,0.4)" : "hsl(0 0% 16%)"}`,
+                          border: `1px solid ${form.risk_tolerance === r.value ? "rgba(247,147,26,0.4)" : stepErrors.risk_tolerance ? "rgba(239,68,68,0.4)" : "hsl(0 0% 16%)"}`,
                         }}
                       >
                         <p className="text-xs font-medium text-white">{r.label}</p>
@@ -236,10 +331,13 @@ export default function OnboardingPage() {
                       </button>
                     ))}
                   </div>
+                  <FieldError field="risk_tolerance" />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">Time horizon</label>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
+                    Time horizon <span className="text-red-400">*</span>
+                  </label>
                   <div className="flex gap-2">
                     {TIME_HORIZONS.map((t) => (
                       <button
@@ -250,7 +348,7 @@ export default function OnboardingPage() {
                         className="flex-1 py-2.5 px-3 rounded-xl text-sm text-center transition-all"
                         style={{
                           background: form.time_horizon === t.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
-                          border: `1px solid ${form.time_horizon === t.value ? "rgba(247,147,26,0.4)" : "hsl(0 0% 16%)"}`,
+                          border: `1px solid ${form.time_horizon === t.value ? "rgba(247,147,26,0.4)" : stepErrors.time_horizon ? "rgba(239,68,68,0.4)" : "hsl(0 0% 16%)"}`,
                           color: form.time_horizon === t.value ? "#F7931A" : "hsl(0 0% 70%)",
                         }}
                       >
@@ -258,6 +356,7 @@ export default function OnboardingPage() {
                       </button>
                     ))}
                   </div>
+                  <FieldError field="time_horizon" />
                 </div>
 
                 <div>
@@ -280,7 +379,7 @@ export default function OnboardingPage() {
             {step > 1 && (
               <button
                 type="button"
-                onClick={() => setStep(step - 1)}
+                onClick={() => { setStepErrors({}); setStep(step - 1); }}
                 data-testid="button-back"
                 className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
                 style={{ background: "hsl(0 0% 11%)", color: "hsl(0 0% 75%)", border: "1px solid hsl(0 0% 16%)" }}
@@ -292,7 +391,7 @@ export default function OnboardingPage() {
             {step < STEPS ? (
               <button
                 type="button"
-                onClick={() => setStep(step + 1)}
+                onClick={handleNext}
                 data-testid="button-next"
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold transition-all"
                 style={{ background: "#F7931A", color: "#0A0A0A" }}

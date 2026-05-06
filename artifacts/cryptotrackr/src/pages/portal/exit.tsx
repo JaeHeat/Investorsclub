@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHoldings } from "@/lib/localStore";
 import { usePrices } from "@/hooks/usePrices";
@@ -17,6 +17,12 @@ const URGENCY_CONFIG: Record<string, { color: string; bg: string; icon: typeof S
 
 export default function ExitStrategyPage() {
   const { user } = useAuth();
+
+  useEffect(() => {
+    document.title = "Exit Strategy — CryptoTrackr";
+    return () => { document.title = "CryptoTrackr"; };
+  }, []);
+
   const holdings = useMemo(() => (user ? getHoldings(user.id) : []), [user]);
 
   const allCoinIds = useMemo(

@@ -70,6 +70,10 @@ const PRIORITY_CONFIG = {
 };
 
 export default function BearProtectionPage() {
+  useEffect(() => {
+    document.title = "Bear Protection — CryptoTrackr";
+    return () => { document.title = "CryptoTrackr"; };
+  }, []);
   const { user } = useAuth();
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const currentPhase = useMemo(() => getCurrentCyclePhase(), []);

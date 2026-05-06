@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHoldings } from "@/lib/localStore";
@@ -123,6 +123,12 @@ function AltCard({ alt, equalPct }: { alt: CuratedAlt; equalPct: number }) {
 
 export default function PlanPage() {
   const { user, clientProfile } = useAuth();
+
+  useEffect(() => {
+    document.title = "Portfolio Plan — CryptoTrackr";
+    return () => { document.title = "CryptoTrackr"; };
+  }, []);
+
   const holdings = useMemo(() => getHoldings(user?.id ?? ""), [user?.id]);
 
   const allCoinIds = useMemo(

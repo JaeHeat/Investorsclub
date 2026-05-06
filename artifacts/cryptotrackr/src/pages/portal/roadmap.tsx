@@ -10,6 +10,11 @@ export default function RoadmapPage() {
   const [items, setItems] = useState<RoadmapItem[]>([]);
 
   useEffect(() => {
+    document.title = "Roadmap — CryptoTrackr";
+    return () => { document.title = "CryptoTrackr"; };
+  }, []);
+
+  useEffect(() => {
     if (user) {
       setItems(getRoadmapItems(user.id));
     }

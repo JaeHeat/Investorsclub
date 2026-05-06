@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bitcoin, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Bitcoin, Eye, EyeOff, Loader2, ChevronDown } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
@@ -21,7 +22,6 @@ export default function LoginPage() {
       setError(signInError);
       setLoading(false);
     }
-    // On success: App.tsx handles redirect via auth state
   }
 
   return (
@@ -51,7 +51,7 @@ export default function LoginPage() {
               required
               placeholder="you@example.com"
               data-testid="input-email"
-              className="w-full px-3.5 py-2.5 rounded-xl text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-xl text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#F7931A] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(0,0%,4%)]"
               style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}
             />
           </div>
@@ -68,13 +68,13 @@ export default function LoginPage() {
                 required
                 placeholder="••••••••"
                 data-testid="input-password"
-                className="w-full px-3.5 py-2.5 pr-10 rounded-xl text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none"
+                className="w-full px-3.5 py-2.5 pr-10 rounded-xl text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none focus-visible:ring-2 focus-visible:ring-[#F7931A] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(0,0%,4%)]"
                 style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(0_0%_40%)] hover:text-[hsl(0_0%_65%)] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(0_0%_40%)] hover:text-[hsl(0_0%_65%)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F7931A] rounded"
                 data-testid="toggle-password"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -96,7 +96,7 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             data-testid="button-signin"
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F7931A] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(0,0%,4%)]"
             style={{ background: "#F7931A", color: "#0A0A0A" }}
           >
             {loading ? (
@@ -110,15 +110,50 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div
-          className="mt-6 px-4 py-3 rounded-xl"
-          style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 13%)" }}
-        >
-          <p className="text-xs font-medium text-[hsl(0_0%_45%)] mb-2">Demo credentials</p>
-          <div className="space-y-1 text-xs text-[hsl(0_0%_40%)]">
-            <p>Admin: <span className="text-[hsl(0_0%_60%)]">admin@cryptotrackr.com / admin123</span></p>
-            <p>Client: <span className="text-[hsl(0_0%_60%)]">client@cryptotrackr.com / client123</span></p>
-          </div>
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={() => setShowDemo(!showDemo)}
+            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs text-[hsl(0_0%_40%)] hover:text-[hsl(0_0%_55%)] transition-colors"
+            style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 13%)" }}
+            data-testid="button-demo-toggle"
+          >
+            <span>Demo credentials</span>
+            <ChevronDown
+              className="w-3.5 h-3.5 transition-transform duration-200"
+              style={{ transform: showDemo ? "rotate(180deg)" : "rotate(0deg)" }}
+            />
+          </button>
+          {showDemo && (
+            <div
+              className="mt-1 px-4 py-3 rounded-xl"
+              style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 13%)" }}
+              data-testid="demo-credentials"
+            >
+              <div className="space-y-1.5 text-xs text-[hsl(0_0%_40%)]">
+                <p>
+                  Admin:{" "}
+                  <button
+                    type="button"
+                    className="text-[hsl(0_0%_60%)] hover:text-white transition-colors underline underline-offset-2"
+                    onClick={() => { setEmail("admin@cryptotrackr.com"); setPassword("admin123"); }}
+                  >
+                    admin@cryptotrackr.com / admin123
+                  </button>
+                </p>
+                <p>
+                  Client:{" "}
+                  <button
+                    type="button"
+                    className="text-[hsl(0_0%_60%)] hover:text-white transition-colors underline underline-offset-2"
+                    onClick={() => { setEmail("client@cryptotrackr.com"); setPassword("client123"); }}
+                  >
+                    client@cryptotrackr.com / client123
+                  </button>
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <p className="text-center text-xs text-[hsl(0_0%_30%)] mt-6">
