@@ -1,13 +1,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { localSignIn, localSignOut, getLocalSession, type LocalUser } from "@/lib/localAuth";
+import { useAuth as useReplitAuth } from "@workspace/replit-auth-web";
+import type { AuthUser } from "@workspace/replit-auth-web";
 import { getClientProfile, upsertClientProfile } from "@/lib/localStore";
 import type { ClientProfile } from "@/lib/types";
 
+export type { AuthUser };
+
 interface AuthContextType {
-  user: LocalUser | null;
+  user: AuthUser | null;
   clientProfile: ClientProfile | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  login: () => void;
   signOut: () => void;
   refreshClientProfile: () => void;
 }
@@ -15,44 +18,42 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<LocalUser | null>(null);
+  const { user, isLoading, login, logout } = useReplitAuth();
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  function loadClientProfile(userId: string) {
+  function loadClientProfile(userId: string, replitUser?: AuthUser | null) {
     const cp = getClientProfile(userId);
-    setClientProfile(cp);
-    return cp;
+    if (!cp) {
+      const name = [replitUser?.firstName, replitUser?.lastName].filter(Boolean).join(" ") || "";
+      upsertClientProfile({
+        user_id: userId,
+        full_name: name,
+        country: null,
+        timezone: null,
+        btc_holdings: null,
+        avg_cost_basis: null,
+        investment_goal: null,
+        risk_tolerance: null,
+        time_horizon: null,
+        notes: null,
+        onboarding_completed: false,
+        initial_portfolio_value: null,
+        high_water_mark: null,
+      });
+      setClientProfile(getClientProfile(userId));
+    } else {
+      setClientProfile(cp);
+    }
   }
 
   useEffect(() => {
-    const session = getLocalSession();
-    if (session) {
-      setUser(session);
-      if (session.role === "client") {
-        loadClientProfile(session.id);
-      }
+    if (!isLoading && user?.role === "client") {
+      loadClientProfile(user.id, user);
     }
-    setLoading(false);
-  }, []);
-
-  async function signIn(email: string, password: string): Promise<{ error: string | null }> {
-    const result = localSignIn(email, password);
-    if ("error" in result) {
-      return { error: result.error };
+    if (!isLoading && !user) {
+      setClientProfile(null);
     }
-    setUser(result.user);
-    if (result.user.role === "client") {
-      loadClientProfile(result.user.id);
-    }
-    return { error: null };
-  }
-
-  function signOut() {
-    localSignOut();
-    setUser(null);
-    setClientProfile(null);
-  }
+  }, [isLoading, user?.id, user?.role]);
 
   function refreshClientProfile() {
     if (user?.role === "client") {
@@ -61,7 +62,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, clientProfile, loading, signIn, signOut, refreshClientProfile }}>
+    <AuthContext.Provider
+      value={{
+        user: user ?? null,
+        clientProfile,
+        loading: isLoading,
+        login,
+        signOut: logout,
+        refreshClientProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
