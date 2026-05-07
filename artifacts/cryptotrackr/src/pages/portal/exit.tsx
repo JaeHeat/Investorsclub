@@ -50,9 +50,11 @@ export default function ExitStrategyPage() {
 
   const currentPhase = useMemo(() => getCurrentCyclePhase(), []);
 
+  const currentPhaseNumericId = currentPhase.id === "bear" ? 6 : (currentPhase.id as number);
+
   const plan = useMemo(
-    () => getExitPlan({ btcValue, ethValue, solValue, altsValue }, currentPhase.id),
-    [btcValue, ethValue, solValue, altsValue, currentPhase.id]
+    () => getExitPlan({ btcValue, ethValue, solValue, altsValue }, currentPhaseNumericId),
+    [btcValue, ethValue, solValue, altsValue, currentPhaseNumericId]
   );
 
   const totalExitValue = plan.reduce((s, t) => s + t.totalSellUsd, 0);
@@ -115,8 +117,8 @@ export default function ExitStrategyPage() {
         {plan.map((t) => {
           const cfg = URGENCY_CONFIG[t.urgency];
           const UrgencyIcon = cfg.icon;
-          const isCurrent = t.phaseId === currentPhase.id;
-          const isPast = t.phaseId < currentPhase.id;
+          const isCurrent = t.phaseId === currentPhaseNumericId;
+          const isPast = t.phaseId < currentPhaseNumericId;
 
           return (
             <div

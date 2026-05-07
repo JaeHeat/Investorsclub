@@ -46,7 +46,7 @@ const CHECKLIST: CheckItem[] = [
   {
     id: "price-alerts",
     label: "Set BTC price alerts for re-entry levels",
-    description: "Historical bear bottoms are 70–85% below the cycle high. Set alerts at $30K, $25K, $20K as watch levels.",
+    description: "Based on historical cycle drawdowns from $126K, watch $50K, $45K, $40K, and $38K as accumulation trigger levels for the 2026 buy window.",
     priority: "high",
   },
   {
@@ -111,7 +111,7 @@ export default function BearProtectionPage() {
       </div>
 
       {/* Phase context */}
-      {currentPhase.id >= 5 && (
+      {currentPhase.phase === "bear" && (
         <div
           className="rounded-2xl p-4 mb-6 flex items-start gap-3"
           style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)" }}

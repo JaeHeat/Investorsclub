@@ -11,6 +11,7 @@ import ReportsPage from "@/pages/portal/reports";
 import NotesPage from "@/pages/portal/notes";
 import PlanPage from "@/pages/portal/plan";
 import ExitStrategyPage from "@/pages/portal/exit";
+import EntryStrategyPage from "@/pages/portal/entry";
 import DcaPage from "@/pages/portal/dca";
 import WatchlistPage from "@/pages/portal/watchlist";
 import BearProtectionPage from "@/pages/portal/bear";
@@ -96,6 +97,9 @@ function AppRoutes() {
       </Route>
       <Route path="/portal/exit">
         <ProtectedRoute requireRole="client"><ExitStrategyPage /></ProtectedRoute>
+      </Route>
+      <Route path="/portal/entry">
+        <ProtectedRoute requireRole="client"><EntryStrategyPage /></ProtectedRoute>
       </Route>
       <Route path="/portal/dca">
         <ProtectedRoute requireRole="client"><DcaPage /></ProtectedRoute>

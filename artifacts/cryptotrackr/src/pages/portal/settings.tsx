@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateClientSettings } from "@/lib/localStore";
-import { INVESTMENT_GOALS } from "@/lib/portfolioPlans";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { Settings, Check, AlertTriangle } from "lucide-react";
 
@@ -232,23 +231,32 @@ export default function SettingsPage() {
             </div>
           </InputRow>
 
-          <InputRow label="Investment goal">
-            <div className="grid grid-cols-2 gap-2">
-              {INVESTMENT_GOALS.map((g) => (
-                <button
-                  key={g.value}
-                  onClick={() => setGoal(g.value)}
-                  className="rounded-xl px-3 py-2.5 text-left transition-all"
-                  style={{
-                    background: goal === g.value ? "rgba(247,147,26,0.08)" : "hsl(0 0% 10%)",
-                    border: goal === g.value ? "1px solid #F7931A" : "1px solid hsl(0 0% 16%)",
-                  }}
-                >
-                  <p className="text-sm font-semibold" style={{ color: goal === g.value ? "#F7931A" : "white" }}>{g.label}</p>
-                  <p className="text-[10px] text-[hsl(0_0%_42%)]">{g.description}</p>
-                </button>
-              ))}
+          <InputRow label="Target portfolio value this cycle ($)">
+            <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
+              <input
+                type="number"
+                className={`${inputClass} pl-7`}
+                value={goal}
+                onChange={(e) => setGoal(e.target.value)}
+                placeholder="e.g. 500000"
+                min={0}
+                step={10000}
+              />
             </div>
+            {(() => {
+              const target = parseFloat(goal);
+              const base = parseFloat(initValue);
+              if (!isNaN(target) && target > 0 && !isNaN(base) && base > 0) {
+                const multiple = (target / base).toFixed(1);
+                return (
+                  <p className="text-xs text-[hsl(0_0%_40%)] mt-1.5">
+                    That's a <span className="text-white font-medium">{multiple}x</span> return on your ${base.toLocaleString()} portfolio
+                  </p>
+                );
+              }
+              return null;
+            })()}
           </InputRow>
         </div>
 

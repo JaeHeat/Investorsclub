@@ -200,7 +200,7 @@ export default function PlanPage() {
     return "#ef4444";
   }
 
-  const isBearPhase = currentPhase.id === 6;
+  const isBearPhase = currentPhase.phase === "bear";
 
   // ── Investment goal + cycle projections ─────────────────────────────────────
   const goal = getInvestmentGoal(clientProfile?.investment_goal);

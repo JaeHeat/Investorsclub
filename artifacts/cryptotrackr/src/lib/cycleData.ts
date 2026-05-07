@@ -357,6 +357,8 @@ export function getDaysSince(date: Date): number {
 
 export function getCurrentCyclePhase(): {
   phase: "bear" | 1 | 2 | 3 | 4 | 5;
+  id: number | "bear";
+  name: string;
   label: string;
   description: string;
   daysIn: number;
@@ -368,11 +370,12 @@ export function getCurrentCyclePhase(): {
   const peak = CURRENT_CYCLE_PEAK_DATE.getTime();
   const buyZone = new Date("2026-10-01").getTime();
   const nextHalving = NEXT_HALVING_DATE.getTime();
-  const nextSell = new Date("2029-09-15").getTime();
 
   if (now < peak) {
     return {
       phase: 5,
+      id: 5,
+      name: "Post-Halving Rally",
       label: "Post-Halving Rally",
       description: "Bitcoin in parabolic bull run phase.",
       daysIn: getDaysSince(CURRENT_HALVING_DATE),
@@ -386,6 +389,8 @@ export function getCurrentCyclePhase(): {
     const totalDuration = Math.round((buyZone - peak) / (1000 * 60 * 60 * 24));
     return {
       phase: "bear",
+      id: "bear",
+      name: "Bear Market",
       label: "Bear Market / Cash Phase",
       description: "Post-cycle drawdown. Hold cash. Watch for buy signals.",
       daysIn,
@@ -397,6 +402,8 @@ export function getCurrentCyclePhase(): {
   if (now < nextHalving) {
     return {
       phase: 1,
+      id: 1,
+      name: "Pre-Halving Accumulation",
       label: "Pre-Halving Accumulation",
       description: "Bear market bottom — DCA window open. This is where wealth is built.",
       daysIn: getDaysSince(new Date("2026-10-01")),
@@ -407,6 +414,8 @@ export function getCurrentCyclePhase(): {
   }
   return {
     phase: 5,
+    id: 5,
+    name: "Post-Halving Rally",
     label: "Post-Halving Rally",
     description: "Next cycle bull run in progress.",
     daysIn: getDaysSince(NEXT_HALVING_DATE),

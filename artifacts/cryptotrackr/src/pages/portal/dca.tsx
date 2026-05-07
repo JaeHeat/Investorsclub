@@ -5,12 +5,16 @@ import { usePrices } from "@/hooks/usePrices";
 import { formatUSD } from "@/lib/utils";
 import { getPortfolioPlan, CYCLE_SCENARIOS, calculateProjection } from "@/lib/portfolioPlans";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { RefreshCw, TrendingUp, Info } from "lucide-react";
+import { RefreshCw, Info } from "lucide-react";
+
+const MIN_MONTHLY = 100;
+const MAX_MONTHLY = 50000;
 
 export default function DcaPage() {
   const { user, clientProfile } = useAuth();
   const [monthly, setMonthly] = useState(500);
   const [months, setMonths] = useState(18);
+  const [monthlyInput, setMonthlyInput] = useState("500");
 
   useEffect(() => {
     document.title = "DCA Planner — CryptoTrackr";
@@ -40,7 +44,7 @@ export default function DcaPage() {
     if (base <= 0) return null;
     return CYCLE_SCENARIOS.map((s) => {
       const baseProjection = calculateProjection(base, plan, s);
-      const dcaProjection = totalDca * s.multipliers.BTC * dcaCompoundFactor;
+      const dcaProjection = totalDca * s.multipliers.btc * dcaCompoundFactor;
       return {
         scenario: s,
         noAdd: baseProjection,
@@ -52,6 +56,33 @@ export default function DcaPage() {
   }, [base, plan, totalDca]);
 
   const maxWithAdd = projections ? projections[projections.length - 1].withAdd : 1;
+
+  function handleSliderChange(val: number) {
+    setMonthly(val);
+    setMonthlyInput(String(val));
+  }
+
+  function handleInputChange(raw: string) {
+    setMonthlyInput(raw);
+    const n = parseInt(raw, 10);
+    if (!isNaN(n) && n >= MIN_MONTHLY && n <= MAX_MONTHLY) {
+      setMonthly(n);
+    }
+  }
+
+  function handleInputBlur() {
+    const n = parseInt(monthlyInput, 10);
+    if (isNaN(n) || n < MIN_MONTHLY) {
+      setMonthly(MIN_MONTHLY);
+      setMonthlyInput(String(MIN_MONTHLY));
+    } else if (n > MAX_MONTHLY) {
+      setMonthly(MAX_MONTHLY);
+      setMonthlyInput(String(MAX_MONTHLY));
+    } else {
+      setMonthly(n);
+      setMonthlyInput(String(n));
+    }
+  }
 
   return (
     <PortalLayout>
@@ -71,22 +102,38 @@ export default function DcaPage() {
         style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}
       >
         <div>
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center justify-between mb-2">
             <label className="text-sm font-medium text-white">Monthly contribution</label>
-            <span className="text-sm font-bold" style={{ color: "#F7931A" }}>{formatUSD(monthly)}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-[hsl(0_0%_45%)]">$</span>
+              <input
+                type="number"
+                value={monthlyInput}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onBlur={handleInputBlur}
+                min={MIN_MONTHLY}
+                max={MAX_MONTHLY}
+                className="w-24 px-2 py-1 rounded-lg text-sm font-bold text-right outline-none"
+                style={{
+                  background: "hsl(0 0% 11%)",
+                  border: "1px solid hsl(0 0% 18%)",
+                  color: "#F7931A",
+                }}
+              />
+            </div>
           </div>
           <input
             type="range"
-            min={100}
-            max={5000}
+            min={MIN_MONTHLY}
+            max={MAX_MONTHLY}
             step={100}
             value={monthly}
-            onChange={(e) => setMonthly(Number(e.target.value))}
+            onChange={(e) => handleSliderChange(Number(e.target.value))}
             className="w-full accent-[#F7931A]"
           />
           <div className="flex justify-between text-[10px] text-[hsl(0_0%_35%)] mt-1">
             <span>$100</span>
-            <span>$5,000</span>
+            <span>$50,000</span>
           </div>
         </div>
 

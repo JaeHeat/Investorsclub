@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
-import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, PieChart, LogOut, Menu, X, TrendingDown, RefreshCw, Eye, Shield, Settings } from "lucide-react";
+import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, PieChart, LogOut, Menu, X, TrendingDown, TrendingUp, RefreshCw, Eye, Shield, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const NAV_GROUPS = [
@@ -16,6 +16,7 @@ const NAV_GROUPS = [
     items: [
       { icon: Activity,        label: "Cycle Outlook",   href: "/portal/cycle" },
       { icon: PieChart,        label: "Portfolio Plan",  href: "/portal/plan" },
+      { icon: TrendingUp,      label: "Entry Strategy",  href: "/portal/entry" },
       { icon: TrendingDown,    label: "Exit Strategy",   href: "/portal/exit" },
       { icon: RefreshCw,       label: "DCA Planner",     href: "/portal/dca" },
     ],

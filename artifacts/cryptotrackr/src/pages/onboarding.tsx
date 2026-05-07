@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { upsertClientProfile } from "@/lib/localStore";
-import { Bitcoin, ChevronRight, ChevronLeft, Check, Loader2, AlertCircle, Calendar, ClipboardList, BarChart2 } from "lucide-react";
-import { INVESTMENT_GOALS } from "@/lib/portfolioPlans";
+import { Bitcoin, ChevronRight, ChevronLeft, Check, AlertCircle, Calendar, ClipboardList, BarChart2 } from "lucide-react";
 
 const STEPS = 3;
 
@@ -14,7 +13,7 @@ const RISK_LEVELS = [
 ];
 
 const TIME_HORIZONS = [
-  { value: "1_year", label: "1 year" },
+  { value: "1_2_years", label: "1–2 years" },
   { value: "2_3_years", label: "2–3 years" },
   { value: "4_plus_years", label: "4+ years" },
 ];
@@ -49,7 +48,6 @@ export default function OnboardingPage() {
     }
   }, [loading, clientProfile, setLocation]);
 
-  // step 0 = welcome, 1–3 = form steps, 4 = done
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
@@ -58,18 +56,32 @@ export default function OnboardingPage() {
     full_name: "",
     country: autoDetectCountry(),
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    btc_holdings: "",
-    avg_cost_basis: "",
-    investment_goal: "",
+    in_crypto: true,
+    total_portfolio_value: "",
+    btc_value: "",
+    eth_value: "",
+    sol_value: "",
+    alts_value: "",
+    cash_value: "",
+    investment_goal_usd: "",
     risk_tolerance: "",
     time_horizon: "",
     notes: "",
   });
 
-  function update(field: string, value: string) {
+  function update(field: string, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setStepErrors((prev) => ({ ...prev, [field]: "" }));
   }
+
+  const totalBreakdown =
+    (parseFloat(form.btc_value) || 0) +
+    (parseFloat(form.eth_value) || 0) +
+    (parseFloat(form.sol_value) || 0) +
+    (parseFloat(form.alts_value) || 0) +
+    (parseFloat(form.cash_value) || 0);
+
+  const portfolioTotal = parseFloat(form.total_portfolio_value) || 0;
 
   function validateStep(s: number): Record<string, string> {
     const errors: Record<string, string> = {};
@@ -78,17 +90,16 @@ export default function OnboardingPage() {
       if (!form.country.trim()) errors.country = "Country is required";
     }
     if (s === 2) {
-      const btc = parseFloat(form.btc_holdings);
-      if (!form.btc_holdings || isNaN(btc) || btc <= 0) {
-        errors.btc_holdings = "Enter your BTC holdings (must be greater than 0)";
-      }
-      const cost = parseFloat(form.avg_cost_basis);
-      if (!form.avg_cost_basis || isNaN(cost) || cost <= 0) {
-        errors.avg_cost_basis = "Enter your average cost basis";
+      const total = parseFloat(form.total_portfolio_value);
+      if (!form.total_portfolio_value || isNaN(total) || total < 0) {
+        errors.total_portfolio_value = "Enter your total portfolio value";
       }
     }
     if (s === 3) {
-      if (!form.investment_goal) errors.investment_goal = "Select a return target";
+      const goalUsd = parseFloat(form.investment_goal_usd);
+      if (!form.investment_goal_usd || isNaN(goalUsd) || goalUsd <= 0) {
+        errors.investment_goal_usd = "Enter your target portfolio value";
+      }
       if (!form.risk_tolerance) errors.risk_tolerance = "Select a risk tolerance";
       if (!form.time_horizon) errors.time_horizon = "Select a time horizon";
     }
@@ -114,24 +125,22 @@ export default function OnboardingPage() {
     if (!user) return;
     setSubmitting(true);
 
-    const btcHoldings = parseFloat(form.btc_holdings);
-    const avgCostBasis = parseFloat(form.avg_cost_basis);
-    const initialPortfolioValue = btcHoldings * avgCostBasis;
+    const totalValue = parseFloat(form.total_portfolio_value) || 0;
 
     upsertClientProfile({
       user_id: user.id,
       full_name: form.full_name,
       country: form.country,
       timezone: form.timezone,
-      btc_holdings: btcHoldings || null,
-      avg_cost_basis: avgCostBasis || null,
-      investment_goal: form.investment_goal,
+      btc_holdings: null,
+      avg_cost_basis: null,
+      investment_goal: form.investment_goal_usd,
       risk_tolerance: form.risk_tolerance,
       time_horizon: form.time_horizon,
       notes: form.notes,
       onboarding_completed: true,
-      initial_portfolio_value: initialPortfolioValue || null,
-      high_water_mark: initialPortfolioValue || null,
+      initial_portfolio_value: totalValue || null,
+      high_water_mark: totalValue || null,
     });
 
     refreshClientProfile();
@@ -155,6 +164,9 @@ export default function OnboardingPage() {
     );
   }
 
+  const goalUsd = parseFloat(form.investment_goal_usd);
+  const goalMultiple = portfolioTotal > 0 && !isNaN(goalUsd) ? (goalUsd / portfolioTotal).toFixed(1) : null;
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: "hsl(0 0% 4%)" }}>
       <div className="w-full max-w-lg">
@@ -163,7 +175,6 @@ export default function OnboardingPage() {
           <span className="text-lg font-semibold tracking-tight text-white">CryptoTrackr</span>
         </div>
 
-        {/* Progress bar — only visible on form steps */}
         {step >= 1 && step <= 3 && (
           <div className="mb-8">
             <div className="flex justify-between items-center mb-3">
@@ -181,7 +192,7 @@ export default function OnboardingPage() {
 
         <div className="rounded-2xl p-8" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
 
-          {/* ── STEP 0: Welcome ────────────────────────────────────────────── */}
+          {/* ── STEP 0: Welcome ─────────────────────────────────────────────── */}
           {step === 0 && (
             <div data-testid="onboarding-welcome">
               <h2 className="text-xl font-semibold text-white mb-2">Welcome to your client portal</h2>
@@ -191,8 +202,8 @@ export default function OnboardingPage() {
               <div className="space-y-3 mb-8">
                 {[
                   { icon: ClipboardList, label: "Your details", desc: "Name, country, and timezone" },
-                  { icon: BarChart2, label: "Your BTC position", desc: "Holdings and average cost basis" },
-                  { icon: Calendar, label: "Your investment goals", desc: "Return target, risk, and time horizon" },
+                  { icon: BarChart2, label: "Your portfolio", desc: "Total value and asset breakdown" },
+                  { icon: Calendar, label: "Your investment goals", desc: "Target, risk, and time horizon" },
                 ].map(({ icon: Icon, label, desc }) => (
                   <div key={label} className="flex items-center gap-3 rounded-xl p-3.5" style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 14%)" }}>
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(247,147,26,0.1)" }}>
@@ -218,7 +229,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── STEP 1: Personal details ───────────────────────────────────── */}
+          {/* ── STEP 1: Personal details ──────────────────────────────────── */}
           {step === 1 && (
             <div data-testid="onboarding-step-1">
               <h2 className="text-xl font-semibold text-white mb-1">Tell us about yourself</h2>
@@ -272,58 +283,113 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── STEP 2: BTC holdings ───────────────────────────────────────── */}
+          {/* ── STEP 2: Portfolio ─────────────────────────────────────────── */}
           {step === 2 && (
             <div data-testid="onboarding-step-2">
-              <h2 className="text-xl font-semibold text-white mb-1">Your BTC holdings</h2>
-              <p className="text-sm text-[hsl(0_0%_50%)] mb-7">This helps us calculate your portfolio value and milestones</p>
+              <h2 className="text-xl font-semibold text-white mb-1">Your portfolio</h2>
+              <p className="text-sm text-[hsl(0_0%_50%)] mb-6">This determines your tier, plan, and projections</p>
+
+              {/* Toggle */}
+              <div className="flex gap-2 mb-6">
+                <button
+                  type="button"
+                  onClick={() => update("in_crypto", true)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all"
+                  style={{
+                    background: form.in_crypto ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
+                    border: `1px solid ${form.in_crypto ? "rgba(247,147,26,0.4)" : "hsl(0 0% 16%)"}`,
+                    color: form.in_crypto ? "#F7931A" : "hsl(0 0% 65%)",
+                  }}
+                >
+                  Holding crypto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => update("in_crypto", false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all"
+                  style={{
+                    background: !form.in_crypto ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
+                    border: `1px solid ${!form.in_crypto ? "rgba(247,147,26,0.4)" : "hsl(0 0% 16%)"}`,
+                    color: !form.in_crypto ? "#F7931A" : "hsl(0 0% 65%)",
+                  }}
+                >
+                  Mostly cash
+                </button>
+              </div>
+
               <div className="space-y-5">
+                {/* Total portfolio value */}
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
-                    Total BTC holdings <span className="text-red-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={form.btc_holdings}
-                      onChange={(e) => update("btc_holdings", e.target.value)}
-                      placeholder="0.5"
-                      step="0.0001"
-                      min="0.0001"
-                      data-testid="input-btc-holdings"
-                      className={`${inputClass} pr-14`}
-                      style={stepErrors.btc_holdings ? errorStyle : inputStyle}
-                    />
-                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">BTC</span>
-                  </div>
-                  <FieldError field="btc_holdings" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
-                    Average cost basis <span className="text-red-400">*</span>
+                    {form.in_crypto ? "Total portfolio value" : "Total investable capital"} <span className="text-red-400">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
                     <input
                       type="number"
-                      value={form.avg_cost_basis}
-                      onChange={(e) => update("avg_cost_basis", e.target.value)}
-                      placeholder="35000"
-                      step="1"
-                      min="1"
-                      data-testid="input-avg-cost"
+                      value={form.total_portfolio_value}
+                      onChange={(e) => update("total_portfolio_value", e.target.value)}
+                      placeholder={form.in_crypto ? "150000" : "50000"}
+                      step="1000"
+                      min="0"
+                      data-testid="input-portfolio-value"
                       className={`${inputClass} pl-7 pr-14`}
-                      style={stepErrors.avg_cost_basis ? errorStyle : inputStyle}
+                      style={stepErrors.total_portfolio_value ? errorStyle : inputStyle}
                     />
                     <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">USD</span>
                   </div>
-                  <FieldError field="avg_cost_basis" />
+                  <FieldError field="total_portfolio_value" />
                 </div>
-                {form.btc_holdings && form.avg_cost_basis && parseFloat(form.btc_holdings) > 0 && parseFloat(form.avg_cost_basis) > 0 && (
+
+                {/* Asset breakdown — crypto mode only */}
+                {form.in_crypto && (
+                  <div>
+                    <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-3 uppercase tracking-wide">
+                      Asset breakdown <span className="text-[hsl(0_0%_40%)] normal-case font-normal">(optional)</span>
+                    </label>
+                    <div className="space-y-2.5">
+                      {[
+                        { field: "btc_value", label: "Bitcoin (BTC)", color: "#F7931A" },
+                        { field: "eth_value", label: "Ethereum (ETH)", color: "#627EEA" },
+                        { field: "sol_value", label: "Solana (SOL)", color: "#9945FF" },
+                        { field: "alts_value", label: "Other alts", color: "#10b981" },
+                        { field: "cash_value", label: "Cash / stablecoins", color: "#6b7280" },
+                      ].map(({ field, label, color }) => (
+                        <div key={field} className="flex items-center gap-3">
+                          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+                          <span className="text-xs text-[hsl(0_0%_55%)] w-40 shrink-0">{label}</span>
+                          <div className="relative flex-1">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[hsl(0_0%_40%)]">$</span>
+                            <input
+                              type="number"
+                              value={form[field as keyof typeof form] as string}
+                              onChange={(e) => update(field, e.target.value)}
+                              placeholder="0"
+                              step="1000"
+                              min="0"
+                              className="w-full pl-6 pr-3 py-2 rounded-lg text-sm text-white placeholder-[hsl(0_0%_25%)] outline-none"
+                              style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {totalBreakdown > 0 && (
+                      <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid hsl(0 0% 14%)" }}>
+                        <span className="text-xs text-[hsl(0_0%_45%)]">Breakdown total</span>
+                        <span className="text-sm font-semibold" style={{ color: Math.abs(totalBreakdown - portfolioTotal) < 1000 ? "#10b981" : "#F7931A" }}>
+                          ${totalBreakdown.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {portfolioTotal > 0 && (
                   <div className="rounded-xl p-4" style={{ background: "rgba(247,147,26,0.06)", border: "1px solid rgba(247,147,26,0.15)" }}>
-                    <p className="text-xs text-[hsl(0_0%_55%)] mb-0.5">Initial portfolio value</p>
+                    <p className="text-xs text-[hsl(0_0%_55%)] mb-0.5">Portfolio value entered</p>
                     <p className="text-lg font-semibold" style={{ color: "#F7931A" }}>
-                      ${(parseFloat(form.btc_holdings) * parseFloat(form.avg_cost_basis)).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      ${portfolioTotal.toLocaleString("en-US")}
                     </p>
                   </div>
                 )}
@@ -331,37 +397,42 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── STEP 3: Investment strategy ────────────────────────────────── */}
+          {/* ── STEP 3: Investment strategy ───────────────────────────────── */}
           {step === 3 && (
             <div data-testid="onboarding-step-3">
               <h2 className="text-xl font-semibold text-white mb-1">Investment strategy</h2>
               <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Help us understand your goals for this cycle</p>
               <div className="space-y-6">
+
+                {/* Custom dollar target */}
                 <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
-                    Return target this cycle <span className="text-red-400">*</span>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
+                    Target portfolio value this cycle <span className="text-red-400">*</span>
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {INVESTMENT_GOALS.map((g) => (
-                      <button
-                        key={g.value}
-                        type="button"
-                        onClick={() => update("investment_goal", g.value)}
-                        data-testid={`goal-${g.value}`}
-                        className="p-3 rounded-xl text-left transition-all"
-                        style={{
-                          background: form.investment_goal === g.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
-                          border: `1px solid ${form.investment_goal === g.value ? "rgba(247,147,26,0.4)" : stepErrors.investment_goal ? "rgba(239,68,68,0.4)" : "hsl(0 0% 16%)"}`,
-                        }}
-                      >
-                        <p className="text-sm font-bold" style={{ color: form.investment_goal === g.value ? "#F7931A" : "white" }}>{g.label}</p>
-                        <p className="text-[10px] text-[hsl(0_0%_45%)] mt-0.5">{g.description}</p>
-                      </button>
-                    ))}
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
+                    <input
+                      type="number"
+                      value={form.investment_goal_usd}
+                      onChange={(e) => update("investment_goal_usd", e.target.value)}
+                      placeholder="500000"
+                      step="10000"
+                      min="1"
+                      data-testid="input-investment-goal"
+                      className={`${inputClass} pl-7 pr-14`}
+                      style={stepErrors.investment_goal_usd ? errorStyle : inputStyle}
+                    />
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">USD</span>
                   </div>
-                  <FieldError field="investment_goal" />
+                  {goalMultiple && !isNaN(parseFloat(form.investment_goal_usd)) && (
+                    <p className="text-xs text-[hsl(0_0%_42%)] mt-1.5">
+                      That's a <span className="text-white font-medium">{goalMultiple}x</span> return on your ${portfolioTotal.toLocaleString()} portfolio
+                    </p>
+                  )}
+                  <FieldError field="investment_goal_usd" />
                 </div>
 
+                {/* Risk tolerance */}
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
                     Risk tolerance <span className="text-red-400">*</span>
@@ -387,6 +458,7 @@ export default function OnboardingPage() {
                   <FieldError field="risk_tolerance" />
                 </div>
 
+                {/* Time horizon */}
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
                     Time horizon <span className="text-red-400">*</span>
@@ -412,6 +484,7 @@ export default function OnboardingPage() {
                   <FieldError field="time_horizon" />
                 </div>
 
+                {/* Notes */}
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
                     Questions for your consultant <span className="text-[hsl(0_0%_40%)] normal-case font-normal">(optional)</span>
@@ -430,7 +503,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── STEP 4: Done ───────────────────────────────────────────────── */}
+          {/* ── STEP 4: Done ─────────────────────────────────────────────── */}
           {step === 4 && (
             <div data-testid="onboarding-complete" className="text-center">
               <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: "rgba(247,147,26,0.12)" }}>
@@ -466,7 +539,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── Navigation buttons (steps 1–3 only) ───────────────────────── */}
+          {/* ── Navigation buttons (steps 1–3 only) ─────────────────────── */}
           {step >= 1 && step <= 3 && (
             <div className="flex gap-3 mt-8">
               <button
@@ -495,21 +568,12 @@ export default function OnboardingPage() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={submitting}
-                  data-testid="button-complete"
+                  data-testid="button-submit"
                   className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-60"
                   style={{ background: "#F7931A", color: "#0A0A0A" }}
                 >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4" />
-                      Complete Setup
-                    </>
-                  )}
+                  Complete setup
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               )}
             </div>
