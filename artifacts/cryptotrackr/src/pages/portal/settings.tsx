@@ -28,7 +28,8 @@ export default function SettingsPage() {
   const [, setLocation] = useLocation();
 
   const initial = {
-    fullName:   clientProfile?.full_name   ?? "",
+    fullName:        clientProfile?.full_name        ?? "",
+    discordUsername: clientProfile?.discord_username ?? "",
     country:    clientProfile?.country      ?? "",
     timezone:   clientProfile?.timezone     ?? "America/New_York",
     risk:       clientProfile?.risk_tolerance ?? "moderate",
@@ -38,8 +39,9 @@ export default function SettingsPage() {
     initValue:  clientProfile?.initial_portfolio_value != null ? String(clientProfile.initial_portfolio_value) : "",
   };
 
-  const [fullName,    setFullName]    = useState(initial.fullName);
-  const [country,     setCountry]     = useState(initial.country);
+  const [fullName,        setFullName]        = useState(initial.fullName);
+  const [discordUsername, setDiscordUsername] = useState(initial.discordUsername);
+  const [country,         setCountry]         = useState(initial.country);
   const [timezone,    setTimezone]    = useState(initial.timezone);
   const [risk,        setRisk]        = useState(initial.risk);
   const [goal,        setGoal]        = useState(initial.goal);
@@ -50,6 +52,7 @@ export default function SettingsPage() {
 
   const isDirty =
     fullName !== initial.fullName ||
+    discordUsername !== initial.discordUsername ||
     country !== initial.country ||
     timezone !== initial.timezone ||
     risk !== initial.risk ||
@@ -79,7 +82,8 @@ export default function SettingsPage() {
     const btc = btcHoldings ? parseFloat(btcHoldings) : undefined;
     const cost = avgCost ? parseFloat(avgCost) : undefined;
     updateClientSettings(user.id, {
-      full_name: fullName || null,
+      full_name:        fullName        || null,
+      discord_username: discordUsername || null,
       country:   country  || null,
       timezone:  timezone || null,
       risk_tolerance: risk,
@@ -134,6 +138,17 @@ export default function SettingsPage() {
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Your full name"
             />
+          </InputRow>
+          <InputRow label="Discord username">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_40%)]">@</span>
+              <input
+                className={`${inputClass} pl-7`}
+                value={discordUsername}
+                onChange={(e) => setDiscordUsername(e.target.value.replace(/^@/, ""))}
+                placeholder="yourhandle"
+              />
+            </div>
           </InputRow>
           <InputRow label="Country">
             <select

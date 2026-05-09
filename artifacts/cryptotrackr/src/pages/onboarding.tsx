@@ -56,6 +56,7 @@ export default function OnboardingPage() {
     full_name: "",
     country: autoDetectCountry(),
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    discord_username: "",
     in_crypto: true,
     total_portfolio_value: "",
     btc_value: "",
@@ -138,6 +139,7 @@ export default function OnboardingPage() {
       risk_tolerance: form.risk_tolerance,
       time_horizon: form.time_horizon,
       notes: form.notes,
+      discord_username: form.discord_username || null,
       onboarding_completed: true,
       initial_portfolio_value: totalValue || null,
       high_water_mark: totalValue || null,
@@ -278,6 +280,24 @@ export default function OnboardingPage() {
                     className={inputClass}
                     style={inputStyle}
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
+                    Discord username <span className="text-[hsl(0_0%_40%)] normal-case font-normal">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_40%)]">@</span>
+                    <input
+                      type="text"
+                      value={form.discord_username}
+                      onChange={(e) => update("discord_username", e.target.value.replace(/^@/, ""))}
+                      placeholder="yourhandle"
+                      data-testid="input-discord"
+                      className={`${inputClass} pl-8`}
+                      style={inputStyle}
+                    />
+                  </div>
+                  <p className="text-[10px] text-[hsl(0_0%_35%)] mt-1.5">Used to set up your private Discord channel</p>
                 </div>
               </div>
             </div>

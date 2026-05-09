@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         risk_tolerance: null,
         time_horizon: null,
         notes: null,
+        discord_username: null,
         onboarding_completed: false,
         initial_portfolio_value: null,
         high_water_mark: null,

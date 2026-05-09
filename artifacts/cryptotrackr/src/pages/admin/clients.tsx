@@ -297,6 +297,7 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
               { label: "Risk Tolerance", value: client.risk_tolerance },
               { label: "Time Horizon", value: client.time_horizon?.replace(/_/g, " ") },
               { label: "Initial Portfolio Value", value: initialValue ? formatUSD(initialValue) : null },
+              { label: "Discord", value: client.discord_username ? `@${client.discord_username}` : null },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between text-sm">
                 <span className="text-[hsl(0_0%_40%)]">{label}</span>

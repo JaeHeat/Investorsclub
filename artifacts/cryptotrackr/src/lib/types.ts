@@ -19,6 +19,7 @@ export interface ClientProfile {
   risk_tolerance: string | null;
   time_horizon: string | null;
   notes: string | null;
+  discord_username: string | null;
   onboarding_completed: boolean;
   initial_portfolio_value: number | null;
   high_water_mark: number | null;
