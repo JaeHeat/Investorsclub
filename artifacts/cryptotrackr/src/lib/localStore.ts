@@ -347,7 +347,7 @@ export function updateClientSettings(
   userId: string,
   updates: Partial<Pick<ClientProfile,
     "risk_tolerance" | "investment_goal" | "initial_portfolio_value" |
-    "full_name" | "timezone" | "country" | "btc_holdings" | "avg_cost_basis" | "discord_username"
+    "full_name" | "timezone" | "country" | "btc_holdings" | "avg_cost_basis" | "discord_username" | "time_horizon"
   >>
 ): void {
   const all = read<ClientProfile[]>("ct-profiles", []);

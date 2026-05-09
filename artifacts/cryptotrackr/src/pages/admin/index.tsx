@@ -1,4 +1,4 @@
-import { getAllClientProfiles, getMilestones } from "@/lib/localStore";
+import { getAllClientProfiles, getMilestones, getHoldings } from "@/lib/localStore";
 import { formatUSD, getPortfolioTier } from "@/lib/utils";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Users, TrendingUp, Target, DollarSign } from "lucide-react";
@@ -29,14 +29,14 @@ export default function AdminDashboard() {
   const allMilestones = clients.flatMap((c) => getMilestones(c.user_id));
 
   const totalClients = clients.length;
-  const totalAUM = clients.reduce((sum, c) => {
-    if (price && c.btc_holdings) return sum + c.btc_holdings * price;
-    return sum + (c.initial_portfolio_value ?? 0);
-  }, 0);
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const milestonesThisMonth = allMilestones.filter((m) => m.hit && m.hit_at && m.hit_at >= startOfMonth).length;
+  // Consistent AUM: always use initial_portfolio_value as the baseline
+  const totalAUM = clients.reduce((sum, c) => sum + (c.initial_portfolio_value ?? 0), 0);
+
+  const totalMilestonesHit = allMilestones.filter((m) => m.hit).length;
+
+  // Pending targets = un-hit milestones across all clients
+  const pendingTargets = allMilestones.filter((m) => !m.hit).length;
 
   return (
     <AdminLayout>
@@ -48,8 +48,8 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
         <SummaryCard icon={Users} label="Total Clients" value={String(totalClients)} />
         <SummaryCard icon={DollarSign} label="Total AUM" value={formatUSD(totalAUM)} />
-        <SummaryCard icon={Target} label="Milestones Hit" value={String(allMilestones.filter((m) => m.hit).length)} />
-        <SummaryCard icon={TrendingUp} label="This Month" value={String(milestonesThisMonth)} />
+        <SummaryCard icon={Target} label="Milestones Hit" value={String(totalMilestonesHit)} />
+        <SummaryCard icon={TrendingUp} label="Pending Targets" value={String(pendingTargets)} />
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid hsl(0 0% 13%)" }}>
@@ -74,12 +74,26 @@ export default function AdminDashboard() {
               <span>Tier</span>
             </div>
             {clients.map((client) => {
-              const currentValue = price && client.btc_holdings ? client.btc_holdings * price : null;
-              const costBasis = client.btc_holdings && client.avg_cost_basis
-                ? client.btc_holdings * client.avg_cost_basis
-                : 0;
-              const returnPct =
-                costBasis > 0 && currentValue ? ((currentValue - costBasis) / costBasis) * 100 : null;
+              // Use holdings array with live BTC price for an accurate return estimate
+              const clientHoldings = getHoldings(client.user_id);
+              const totalCost = clientHoldings.reduce((s, h) => s + h.amount * h.avg_cost, 0);
+
+              // BTC gets live price; other assets use avg_cost as a stable proxy
+              const approxCurrentValue = price && clientHoldings.length > 0
+                ? clientHoldings.reduce((s, h) => {
+                    const assetPrice = h.coingecko_id === "bitcoin" ? price : h.avg_cost;
+                    return s + h.amount * assetPrice;
+                  }, 0)
+                : null;
+
+              const returnPct = totalCost > 0 && approxCurrentValue !== null
+                ? ((approxCurrentValue - totalCost) / totalCost) * 100
+                : null;
+
+              const displayValue = client.initial_portfolio_value
+                ? formatUSD(client.initial_portfolio_value)
+                : "—";
+
               const tier = getPortfolioTier(client.initial_portfolio_value ?? 0);
 
               return (
@@ -91,17 +105,13 @@ export default function AdminDashboard() {
                   data-testid={`admin-client-row-${client.user_id}`}
                 >
                   <span className="col-span-2 text-sm font-medium text-white truncate">{client.full_name || "—"}</span>
-                  <span className="text-sm text-[hsl(0_0%_65%)]">
-                    {currentValue
-                      ? formatUSD(currentValue)
-                      : client.initial_portfolio_value
-                        ? formatUSD(client.initial_portfolio_value)
-                        : "—"}
-                  </span>
+                  <span className="text-sm text-[hsl(0_0%_65%)]">{displayValue}</span>
                   <span
-                    className={`text-sm font-medium ${returnPct !== null && returnPct >= 0 ? "text-green-400" : "text-red-400"}`}
+                    className={`text-sm font-medium ${returnPct !== null && returnPct >= 0 ? "text-green-400" : returnPct !== null ? "text-red-400" : "text-[hsl(0_0%_45%)]"}`}
                   >
-                    {returnPct !== null ? `${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(1)}%` : "—"}
+                    {returnPct !== null
+                      ? `${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(1)}%`
+                      : clientHoldings.length === 0 ? "No data" : "—"}
                   </span>
                   <span
                     className="text-xs font-semibold px-2 py-0.5 rounded-full w-fit"

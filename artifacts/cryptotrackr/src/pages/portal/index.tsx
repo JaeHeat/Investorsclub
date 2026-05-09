@@ -5,7 +5,6 @@ import {
   savePortfolioSnapshot, getHoldings,
 } from "@/lib/localStore";
 import type { Milestone, Broadcast, PortfolioSnapshot } from "@/lib/types";
-import { useBtcPrice } from "@/hooks/useBtcPrice";
 import { usePrices } from "@/hooks/usePrices";
 import { formatUSD, formatPct, MILESTONE_PCTS } from "@/lib/utils";
 import PortalLayout from "@/components/layout/PortalLayout";
@@ -13,14 +12,14 @@ import { TrendingUp, TrendingDown, RefreshCw, Bitcoin, X, Radio, ArrowRight } fr
 import { Link } from "wouter";
 
 function StatCard({
-  label, value, sub, accent,
-}: { label: string; value: string; sub?: string; accent?: boolean }) {
+  label, value, sub, valueColor,
+}: { label: string; value: string; sub?: string; valueColor?: string }) {
   return (
     <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
       <p className="text-xs text-[hsl(0_0%_45%)] uppercase tracking-wide mb-2">{label}</p>
       <p
         className="text-2xl font-semibold tracking-tight"
-        style={{ color: accent ? "#F7931A" : "white" }}
+        style={{ color: valueColor ?? "white" }}
         data-testid={`stat-${label.toLowerCase().replace(/\s+/g, "-")}`}
       >
         {value}
@@ -65,7 +64,6 @@ function Sparkline({ snapshots }: { snapshots: PortfolioSnapshot[] }) {
 
 export default function PortalIndex() {
   const { clientProfile, user } = useAuth();
-  const { price, loading: priceLoading } = useBtcPrice();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>([]);
@@ -101,7 +99,13 @@ export default function PortalIndex() {
   // ── Multi-asset portfolio ───────────────────────────────────────────────────
   const holdings = useMemo(() => (user ? getHoldings(user.id) : []), [user]);
   const coinIds = useMemo(() => holdings.map((h) => h.coingecko_id), [holdings]);
-  const { prices, loading: pricesLoading } = usePrices(coinIds);
+
+  // Always include bitcoin so we can show its live price regardless of holdings
+  const allCoinIds = useMemo(() => {
+    return coinIds.includes("bitcoin") ? coinIds : ["bitcoin", ...coinIds];
+  }, [coinIds]);
+
+  const { prices, changes24h, loading: pricesLoading } = usePrices(allCoinIds);
 
   const totalCostBasis = useMemo(
     () => holdings.reduce((s, h) => s + h.amount * h.avg_cost, 0),
@@ -121,6 +125,10 @@ export default function PortalIndex() {
   const initialValue = clientProfile?.initial_portfolio_value ?? 0;
   const hasHoldings = holdings.length > 0;
 
+  // BTC live price + 24h change
+  const btcPrice = prices["bitcoin"] ?? null;
+  const btcChange24h = changes24h["bitcoin"] ?? null;
+
   // ── Save daily snapshot using total portfolio value ─────────────────────────
   useEffect(() => {
     if (user && totalCurrentValue !== null && totalCurrentValue > 0) {
@@ -135,14 +143,9 @@ export default function PortalIndex() {
   });
   const nextMilestoneValue = nextMilestone && initialValue ? initialValue * (1 + nextMilestone / 100) : null;
 
-  const recentBroadcasts = useMemo(
-    () =>
-      broadcasts
-        .filter((b) => {
-          const ageDays = (Date.now() - new Date(b.created_at).getTime()) / 86400000;
-          return ageDays <= 14 && !dismissedIds.has(b.id);
-        })
-        .slice(0, 2),
+  // Show all undismissed broadcasts — no time cutoff
+  const visibleBroadcasts = useMemo(
+    () => broadcasts.filter((b) => !dismissedIds.has(b.id)).slice(0, 3),
     [broadcasts, dismissedIds]
   );
 
@@ -165,7 +168,7 @@ export default function PortalIndex() {
       </div>
 
       {/* Broadcasts */}
-      {recentBroadcasts.map((b) => (
+      {visibleBroadcasts.map((b) => (
         <div
           key={b.id}
           className="rounded-2xl p-4 mb-4 flex items-start gap-3"
@@ -202,13 +205,21 @@ export default function PortalIndex() {
         data-testid="btc-price-strip"
       >
         <Bitcoin className="w-4 h-4" style={{ color: "#F7931A" }} />
-        {priceLoading ? (
+        {pricesLoading && !btcPrice ? (
           <span className="text-sm text-[hsl(0_0%_50%)] flex items-center gap-1.5">
             <RefreshCw className="w-3 h-3 animate-spin" /> Fetching price...
           </span>
         ) : (
           <span className="text-sm font-medium text-white">
-            BTC <span style={{ color: "#F7931A" }}>{price ? formatUSD(price) : "—"}</span>
+            BTC <span style={{ color: "#F7931A" }}>{btcPrice ? formatUSD(btcPrice) : "—"}</span>
+          </span>
+        )}
+        {btcChange24h !== null && (
+          <span
+            className="text-xs font-semibold"
+            style={{ color: btcChange24h >= 0 ? "#10b981" : "#ef4444" }}
+          >
+            {btcChange24h >= 0 ? "+" : ""}{btcChange24h.toFixed(2)}%
           </span>
         )}
         <span className="text-xs text-[hsl(0_0%_35%)]">Live</span>
@@ -249,7 +260,7 @@ export default function PortalIndex() {
                   : "—"
               }
               sub={`${holdings.length} asset${holdings.length !== 1 ? "s" : ""}`}
-              accent
+              valueColor="#F7931A"
             />
             <StatCard
               label="Total Invested"
@@ -264,16 +275,20 @@ export default function PortalIndex() {
                   ? `${isPositive ? "+" : ""}${formatUSD(gainLoss)}`
                   : undefined
               }
+              valueColor={returnPct !== null ? (isPositive ? "#22c55e" : "#ef4444") : undefined}
             />
             <StatCard
-              label="Unrealized P&L"
-              value={
-                gainLoss !== null ? `${isPositive ? "+" : ""}${formatUSD(gainLoss)}` : "—"
-              }
+              label="BTC Price"
+              value={btcPrice ? formatUSD(btcPrice) : "—"}
               sub={
-                returnPct !== null
-                  ? `${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(1)}%`
-                  : undefined
+                btcChange24h !== null
+                  ? `${btcChange24h >= 0 ? "+" : ""}${btcChange24h.toFixed(2)}% (24h)`
+                  : "Live"
+              }
+              valueColor={
+                btcChange24h !== null
+                  ? (btcChange24h >= 0 ? "#22c55e" : "#ef4444")
+                  : "#F7931A"
               }
             />
           </div>

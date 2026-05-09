@@ -11,6 +11,12 @@ const RISK_OPTIONS = [
   { value: "aggressive",   label: "Aggressive",   desc: "Maximum cycle upside, higher alts allocation" },
 ];
 
+const TIME_HORIZON_OPTIONS = [
+  { value: "1_2_years",      label: "1–2 years",   desc: "Near-term exit around the cycle peak, capital preservation after" },
+  { value: "2_3_years",      label: "2–3 years",   desc: "Full cycle play into 2026–2027 peak and bear recovery" },
+  { value: "3_5_years_plus", label: "3–5+ years",  desc: "Multi-cycle compounding through multiple peaks" },
+];
+
 const TIMEZONES = [
   "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
   "Europe/London", "Europe/Berlin", "Europe/Paris", "Asia/Dubai",
@@ -66,6 +72,7 @@ export default function SettingsPage() {
   const [country,         setCountry]         = useState("");
   const [timezone,        setTimezone]        = useState("America/New_York");
   const [risk,            setRisk]            = useState("moderate");
+  const [timeHorizon,     setTimeHorizon]     = useState("2_3_years");
   const [goal,            setGoal]            = useState("");
   const [initValue,       setInitValue]       = useState("");
 
@@ -91,6 +98,7 @@ export default function SettingsPage() {
       setCountry(clientProfile.country ?? "");
       setTimezone(clientProfile.timezone ?? "America/New_York");
       setRisk(clientProfile.risk_tolerance ?? "moderate");
+      setTimeHorizon(clientProfile.time_horizon ?? "2_3_years");
       // Goal is a dollar string from onboarding; handle legacy "Nx" values
       const g = clientProfile.investment_goal ?? "";
       const parsed = parseFloat(g);
@@ -112,6 +120,7 @@ export default function SettingsPage() {
     }
   }, [user, profileLoaded]);
 
+  // Warn on browser/tab close if dirty
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (isDirty) { e.preventDefault(); e.returnValue = ""; }
@@ -130,6 +139,7 @@ export default function SettingsPage() {
       country:   country  || null,
       timezone:  timezone || null,
       risk_tolerance: risk,
+      time_horizon: timeHorizon,
       investment_goal: goal || null,
       initial_portfolio_value: initValue ? Number(initValue) : undefined,
     });
@@ -409,6 +419,25 @@ export default function SettingsPage() {
             </div>
           </InputRow>
 
+          <InputRow label="Time horizon">
+            <div className="space-y-2">
+              {TIME_HORIZON_OPTIONS.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => { setTimeHorizon(t.value); markDirty(); }}
+                  className="w-full rounded-xl px-4 py-3 text-left transition-all"
+                  style={{
+                    background: timeHorizon === t.value ? "rgba(247,147,26,0.08)" : "hsl(0 0% 10%)",
+                    border: timeHorizon === t.value ? "1px solid #F7931A" : "1px solid hsl(0 0% 16%)",
+                  }}
+                >
+                  <p className="text-sm font-semibold" style={{ color: timeHorizon === t.value ? "#F7931A" : "white" }}>{t.label}</p>
+                  <p className="text-xs text-[hsl(0_0%_45%)] mt-0.5">{t.desc}</p>
+                </button>
+              ))}
+            </div>
+          </InputRow>
+
           <InputRow label="Target portfolio value this cycle ($)">
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
@@ -454,6 +483,31 @@ export default function SettingsPage() {
           )}
         </button>
       </div>
+
+      {/* Sticky unsaved-changes footer — warns before in-app navigation */}
+      {isDirty && (
+        <div className="fixed bottom-0 inset-x-0 lg:left-60 z-50 p-4 pointer-events-none">
+          <div className="max-w-xl mx-auto pointer-events-auto">
+            <div
+              className="rounded-xl px-4 py-3 flex items-center justify-between gap-3 shadow-lg"
+              style={{ background: "hsl(0 0% 10%)", border: "1px solid rgba(247,147,26,0.4)" }}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: "#F7931A" }} />
+                <p className="text-sm font-medium text-white truncate">Unsaved changes</p>
+                <p className="text-xs text-[hsl(0_0%_45%)] hidden sm:block shrink-0">— navigating away will lose them</p>
+              </div>
+              <button
+                onClick={handleSave}
+                className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+                style={{ background: "#F7931A", color: "#000" }}
+              >
+                Save now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PortalLayout>
   );
 }

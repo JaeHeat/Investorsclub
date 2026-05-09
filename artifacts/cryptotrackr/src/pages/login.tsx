@@ -30,7 +30,7 @@ export default function LoginPage() {
           onClick={login}
           disabled={loading}
           data-testid="button-signin"
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F7931A] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(0,0%,4%)]"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F7931A] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(0,0%,4%)]"
           style={{ background: "#F7931A", color: "#0A0A0A" }}
         >
           {loading ? (

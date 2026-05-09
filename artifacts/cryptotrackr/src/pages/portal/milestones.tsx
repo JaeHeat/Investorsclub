@@ -5,7 +5,8 @@ import type { Milestone } from "@/lib/types";
 import { usePrices } from "@/hooks/usePrices";
 import { formatUSD, getMilestoneTier } from "@/lib/utils";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { Check, Lock, TrendingUp } from "lucide-react";
+import { Check, Lock, TrendingUp, AlertTriangle } from "lucide-react";
+import { Link } from "wouter";
 
 export default function MilestonesPage() {
   const { clientProfile, user } = useAuth();
@@ -62,7 +63,7 @@ export default function MilestonesPage() {
       </div>
 
       {/* Tier badge */}
-      <div className="mb-6 rounded-2xl p-4 flex items-center justify-between" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
+      <div className="mb-4 rounded-2xl p-4 flex items-center justify-between" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
         <div>
           <p className="text-xs text-[hsl(0_0%_40%)] uppercase tracking-wide mb-0.5">Your milestone plan</p>
           <p className="text-sm font-semibold text-white">{tier.portfolioLabel} · {tier.riskLabel}</p>
@@ -72,6 +73,26 @@ export default function MilestonesPage() {
           <p className="text-sm font-semibold" style={{ color: "#F7931A" }}>{tier.maxReturnLabel} return</p>
         </div>
       </div>
+
+      {/* Banner when initialValue is not set */}
+      {initialValue === 0 && (
+        <div
+          className="mb-6 rounded-2xl p-4 flex items-start gap-3"
+          style={{ background: "rgba(247,147,26,0.06)", border: "1px solid rgba(247,147,26,0.22)" }}
+        >
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#F7931A" }} />
+          <div>
+            <p className="text-sm font-semibold text-white">Set your starting value to unlock targets</p>
+            <p className="text-xs text-[hsl(0_0%_50%)] mt-0.5 leading-relaxed">
+              Add your starting portfolio value in{" "}
+              <Link href="/portal/settings">
+                <a className="underline underline-offset-2" style={{ color: "#F7931A" }}>Settings</a>
+              </Link>{" "}
+              to see personalised milestone targets and progress bars.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         {tier.pcts.map((pct) => {

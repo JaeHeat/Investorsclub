@@ -341,6 +341,28 @@ export default function PlanPage() {
           </div>
         </Card>
 
+        {/* Empty state when no portfolio data */}
+        {projectionBase === 0 && (
+          <Card>
+            <div className="flex flex-col items-center py-4 text-center gap-3">
+              <Info className="w-7 h-7 text-[hsl(0_0%_28%)]" />
+              <div>
+                <p className="text-sm font-semibold text-white mb-1">Add holdings to unlock projections</p>
+                <p className="text-xs text-[hsl(0_0%_45%)] leading-relaxed max-w-xs">
+                  Cycle projections and the rebalancing calculator activate once your portfolio data is saved in Settings.
+                </p>
+              </div>
+              <a
+                href="/portal/settings"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+                style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}
+              >
+                Go to Settings <ChevronRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </Card>
+        )}
+
         {/* Cycle Projections */}
         {projectionBase > 0 && (
           <Card>
