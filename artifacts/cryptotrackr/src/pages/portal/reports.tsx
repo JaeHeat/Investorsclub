@@ -3,7 +3,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getReports } from "@/lib/localStore";
 import type { Report } from "@/lib/types";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { FileText, ChevronRight } from "lucide-react";
+import { FileText, ChevronRight, ChevronLeft } from "lucide-react";
+
+function isNew(report: Report) {
+  const ageDays = (Date.now() - new Date(report.published_at).getTime()) / 86400000;
+  return ageDays <= 7;
+}
 
 export default function ReportsPage() {
   const { user } = useAuth();
@@ -26,21 +31,23 @@ export default function ReportsPage() {
       <PortalLayout>
         <button
           onClick={() => setSelected(null)}
-          className="text-xs text-[hsl(0_0%_45%)] hover:text-white flex items-center gap-1 mb-6 transition-colors"
+          className="flex items-center gap-1.5 text-xs text-[hsl(0_0%_45%)] hover:text-white mb-6 transition-colors"
           data-testid="button-back-reports"
         >
-          ← Back to reports
+          <ChevronLeft className="w-3.5 h-3.5" /> Back to reports
         </button>
         <div className="rounded-2xl p-7" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
           <div className="flex items-start justify-between gap-4 mb-6">
             <h1 className="text-xl font-semibold text-white">{selected.title}</h1>
-            <div className="shrink-0 text-right">
-              <p className="text-xs text-[hsl(0_0%_40%)]">
-                {new Date(selected.published_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-              </p>
-            </div>
+            <p className="text-xs text-[hsl(0_0%_40%)] shrink-0 mt-1">
+              {new Date(selected.published_at).toLocaleDateString("en-US", {
+                month: "long", day: "numeric", year: "numeric",
+              })}
+            </p>
           </div>
-          <p className="text-[hsl(0_0%_65%)] leading-relaxed whitespace-pre-wrap text-sm">{selected.content}</p>
+          <p className="text-[hsl(0_0%_65%)] leading-relaxed whitespace-pre-wrap text-sm">
+            {selected.content}
+          </p>
         </div>
       </PortalLayout>
     );
@@ -64,26 +71,44 @@ export default function ReportsPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {reports.map((report) => (
-            <button
-              key={report.id}
-              onClick={() => setSelected(report)}
-              className="w-full rounded-2xl p-5 flex items-center justify-between gap-4 text-left transition-all hover:border-[hsl(0_0%_18%)]"
-              style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}
-              data-testid={`report-${report.id}`}
-            >
-              <div className="flex items-center gap-3">
-                <FileText className="w-4 h-4 shrink-0 text-[hsl(0_0%_40%)]" />
-                <div>
-                  <p className="text-sm font-medium text-white">{report.title}</p>
-                  <p className="text-xs text-[hsl(0_0%_40%)] mt-0.5">
-                    {new Date(report.published_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                  </p>
+          {reports.map((report) => {
+            const fresh = isNew(report);
+            return (
+              <button
+                key={report.id}
+                onClick={() => setSelected(report)}
+                className="w-full rounded-2xl p-5 flex items-center justify-between gap-4 text-left transition-all hover:border-[hsl(0_0%_18%)]"
+                style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}
+                data-testid={`report-${report.id}`}
+              >
+                <div className="flex items-start gap-3 min-w-0">
+                  <FileText className="w-4 h-4 shrink-0 text-[hsl(0_0%_40%)] mt-0.5" />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <p className="text-sm font-medium text-white">{report.title}</p>
+                      {fresh && (
+                        <span
+                          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+                          style={{ background: "rgba(247,147,26,0.12)", color: "#F7931A" }}
+                        >
+                          NEW
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[hsl(0_0%_40%)] mb-1.5">
+                      {new Date(report.published_at).toLocaleDateString("en-US", {
+                        month: "long", day: "numeric", year: "numeric",
+                      })}
+                    </p>
+                    <p className="text-xs text-[hsl(0_0%_45%)] leading-relaxed line-clamp-2">
+                      {report.content.split("\n")[0]}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-[hsl(0_0%_35%)] shrink-0" />
-            </button>
-          ))}
+                <ChevronRight className="w-4 h-4 text-[hsl(0_0%_35%)] shrink-0" />
+              </button>
+            );
+          })}
         </div>
       )}
     </PortalLayout>

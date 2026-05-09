@@ -535,8 +535,27 @@ export function getExitPlan(
   });
 }
 
-export function getInvestmentGoal(value: string | null | undefined): InvestmentGoal | null {
-  return INVESTMENT_GOALS.find((g) => g.value === value) ?? null;
+export function getInvestmentGoal(value: string | null | undefined, baseValue?: number): InvestmentGoal | null {
+  if (!value) return null;
+  // Legacy "Nx" format
+  const legacy = INVESTMENT_GOALS.find((g) => g.value === value);
+  if (legacy) return legacy;
+  // Dollar format: numeric string e.g. "500000"
+  const dollars = parseFloat(value);
+  if (!isNaN(dollars) && dollars > 1000) {
+    const multiple = baseValue && baseValue > 0 ? dollars / baseValue : 1;
+    const formatted =
+      dollars >= 1_000_000
+        ? `$${(dollars / 1_000_000).toFixed(1)}M`
+        : `$${Math.round(dollars / 1000)}K`;
+    return {
+      value,
+      multiple,
+      label: `${formatted} Target`,
+      description: `Reach ${formatted} by the cycle peak`,
+    };
+  }
+  return null;
 }
 
 // Which scenario achieves the goal multiple?

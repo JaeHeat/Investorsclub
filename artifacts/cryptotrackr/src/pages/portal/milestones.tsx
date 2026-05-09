@@ -147,15 +147,26 @@ export default function MilestonesPage() {
                 </div>
               )}
 
-              {isHit && record?.hit_at && (
-                <p className="text-xs text-[hsl(0_0%_40%)] mt-2">
-                  Hit{" "}
-                  {new Date(record.hit_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </p>
+              {isHit && (
+                <div className="mt-3">
+                  <div className="flex justify-between text-xs text-[hsl(0_0%_40%)] mb-1">
+                    <span>Target reached</span>
+                    <span className="font-semibold" style={{ color: "#22c55e" }}>100%</span>
+                  </div>
+                  <div className="h-1 rounded-full" style={{ background: "hsl(0 0% 13%)" }}>
+                    <div className="h-1 rounded-full" style={{ width: "100%", background: "#22c55e" }} />
+                  </div>
+                  {record?.hit_at && (
+                    <p className="text-xs text-[hsl(0_0%_40%)] mt-1.5">
+                      Hit{" "}
+                      {new Date(record.hit_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           );

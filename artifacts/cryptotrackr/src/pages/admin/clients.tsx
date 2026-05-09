@@ -293,7 +293,15 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
           <h2 className="text-xs font-semibold text-[hsl(0_0%_50%)] uppercase tracking-wide mb-4">Client Profile</h2>
           <div className="space-y-2.5">
             {[
-              { label: "Investment Goal", value: client.investment_goal?.replace(/_/g, " ") },
+              { label: "Investment Goal", value: (() => {
+                const g = client.investment_goal;
+                if (!g) return null;
+                const n = parseFloat(g);
+                if (!isNaN(n) && n > 1000) {
+                  return n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : `$${Math.round(n / 1000)}K`;
+                }
+                return g.replace(/_/g, " ");
+              })() },
               { label: "Risk Tolerance", value: client.risk_tolerance },
               { label: "Time Horizon", value: client.time_horizon?.replace(/_/g, " ") },
               { label: "Initial Portfolio Value", value: initialValue ? formatUSD(initialValue) : null },

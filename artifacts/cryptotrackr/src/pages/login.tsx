@@ -1,5 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Bitcoin, Loader2 } from "lucide-react";
+import { Bitcoin, Loader2, Check } from "lucide-react";
+
+const FEATURES = [
+  "Live portfolio P&L across all your assets",
+  "6-phase Bitcoin cycle exit plan, personalised to your holdings",
+  "Milestone tracker with tiered return targets",
+  "Monthly cycle reports and direct consultant roadmap",
+];
 
 export default function LoginPage() {
   const { login, loading } = useAuth();
@@ -36,7 +43,21 @@ export default function LoginPage() {
           )}
         </button>
 
-        <p className="text-center text-xs text-[hsl(0_0%_30%)] mt-6">
+        <div className="mt-8 space-y-2.5">
+          {FEATURES.map((f) => (
+            <div key={f} className="flex items-start gap-2.5">
+              <div
+                className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                style={{ background: "rgba(247,147,26,0.12)" }}
+              >
+                <Check className="w-2.5 h-2.5" style={{ color: "#F7931A" }} />
+              </div>
+              <span className="text-xs text-[hsl(0_0%_45%)] leading-relaxed">{f}</span>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-center text-xs text-[hsl(0_0%_25%)] mt-8">
           Bitcoin cycle consultation platform
         </p>
       </div>

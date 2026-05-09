@@ -203,8 +203,8 @@ export default function PlanPage() {
   const isBearPhase = currentPhase.phase === "bear";
 
   // ── Investment goal + cycle projections ─────────────────────────────────────
-  const goal = getInvestmentGoal(clientProfile?.investment_goal);
   const projectionBase = totalLive > 0 ? totalLive : initialValue;
+  const goal = getInvestmentGoal(clientProfile?.investment_goal, projectionBase);
 
   const projectionValues = CYCLE_SCENARIOS.map((s) => ({
     scenario: s,

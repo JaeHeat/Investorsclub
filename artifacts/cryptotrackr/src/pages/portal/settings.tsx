@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateClientSettings } from "@/lib/localStore";
+import { updateClientSettings, getHoldings, setHoldings } from "@/lib/localStore";
+import type { HoldingAsset } from "@/lib/types";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { Settings, Check, AlertTriangle } from "lucide-react";
+import { Settings, Check, AlertTriangle, Plus, X } from "lucide-react";
 
 const RISK_OPTIONS = [
   { value: "conservative", label: "Conservative", desc: "Capital preservation first, lower alts exposure" },
@@ -23,78 +23,155 @@ const COUNTRIES = [
   "United Arab Emirates", "Brazil", "India", "South Korea", "Other",
 ];
 
+const ASSET_OPTIONS = [
+  { coingecko_id: "bitcoin",      symbol: "BTC",  name: "Bitcoin" },
+  { coingecko_id: "ethereum",     symbol: "ETH",  name: "Ethereum" },
+  { coingecko_id: "solana",       symbol: "SOL",  name: "Solana" },
+  { coingecko_id: "ripple",       symbol: "XRP",  name: "XRP" },
+  { coingecko_id: "cardano",      symbol: "ADA",  name: "Cardano" },
+  { coingecko_id: "avalanche-2",  symbol: "AVAX", name: "Avalanche" },
+  { coingecko_id: "chainlink",    symbol: "LINK", name: "Chainlink" },
+  { coingecko_id: "polkadot",     symbol: "DOT",  name: "Polkadot" },
+  { coingecko_id: "sui",          symbol: "SUI",  name: "Sui" },
+  { coingecko_id: "uniswap",      symbol: "UNI",  name: "Uniswap" },
+  { coingecko_id: "pepe",         symbol: "PEPE", name: "PEPE" },
+  { coingecko_id: "tether",       symbol: "USDT", name: "Tether (USDT)" },
+  { coingecko_id: "usd-coin",     symbol: "USDC", name: "USD Coin" },
+];
+
+type HoldingRow = {
+  coingecko_id: string;
+  symbol: string;
+  name: string;
+  amount: string;
+  avg_cost: string;
+};
+
+function toRows(hs: HoldingAsset[]): HoldingRow[] {
+  return hs.map((h) => ({
+    coingecko_id: h.coingecko_id,
+    symbol: h.symbol,
+    name: h.name,
+    amount: String(h.amount),
+    avg_cost: String(h.avg_cost),
+  }));
+}
+
 export default function SettingsPage() {
   const { clientProfile, user, refreshClientProfile } = useAuth();
-  const [, setLocation] = useLocation();
 
-  const initial = {
-    fullName:        clientProfile?.full_name        ?? "",
-    discordUsername: clientProfile?.discord_username ?? "",
-    country:    clientProfile?.country      ?? "",
-    timezone:   clientProfile?.timezone     ?? "America/New_York",
-    risk:       clientProfile?.risk_tolerance ?? "moderate",
-    goal:       clientProfile?.investment_goal ?? "5x",
-    btcHoldings: clientProfile?.btc_holdings != null ? String(clientProfile.btc_holdings) : "",
-    avgCost:    clientProfile?.avg_cost_basis != null ? String(clientProfile.avg_cost_basis) : "",
-    initValue:  clientProfile?.initial_portfolio_value != null ? String(clientProfile.initial_portfolio_value) : "",
-  };
+  // ── Profile fields ──────────────────────────────────────────────────────────
+  const [fullName,        setFullName]        = useState("");
+  const [discordUsername, setDiscordUsername] = useState("");
+  const [country,         setCountry]         = useState("");
+  const [timezone,        setTimezone]        = useState("America/New_York");
+  const [risk,            setRisk]            = useState("moderate");
+  const [goal,            setGoal]            = useState("");
+  const [initValue,       setInitValue]       = useState("");
 
-  const [fullName,        setFullName]        = useState(initial.fullName);
-  const [discordUsername, setDiscordUsername] = useState(initial.discordUsername);
-  const [country,         setCountry]         = useState(initial.country);
-  const [timezone,    setTimezone]    = useState(initial.timezone);
-  const [risk,        setRisk]        = useState(initial.risk);
-  const [goal,        setGoal]        = useState(initial.goal);
-  const [btcHoldings, setBtcHoldings] = useState(initial.btcHoldings);
-  const [avgCost,     setAvgCost]     = useState(initial.avgCost);
-  const [initValue,   setInitValue]   = useState(initial.initValue);
-  const [saved,       setSaved]       = useState(false);
+  // ── Holdings ────────────────────────────────────────────────────────────────
+  const [holdingRows,    setHoldingRows]    = useState<HoldingRow[]>([]);
+  const [showPicker,     setShowPicker]     = useState(false);
 
-  const isDirty =
-    fullName !== initial.fullName ||
-    discordUsername !== initial.discordUsername ||
-    country !== initial.country ||
-    timezone !== initial.timezone ||
-    risk !== initial.risk ||
-    goal !== initial.goal ||
-    btcHoldings !== initial.btcHoldings ||
-    avgCost !== initial.avgCost ||
-    initValue !== initial.initValue;
+  // ── UI state ────────────────────────────────────────────────────────────────
+  const [profileLoaded,  setProfileLoaded]  = useState(false);
+  const [isDirty,        setIsDirty]        = useState(false);
+  const [saved,          setSaved]          = useState(false);
 
   useEffect(() => {
     document.title = "Settings — CryptoTrackr";
     return () => { document.title = "CryptoTrackr"; };
   }, []);
 
+  // Sync profile fields once on first load
+  useEffect(() => {
+    if (clientProfile && !profileLoaded) {
+      setFullName(clientProfile.full_name ?? "");
+      setDiscordUsername(clientProfile.discord_username ?? "");
+      setCountry(clientProfile.country ?? "");
+      setTimezone(clientProfile.timezone ?? "America/New_York");
+      setRisk(clientProfile.risk_tolerance ?? "moderate");
+      // Goal is a dollar string from onboarding; handle legacy "Nx" values
+      const g = clientProfile.investment_goal ?? "";
+      const parsed = parseFloat(g);
+      setGoal(!isNaN(parsed) && parsed > 0 ? String(parsed) : "");
+      setInitValue(
+        clientProfile.initial_portfolio_value != null
+          ? String(clientProfile.initial_portfolio_value)
+          : ""
+      );
+      setProfileLoaded(true);
+    }
+  }, [clientProfile, profileLoaded]);
+
+  // Load holdings once user is ready
+  useEffect(() => {
+    if (user && !profileLoaded) return;
+    if (user) {
+      setHoldingRows(toRows(getHoldings(user.id)));
+    }
+  }, [user, profileLoaded]);
+
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
+      if (isDirty) { e.preventDefault(); e.returnValue = ""; }
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
+  function markDirty() { setIsDirty(true); }
+
   function handleSave() {
     if (!user) return;
-    const btc = btcHoldings ? parseFloat(btcHoldings) : undefined;
-    const cost = avgCost ? parseFloat(avgCost) : undefined;
     updateClientSettings(user.id, {
       full_name:        fullName        || null,
       discord_username: discordUsername || null,
       country:   country  || null,
       timezone:  timezone || null,
       risk_tolerance: risk,
-      investment_goal: goal,
-      btc_holdings: btc != null && !isNaN(btc) ? btc : undefined,
-      avg_cost_basis: cost != null && !isNaN(cost) ? cost : undefined,
+      investment_goal: goal || null,
       initial_portfolio_value: initValue ? Number(initValue) : undefined,
     });
+
+    const validHoldings: HoldingAsset[] = holdingRows
+      .filter((r) => r.amount.trim() && r.avg_cost.trim())
+      .map((r) => ({
+        coingecko_id: r.coingecko_id,
+        symbol:       r.symbol,
+        name:         r.name,
+        amount:       parseFloat(r.amount),
+        avg_cost:     parseFloat(r.avg_cost),
+      }));
+    setHoldings(user.id, validHoldings);
+
     if (refreshClientProfile) refreshClientProfile();
+    setIsDirty(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
+  }
+
+  function updateRow(idx: number, field: "amount" | "avg_cost", val: string) {
+    setHoldingRows((prev) => prev.map((r, i) => (i === idx ? { ...r, [field]: val } : r)));
+    markDirty();
+  }
+
+  function removeRow(idx: number) {
+    setHoldingRows((prev) => prev.filter((_, i) => i !== idx));
+    markDirty();
+  }
+
+  function addAsset(asset: typeof ASSET_OPTIONS[number]) {
+    if (holdingRows.find((r) => r.coingecko_id === asset.coingecko_id)) {
+      setShowPicker(false);
+      return;
+    }
+    setHoldingRows((prev) => [
+      ...prev,
+      { coingecko_id: asset.coingecko_id, symbol: asset.symbol, name: asset.name, amount: "", avg_cost: "" },
+    ]);
+    setShowPicker(false);
+    markDirty();
   }
 
   function InputRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -106,7 +183,10 @@ export default function SettingsPage() {
     );
   }
 
-  const inputClass = "w-full px-3 py-2.5 rounded-xl text-sm text-white bg-[hsl(0,0%,10%)] border border-[hsl(0,0%,18%)] outline-none focus:border-[#F7931A] transition-colors";
+  const inputClass =
+    "w-full px-3 py-2.5 rounded-xl text-sm text-white bg-[hsl(0,0%,10%)] border border-[hsl(0,0%,18%)] outline-none focus:border-[#F7931A] transition-colors";
+
+  const usedIds = new Set(holdingRows.map((r) => r.coingecko_id));
 
   return (
     <PortalLayout>
@@ -124,7 +204,7 @@ export default function SettingsPage() {
             </span>
           )}
         </div>
-        <p className="text-sm text-[hsl(0_0%_42%)]">Update your profile, BTC holdings, risk preference, and investment goal.</p>
+        <p className="text-sm text-[hsl(0_0%_42%)]">Update your profile, holdings, risk preference, and investment goal.</p>
       </div>
 
       <div className="space-y-6 max-w-xl">
@@ -135,7 +215,7 @@ export default function SettingsPage() {
             <input
               className={inputClass}
               value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              onChange={(e) => { setFullName(e.target.value); markDirty(); }}
               placeholder="Your full name"
             />
           </InputRow>
@@ -145,7 +225,7 @@ export default function SettingsPage() {
               <input
                 className={`${inputClass} pl-7`}
                 value={discordUsername}
-                onChange={(e) => setDiscordUsername(e.target.value.replace(/^@/, ""))}
+                onChange={(e) => { setDiscordUsername(e.target.value.replace(/^@/, "")); markDirty(); }}
                 placeholder="yourhandle"
               />
             </div>
@@ -154,72 +234,135 @@ export default function SettingsPage() {
             <select
               className={inputClass}
               value={country}
-              onChange={(e) => setCountry(e.target.value)}
+              onChange={(e) => { setCountry(e.target.value); markDirty(); }}
             >
               <option value="">Select country...</option>
-              {COUNTRIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
+              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </InputRow>
           <InputRow label="Timezone">
             <select
               className={inputClass}
               value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
+              onChange={(e) => { setTimezone(e.target.value); markDirty(); }}
             >
-              {TIMEZONES.map((tz) => (
-                <option key={tz} value={tz}>{tz.replace(/_/g, " ")}</option>
-              ))}
+              {TIMEZONES.map((tz) => <option key={tz} value={tz}>{tz.replace(/_/g, " ")}</option>)}
             </select>
           </InputRow>
         </div>
 
-        {/* BTC Holdings */}
+        {/* Holdings */}
         <div className="rounded-2xl p-5 space-y-4" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(0_0%_35%)]">BTC Holdings</p>
-          <p className="text-xs text-[hsl(0_0%_40%)] -mt-1">These values drive all portfolio calculations across the app.</p>
-          <InputRow label="Total BTC holdings">
-            <div className="relative">
-              <input
-                type="number"
-                className={`${inputClass} pr-14`}
-                value={btcHoldings}
-                onChange={(e) => setBtcHoldings(e.target.value)}
-                placeholder="e.g. 1.8"
-                step="0.0001"
-                min="0"
-              />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">BTC</span>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(0_0%_35%)]">Holdings</p>
+              <p className="text-xs text-[hsl(0_0%_40%)] mt-0.5">Your assets drive P&L, exit plans, and cycle projections.</p>
             </div>
-          </InputRow>
-          <InputRow label="Average cost basis">
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
-              <input
-                type="number"
-                className={`${inputClass} pl-7 pr-14`}
-                value={avgCost}
-                onChange={(e) => setAvgCost(e.target.value)}
-                placeholder="e.g. 35000"
-                step="1"
-                min="0"
-              />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">USD</span>
+            <button
+              onClick={() => setShowPicker(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add asset
+            </button>
+          </div>
+
+          {/* Asset picker */}
+          {showPicker && (
+            <div className="rounded-xl p-3" style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 18%)" }}>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-[hsl(0_0%_55%)]">Select an asset</p>
+                <button onClick={() => setShowPicker(false)} className="text-[hsl(0_0%_40%)] hover:text-white">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {ASSET_OPTIONS.map((asset) => {
+                  const added = usedIds.has(asset.coingecko_id);
+                  return (
+                    <button
+                      key={asset.coingecko_id}
+                      onClick={() => !added && addAsset(asset)}
+                      disabled={added}
+                      className="px-2.5 py-2 rounded-lg text-xs font-semibold text-left transition-all"
+                      style={{
+                        background: added ? "hsl(0 0% 12%)" : "hsl(0 0% 14%)",
+                        color: added ? "hsl(0 0% 35%)" : "white",
+                        cursor: added ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      <p className="font-bold">{asset.symbol}</p>
+                      <p className="text-[10px] opacity-70 truncate">{asset.name}</p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </InputRow>
-          <InputRow label="Initial portfolio value ($)">
+          )}
+
+          {holdingRows.length === 0 ? (
+            <p className="text-xs text-[hsl(0_0%_35%)] py-2">No assets added yet. Click "Add asset" to get started.</p>
+          ) : (
+            <div className="space-y-2">
+              {/* Header */}
+              <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 px-1">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[hsl(0_0%_35%)]">Asset</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[hsl(0_0%_35%)]">Quantity</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[hsl(0_0%_35%)]">Avg cost ($)</p>
+                <span />
+              </div>
+
+              {holdingRows.map((row, idx) => (
+                <div key={row.coingecko_id} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center">
+                  <div className="px-3 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}>
+                    {row.symbol}
+                  </div>
+                  <input
+                    type="number"
+                    className={inputClass}
+                    value={row.amount}
+                    onChange={(e) => updateRow(idx, "amount", e.target.value)}
+                    placeholder="0"
+                    min="0"
+                    step="any"
+                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[hsl(0_0%_40%)]">$</span>
+                    <input
+                      type="number"
+                      className={`${inputClass} pl-6`}
+                      value={row.avg_cost}
+                      onChange={(e) => updateRow(idx, "avg_cost", e.target.value)}
+                      placeholder="0"
+                      min="0"
+                      step="any"
+                    />
+                  </div>
+                  <button
+                    onClick={() => removeRow(idx)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-[hsl(0_0%_35%)] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <InputRow label="Starting portfolio value ($)">
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
               <input
                 type="number"
                 className={`${inputClass} pl-7`}
                 value={initValue}
-                onChange={(e) => setInitValue(e.target.value)}
+                onChange={(e) => { setInitValue(e.target.value); markDirty(); }}
                 placeholder="e.g. 150000"
                 min={0}
               />
             </div>
+            <p className="text-xs text-[hsl(0_0%_35%)] mt-1.5">Used as the baseline for milestone % return targets</p>
           </InputRow>
         </div>
 
@@ -232,7 +375,7 @@ export default function SettingsPage() {
               {RISK_OPTIONS.map((r) => (
                 <button
                   key={r.value}
-                  onClick={() => setRisk(r.value)}
+                  onClick={() => { setRisk(r.value); markDirty(); }}
                   className="w-full rounded-xl px-4 py-3 text-left transition-all"
                   style={{
                     background: risk === r.value ? "rgba(247,147,26,0.08)" : "hsl(0 0% 10%)",
@@ -253,7 +396,7 @@ export default function SettingsPage() {
                 type="number"
                 className={`${inputClass} pl-7`}
                 value={goal}
-                onChange={(e) => setGoal(e.target.value)}
+                onChange={(e) => { setGoal(e.target.value); markDirty(); }}
                 placeholder="e.g. 500000"
                 min={0}
                 step={10000}
@@ -266,7 +409,7 @@ export default function SettingsPage() {
                 const multiple = (target / base).toFixed(1);
                 return (
                   <p className="text-xs text-[hsl(0_0%_40%)] mt-1.5">
-                    That's a <span className="text-white font-medium">{multiple}x</span> return on your ${base.toLocaleString()} portfolio
+                    That's a <span className="text-white font-medium">{multiple}×</span> return on your ${base.toLocaleString()} starting value
                   </p>
                 );
               }
@@ -285,10 +428,7 @@ export default function SettingsPage() {
           }}
         >
           {saved ? (
-            <>
-              <Check className="w-4 h-4" />
-              Saved
-            </>
+            <><Check className="w-4 h-4" /> Saved</>
           ) : (
             "Save changes"
           )}

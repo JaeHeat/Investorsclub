@@ -1,19 +1,30 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getMilestones, getBroadcasts, getPortfolioSnapshots, savePortfolioSnapshot } from "@/lib/localStore";
+import {
+  getMilestones, getBroadcasts, getPortfolioSnapshots,
+  savePortfolioSnapshot, getHoldings,
+} from "@/lib/localStore";
 import type { Milestone, Broadcast, PortfolioSnapshot } from "@/lib/types";
 import { useBtcPrice } from "@/hooks/useBtcPrice";
-import { formatUSD, formatBTC, formatPct, MILESTONE_PCTS } from "@/lib/utils";
+import { usePrices } from "@/hooks/usePrices";
+import { formatUSD, formatPct, MILESTONE_PCTS } from "@/lib/utils";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { TrendingUp, TrendingDown, RefreshCw, Bitcoin, X, Radio } from "lucide-react";
+import { TrendingUp, TrendingDown, RefreshCw, Bitcoin, X, Radio, ArrowRight } from "lucide-react";
+import { Link } from "wouter";
 
-function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
+function StatCard({
+  label, value, sub, accent,
+}: { label: string; value: string; sub?: string; accent?: boolean }) {
   return (
     <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
       <p className="text-xs text-[hsl(0_0%_45%)] uppercase tracking-wide mb-2">{label}</p>
-      <p className="text-2xl font-semibold tracking-tight" style={{ color: accent ? "#F7931A" : "white" }}
+      <p
+        className="text-2xl font-semibold tracking-tight"
+        style={{ color: accent ? "#F7931A" : "white" }}
         data-testid={`stat-${label.toLowerCase().replace(/\s+/g, "-")}`}
-      >{value}</p>
+      >
+        {value}
+      </p>
       {sub && <p className="text-xs text-[hsl(0_0%_45%)] mt-1">{sub}</p>}
     </div>
   );
@@ -22,7 +33,6 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string;
 function Sparkline({ snapshots }: { snapshots: PortfolioSnapshot[] }) {
   const W = 280;
   const H = 56;
-
   if (snapshots.length === 1) {
     const midY = H / 2;
     return (
@@ -32,7 +42,6 @@ function Sparkline({ snapshots }: { snapshots: PortfolioSnapshot[] }) {
       </svg>
     );
   }
-
   const values = snapshots.map((s) => s.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -46,7 +55,6 @@ function Sparkline({ snapshots }: { snapshots: PortfolioSnapshot[] }) {
   const color = isUp ? "#10b981" : "#ef4444";
   const polyline = pts.join(" ");
   const last = pts[pts.length - 1].split(",");
-
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 56 }}>
       <polyline points={polyline} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
@@ -90,21 +98,36 @@ export default function PortalIndex() {
     }
   }, [user]);
 
-  const btcHoldings = clientProfile?.btc_holdings ?? 0;
-  const avgCostBasis = clientProfile?.avg_cost_basis ?? 0;
-  const initialValue = clientProfile?.initial_portfolio_value ?? 0;
-  const currentValue = price ? btcHoldings * price : null;
-  const costBasisTotal = btcHoldings * avgCostBasis;
-  const gainLoss = currentValue !== null ? currentValue - costBasisTotal : null;
-  const returnPct = costBasisTotal > 0 && gainLoss !== null ? (gainLoss / costBasisTotal) * 100 : null;
-  const isPositive = gainLoss !== null && gainLoss >= 0;
+  // ── Multi-asset portfolio ───────────────────────────────────────────────────
+  const holdings = useMemo(() => (user ? getHoldings(user.id) : []), [user]);
+  const coinIds = useMemo(() => holdings.map((h) => h.coingecko_id), [holdings]);
+  const { prices, loading: pricesLoading } = usePrices(coinIds);
 
+  const totalCostBasis = useMemo(
+    () => holdings.reduce((s, h) => s + h.amount * h.avg_cost, 0),
+    [holdings]
+  );
+
+  const totalCurrentValue = useMemo(() => {
+    if (holdings.length === 0) return null;
+    const hasSomePrices = holdings.some((h) => prices[h.coingecko_id] != null);
+    if (!hasSomePrices) return null;
+    return holdings.reduce((s, h) => s + h.amount * (prices[h.coingecko_id] ?? h.avg_cost), 0);
+  }, [holdings, prices]);
+
+  const gainLoss = totalCurrentValue !== null ? totalCurrentValue - totalCostBasis : null;
+  const returnPct = totalCostBasis > 0 && gainLoss !== null ? (gainLoss / totalCostBasis) * 100 : null;
+  const isPositive = gainLoss !== null && gainLoss >= 0;
+  const initialValue = clientProfile?.initial_portfolio_value ?? 0;
+  const hasHoldings = holdings.length > 0;
+
+  // ── Save daily snapshot using total portfolio value ─────────────────────────
   useEffect(() => {
-    if (user && currentValue !== null && currentValue > 0) {
-      savePortfolioSnapshot(user.id, currentValue);
+    if (user && totalCurrentValue !== null && totalCurrentValue > 0) {
+      savePortfolioSnapshot(user.id, totalCurrentValue);
       setSnapshots(getPortfolioSnapshots(user.id));
     }
-  }, [user, currentValue]);
+  }, [user, totalCurrentValue]);
 
   const nextMilestone = MILESTONE_PCTS.find((pct) => {
     const milestone = milestones.find((m) => m.milestone_pct === pct);
@@ -112,20 +135,25 @@ export default function PortalIndex() {
   });
   const nextMilestoneValue = nextMilestone && initialValue ? initialValue * (1 + nextMilestone / 100) : null;
 
-  const recentBroadcasts = useMemo(() =>
-    broadcasts.filter((b) => {
-      const ageDays = (Date.now() - new Date(b.created_at).getTime()) / 86400000;
-      return ageDays <= 14 && !dismissedIds.has(b.id);
-    }).slice(0, 2),
+  const recentBroadcasts = useMemo(
+    () =>
+      broadcasts
+        .filter((b) => {
+          const ageDays = (Date.now() - new Date(b.created_at).getTime()) / 86400000;
+          return ageDays <= 14 && !dismissedIds.has(b.id);
+        })
+        .slice(0, 2),
     [broadcasts, dismissedIds]
   );
 
-  const portfolioChange = snapshots.length >= 2
-    ? snapshots[snapshots.length - 1].value - snapshots[0].value
-    : null;
-  const portfolioChangePct = portfolioChange !== null && snapshots[0].value > 0
-    ? (portfolioChange / snapshots[0].value) * 100
-    : null;
+  const portfolioChange =
+    snapshots.length >= 2
+      ? snapshots[snapshots.length - 1].value - snapshots[0].value
+      : null;
+  const portfolioChangePct =
+    portfolioChange !== null && snapshots[0].value > 0
+      ? (portfolioChange / snapshots[0].value) * 100
+      : null;
 
   return (
     <PortalLayout>
@@ -147,7 +175,10 @@ export default function PortalIndex() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               {b.phase_tag && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(247,147,26,0.12)", color: "#F7931A" }}>
+                <span
+                  className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                  style={{ background: "rgba(247,147,26,0.12)", color: "#F7931A" }}
+                >
                   {b.phase_tag}
                 </span>
               )}
@@ -164,6 +195,7 @@ export default function PortalIndex() {
         </div>
       ))}
 
+      {/* BTC price strip */}
       <div
         className="flex items-center gap-2 mb-6 px-4 py-2.5 rounded-xl w-fit"
         style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}
@@ -182,35 +214,101 @@ export default function PortalIndex() {
         <span className="text-xs text-[hsl(0_0%_35%)]">Live</span>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Current Value" value={currentValue ? formatUSD(currentValue) : "—"} sub={btcHoldings ? formatBTC(btcHoldings) : undefined} accent />
-        <StatCard label="Cost Basis" value={formatUSD(costBasisTotal)} sub={`${formatUSD(avgCostBasis)} avg/BTC`} />
-        <StatCard label="Total Return" value={returnPct !== null ? formatPct(returnPct) : "—"} sub={gainLoss !== null ? `${isPositive ? "+" : ""}${formatUSD(gainLoss)}` : undefined} />
-        <StatCard label="BTC Holdings" value={btcHoldings ? formatBTC(btcHoldings) : "—"} sub={price ? `@ ${formatUSD(price)}` : undefined} />
-      </div>
-
-      {returnPct !== null && (
+      {/* Empty state — no holdings */}
+      {!hasHoldings && (
         <div
-          className="rounded-2xl p-5 mb-6 flex items-center gap-4"
-          style={{
-            background: isPositive ? "rgba(34,197,94,0.05)" : "rgba(239,68,68,0.05)",
-            border: `1px solid ${isPositive ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)"}`,
-          }}
-          data-testid="return-card"
+          className="rounded-2xl p-10 mb-6 flex flex-col items-center text-center"
+          style={{ background: "hsl(0 0% 7%)", border: "1px dashed hsl(0 0% 18%)" }}
         >
-          {isPositive ? <TrendingUp className="w-6 h-6 shrink-0" style={{ color: "#22c55e" }} /> : <TrendingDown className="w-6 h-6 shrink-0" style={{ color: "#ef4444" }} />}
-          <div>
-            <p className="text-sm font-medium" style={{ color: isPositive ? "#22c55e" : "#ef4444" }}>
-              {formatPct(returnPct)} return on investment
-            </p>
-            <p className="text-xs text-[hsl(0_0%_45%)] mt-0.5">
-              {isPositive ? "Gain" : "Loss"} of {formatUSD(Math.abs(gainLoss!))} since your entry
-            </p>
-          </div>
+          <p className="text-sm font-semibold text-white mb-1">No holdings on record yet</p>
+          <p className="text-xs text-[hsl(0_0%_45%)] mb-5 max-w-xs leading-relaxed">
+            Add your assets in Settings to see live P&L, cycle projections, and milestone tracking.
+          </p>
+          <Link href="/portal/settings">
+            <a
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+              style={{ background: "#F7931A", color: "#0A0A0A" }}
+            >
+              Add holdings <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          </Link>
         </div>
       )}
 
-      {/* Portfolio history sparkline — shown with 1+ snapshots */}
+      {/* Stats grid */}
+      {hasHoldings && (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            <StatCard
+              label="Portfolio Value"
+              value={
+                totalCurrentValue != null
+                  ? formatUSD(totalCurrentValue)
+                  : pricesLoading
+                  ? "Loading…"
+                  : "—"
+              }
+              sub={`${holdings.length} asset${holdings.length !== 1 ? "s" : ""}`}
+              accent
+            />
+            <StatCard
+              label="Total Invested"
+              value={formatUSD(totalCostBasis)}
+              sub="at cost basis"
+            />
+            <StatCard
+              label="Total Return"
+              value={returnPct !== null ? formatPct(returnPct) : "—"}
+              sub={
+                gainLoss !== null
+                  ? `${isPositive ? "+" : ""}${formatUSD(gainLoss)}`
+                  : undefined
+              }
+            />
+            <StatCard
+              label="Unrealized P&L"
+              value={
+                gainLoss !== null ? `${isPositive ? "+" : ""}${formatUSD(gainLoss)}` : "—"
+              }
+              sub={
+                returnPct !== null
+                  ? `${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(1)}%`
+                  : undefined
+              }
+            />
+          </div>
+
+          {returnPct !== null && (
+            <div
+              className="rounded-2xl p-5 mb-6 flex items-center gap-4"
+              style={{
+                background: isPositive ? "rgba(34,197,94,0.05)" : "rgba(239,68,68,0.05)",
+                border: `1px solid ${isPositive ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)"}`,
+              }}
+              data-testid="return-card"
+            >
+              {isPositive ? (
+                <TrendingUp className="w-6 h-6 shrink-0" style={{ color: "#22c55e" }} />
+              ) : (
+                <TrendingDown className="w-6 h-6 shrink-0" style={{ color: "#ef4444" }} />
+              )}
+              <div>
+                <p
+                  className="text-sm font-medium"
+                  style={{ color: isPositive ? "#22c55e" : "#ef4444" }}
+                >
+                  {formatPct(returnPct)} return across all holdings
+                </p>
+                <p className="text-xs text-[hsl(0_0%_45%)] mt-0.5">
+                  {isPositive ? "Gain" : "Loss"} of {formatUSD(Math.abs(gainLoss!))} since your entry
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Portfolio history sparkline */}
       {snapshots.length >= 1 && (
         <div
           className="rounded-2xl p-5 mb-6"
@@ -225,7 +323,8 @@ export default function PortalIndex() {
                 className="text-xs font-semibold"
                 style={{ color: portfolioChangePct >= 0 ? "#10b981" : "#ef4444" }}
               >
-                {portfolioChangePct >= 0 ? "+" : ""}{portfolioChangePct.toFixed(1)}% over period
+                {portfolioChangePct >= 0 ? "+" : ""}
+                {portfolioChangePct.toFixed(1)}% over period
               </span>
             ) : (
               <span className="text-xs text-[hsl(0_0%_35%)]">First data point captured</span>
@@ -239,8 +338,13 @@ export default function PortalIndex() {
         </div>
       )}
 
+      {/* Next milestone */}
       {nextMilestone && nextMilestoneValue && (
-        <div className="rounded-2xl p-5" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }} data-testid="next-milestone-card">
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}
+          data-testid="next-milestone-card"
+        >
           <p className="text-xs text-[hsl(0_0%_45%)] uppercase tracking-wide mb-3">Next Milestone</p>
           <div className="flex items-center justify-between">
             <div>
@@ -250,22 +354,25 @@ export default function PortalIndex() {
             <div className="text-right">
               <p className="text-xs text-[hsl(0_0%_45%)]">Still needed</p>
               <p className="text-base font-semibold mt-0.5" style={{ color: "#F7931A" }}>
-                {currentValue !== null && nextMilestoneValue
-                  ? formatUSD(Math.max(0, nextMilestoneValue - currentValue))
+                {totalCurrentValue !== null && nextMilestoneValue
+                  ? formatUSD(Math.max(0, nextMilestoneValue - totalCurrentValue))
                   : "—"}
               </p>
             </div>
           </div>
-          {currentValue !== null && nextMilestoneValue && (
+          {totalCurrentValue !== null && nextMilestoneValue && (
             <div className="mt-4">
               <div className="flex justify-between text-xs text-[hsl(0_0%_45%)] mb-1.5">
-                <span>{formatUSD(currentValue)}</span>
+                <span>{formatUSD(totalCurrentValue)}</span>
                 <span>{formatUSD(nextMilestoneValue)}</span>
               </div>
               <div className="h-1.5 rounded-full" style={{ background: "hsl(0 0% 13%)" }}>
                 <div
                   className="h-1.5 rounded-full transition-all"
-                  style={{ width: `${Math.min(100, (currentValue / nextMilestoneValue) * 100)}%`, background: "#F7931A" }}
+                  style={{
+                    width: `${Math.min(100, (totalCurrentValue / nextMilestoneValue) * 100)}%`,
+                    background: "#F7931A",
+                  }}
                 />
               </div>
             </div>
