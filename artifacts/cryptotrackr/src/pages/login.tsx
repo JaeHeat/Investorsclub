@@ -16,7 +16,7 @@ export default function LoginPage() {
             <span className="text-xl font-semibold tracking-tight text-white">CryptoTrackr</span>
           </div>
           <h1 className="text-2xl font-semibold text-white mb-1">Sign in</h1>
-          <p className="text-sm text-[hsl(0_0%_45%)]">Access your Bitcoin cycle portal</p>
+          <p className="text-sm text-[hsl(0_0%_45%)]">Access your Bitcoin consulting portal</p>
         </div>
 
         <button
