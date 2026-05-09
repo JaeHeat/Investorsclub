@@ -89,41 +89,16 @@ export default function NotesPage() {
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
-        {text.length === 0 && (
-          <div className="px-5 pt-5 pb-2 pointer-events-none select-none">
-            <p className="text-sm text-[hsl(0_0%_30%)] leading-relaxed">
-              Start writing your thoughts, targets, or reminders here...
-              {"\n\n"}Ideas: upcoming sell levels, personal price targets, questions to ask your consultant, cycle notes.
-            </p>
-          </div>
-        )}
         <textarea
           value={text}
           onChange={handleChange}
-          placeholder=""
+          placeholder={"Start writing your thoughts, targets, or reminders here...\n\nIdeas: upcoming sell levels, personal price targets, questions to ask your consultant, cycle notes."}
           data-testid="notes-textarea"
-          className="w-full px-5 py-5 text-sm text-white leading-relaxed bg-transparent outline-none resize-none"
-          style={{
-            minHeight: text.length === 0 ? "0px" : "320px",
-            height: text.length === 0 ? "0px" : "auto",
-            position: text.length === 0 ? "absolute" : "relative",
-            opacity: text.length === 0 ? 0 : 1,
-          }}
+          className="w-full px-5 py-5 text-sm text-white leading-relaxed bg-transparent outline-none resize-none placeholder-[hsl(0,0%,28%)]"
+          style={{ minHeight: "320px" }}
           rows={16}
           spellCheck
         />
-        {text.length === 0 && (
-          <textarea
-            value={text}
-            onChange={handleChange}
-            placeholder=""
-            data-testid="notes-textarea-visible"
-            className="w-full px-5 pb-5 text-sm text-white leading-relaxed bg-transparent outline-none resize-none"
-            style={{ minHeight: "240px" }}
-            rows={12}
-            spellCheck
-          />
-        )}
         <div
           className="flex items-center justify-between px-5 py-3"
           style={{ borderTop: "1px solid hsl(0 0% 11%)" }}

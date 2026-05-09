@@ -1,65 +1,58 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getBearChecklist, setBearChecklistItem } from "@/lib/localStore";
 import { getCurrentCyclePhase } from "@/lib/cycleData";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { Shield, CheckCircle2, Circle, AlertTriangle } from "lucide-react";
 
-interface CheckItem {
-  id: string;
-  label: string;
-  description: string;
-  priority: "critical" | "high" | "medium";
-}
-
-const CHECKLIST: CheckItem[] = [
+const CHECKLIST = [
   {
     id: "reduce-alts",
-    label: "Reduce alt exposure below plan target",
-    description: "Trim altcoin positions to below your plan target weight. Alts fall 70–95% in bear markets. Rotate into BTC or stablecoin.",
-    priority: "critical",
+    label: "Reduce or exit speculative altcoin positions",
+    description: "Alts bleed hardest in bear markets. Prioritise exiting rank 20+ positions first. Liquidity dries up fast.",
+    priority: "critical" as const,
   },
   {
     id: "btc-floor",
-    label: "Set BTC as primary store of value",
-    description: "Ensure BTC is your dominant holding. In bear markets, BTC loses less than alts and recovers first.",
-    priority: "critical",
-  },
-  {
-    id: "take-profits",
-    label: "Take profits on ETH and SOL positions",
-    description: "ETH and SOL typically drop 80–90% from cycle highs. Sell into strength and preserve capital.",
-    priority: "critical",
-  },
-  {
-    id: "stop-dca-alts",
-    label: "Stop DCA on alts — continue BTC only",
-    description: "In bear conditions, dollar-cost averaging into alts accelerates losses. Only DCA into BTC at confirmed support levels.",
-    priority: "high",
+    label: "Establish a BTC floor (minimum hold)",
+    description: "Decide your minimum BTC allocation you will not sell regardless of price. Write it down. This is your cycle re-entry anchor.",
+    priority: "critical" as const,
   },
   {
     id: "stablecoin-reserve",
-    label: "Build stablecoin reserve for re-entry",
-    description: "Accumulate USDC or USDT as dry powder. Bear market bottoms create generational buying opportunities.",
-    priority: "high",
+    label: "Convert 20–40% to stablecoins",
+    description: "USDC or USDT held on-chain or on a regulated exchange. This is your dry powder for the next cycle bottom.",
+    priority: "critical" as const,
   },
   {
-    id: "price-alerts",
-    label: "Set BTC price alerts for re-entry levels",
-    description: "Based on historical cycle drawdowns from $126K, watch $50K, $45K, $40K, and $38K as accumulation trigger levels for the 2026 buy window.",
-    priority: "high",
+    id: "hardware-wallet",
+    label: "Move long-term holds to cold storage",
+    description: "Any asset you plan to hold through the full bear market should be off exchanges. Hardware wallet (Ledger, Trezor) is the standard.",
+    priority: "high" as const,
   },
   {
-    id: "emergency-fund",
-    label: "Verify emergency fund is in fiat — not crypto",
-    description: "Keep 6 months of expenses in a bank account. Never rely on crypto for emergency needs during a bear market.",
-    priority: "medium",
+    id: "tax-review",
+    label: "Review tax-loss harvesting opportunities",
+    description: "Selling at a loss can offset capital gains from earlier in the cycle. Consult a tax professional before year-end.",
+    priority: "high" as const,
+  },
+  {
+    id: "stop-dca",
+    label: "Pause DCA into volatile assets",
+    description: "Catching a falling knife destroys cost basis. Wait for confirmed bottom signals (12-month MA reclaim, on-chain accumulation) before resuming DCA.",
+    priority: "high" as const,
+  },
+  {
+    id: "track-on-chain",
+    label: "Set price alerts for re-entry levels",
+    description: "Define your re-entry prices now, before emotion takes over. Use TradingView or CryptoTrackr alerts. The best buys come at the worst headlines.",
+    priority: "medium" as const,
   },
   {
     id: "document-entries",
     label: "Document entry prices for next cycle",
     description: "Record your average cost basis and ideal re-entry levels now, while the data is fresh. Preparation beats panic.",
-    priority: "medium",
+    priority: "medium" as const,
   },
 ];
 
@@ -76,10 +69,19 @@ export default function BearProtectionPage() {
   }, []);
   const { user } = useAuth();
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [checkedAt, setCheckedAt] = useState<Record<string, string>>({});
   const currentPhase = useMemo(() => getCurrentCyclePhase(), []);
 
   useEffect(() => {
-    if (user) setChecked(getBearChecklist(user.id));
+    if (user) {
+      setChecked(getBearChecklist(user.id));
+      try {
+        const raw = localStorage.getItem(`ct-bear-checklist-at-${user.id}`);
+        setCheckedAt(raw ? JSON.parse(raw) : {});
+      } catch {
+        setCheckedAt({});
+      }
+    }
   }, [user]);
 
   function toggle(id: string) {
@@ -87,10 +89,25 @@ export default function BearProtectionPage() {
     const next = !checked[id];
     setBearChecklistItem(user.id, id, next);
     setChecked((prev) => ({ ...prev, [id]: next }));
+    if (next) {
+      const ts = new Date().toISOString();
+      const newAt = { ...checkedAt, [id]: ts };
+      setCheckedAt(newAt);
+      localStorage.setItem(`ct-bear-checklist-at-${user.id}`, JSON.stringify(newAt));
+    } else {
+      const newAt = { ...checkedAt };
+      delete newAt[id];
+      setCheckedAt(newAt);
+      localStorage.setItem(`ct-bear-checklist-at-${user.id}`, JSON.stringify(newAt));
+    }
   }
 
   const doneCount = CHECKLIST.filter((c) => checked[c.id]).length;
   const progress = Math.round((doneCount / CHECKLIST.length) * 100);
+
+  function formatCheckedAt(iso: string) {
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
 
   return (
     <PortalLayout>
@@ -158,6 +175,7 @@ export default function BearProtectionPage() {
         {CHECKLIST.map((item) => {
           const done = !!checked[item.id];
           const pCfg = PRIORITY_CONFIG[item.priority];
+          const completedDate = checkedAt[item.id];
 
           return (
             <button
@@ -165,14 +183,14 @@ export default function BearProtectionPage() {
               onClick={() => toggle(item.id)}
               className="w-full rounded-2xl p-4 text-left transition-all flex items-start gap-3"
               style={{
-                background: done ? "hsl(0 0% 7%)" : "hsl(0 0% 7%)",
+                background: "hsl(0 0% 7%)",
                 border: done ? "1px solid rgba(16,185,129,0.25)" : "1px solid hsl(0 0% 13%)",
-                opacity: done ? 0.7 : 1,
+                opacity: done ? 0.75 : 1,
               }}
             >
               <div className="shrink-0 mt-0.5">
                 {done ? (
-                  <CheckCircle2 className="w-4.5 h-4.5 text-[#10b981] w-5 h-5" />
+                  <CheckCircle2 className="w-5 h-5 text-[#10b981]" />
                 ) : (
                   <Circle className="w-5 h-5 text-[hsl(0_0%_30%)]" />
                 )}
@@ -193,6 +211,11 @@ export default function BearProtectionPage() {
                   </span>
                 </div>
                 <p className="text-xs text-[hsl(0_0%_42%)] leading-relaxed">{item.description}</p>
+                {done && completedDate && (
+                  <p className="text-[10px] text-[#10b981] mt-1.5">
+                    Completed {formatCheckedAt(completedDate)}
+                  </p>
+                )}
               </div>
             </button>
           );

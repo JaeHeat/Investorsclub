@@ -175,8 +175,19 @@ export default function DcaPage() {
       {/* Scenario projections */}
       <div className="space-y-3 mb-6">
         {projections === null && (
-          <div className="rounded-2xl p-6 text-center" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
-            <p className="text-sm text-[hsl(0_0%_40%)]">Loading portfolio data...</p>
+          <div className="rounded-2xl p-8 text-center" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
+            <RefreshCw className="w-8 h-8 mx-auto mb-3 text-[hsl(0_0%_25%)]" />
+            <p className="text-sm font-semibold text-[hsl(0_0%_45%)]">No portfolio data yet</p>
+            <p className="text-xs text-[hsl(0_0%_35%)] mt-1.5 mb-4 leading-relaxed">
+              Add your holdings and starting portfolio value in Settings to see personalised DCA projections.
+            </p>
+            <a
+              href="/portal/settings"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+              style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}
+            >
+              Go to Settings
+            </a>
           </div>
         )}
         {projections?.map(({ scenario, noAdd, withAdd, dcaGain, improvement }) => {

@@ -29,10 +29,15 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: "Consultant",
+    label: "Resources",
     items: [
       { icon: Map,             label: "Roadmap",         href: "/portal/roadmap" },
       { icon: FileText,        label: "Reports",         href: "/portal/reports" },
+    ],
+  },
+  {
+    label: "Personal",
+    items: [
       { icon: MessageSquare,   label: "Notes",           href: "/portal/notes" },
     ],
   },

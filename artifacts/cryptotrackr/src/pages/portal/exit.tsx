@@ -93,14 +93,14 @@ export default function ExitStrategyPage() {
         </div>
       </div>
 
-      {/* Summary strip */}
+      {/* Summary strip — only show columns for assets the user actually holds */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
-          { label: "BTC to exit", value: formatUSD(plan.reduce((s, t) => s + t.btcSellUsd, 0)), color: ASSET_CONFIG.BTC.color },
-          { label: "ETH to exit", value: formatUSD(plan.reduce((s, t) => s + t.ethSellUsd, 0)), color: ASSET_CONFIG.ETH.color },
-          { label: "SOL to exit", value: formatUSD(plan.reduce((s, t) => s + t.solSellUsd, 0)), color: ASSET_CONFIG.SOL.color },
-          { label: "Alts to exit", value: formatUSD(plan.reduce((s, t) => s + t.altsSellUsd, 0)), color: ASSET_CONFIG.ALTS.color },
-        ].map(({ label, value, color }) => (
+          { label: "BTC to exit", value: formatUSD(plan.reduce((s, t) => s + t.btcSellUsd, 0)), color: ASSET_CONFIG.BTC.color, held: btcValue > 0 },
+          { label: "ETH to exit", value: formatUSD(plan.reduce((s, t) => s + t.ethSellUsd, 0)), color: ASSET_CONFIG.ETH.color, held: ethValue > 0 },
+          { label: "SOL to exit", value: formatUSD(plan.reduce((s, t) => s + t.solSellUsd, 0)), color: ASSET_CONFIG.SOL.color, held: solValue > 0 },
+          { label: "Alts to exit", value: formatUSD(plan.reduce((s, t) => s + t.altsSellUsd, 0)), color: ASSET_CONFIG.ALTS.color, held: altsValue > 0 },
+        ].filter((a) => a.held).map(({ label, value, color }) => (
           <div
             key={label}
             className="rounded-xl p-3"

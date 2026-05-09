@@ -367,3 +367,38 @@ export function getPersonalNotes(userId: string): string {
 export function savePersonalNotes(userId: string, notes: string): void {
   localStorage.setItem(`ct-personal-notes-${userId}`, notes);
 }
+
+// ── Delete helpers ─────────────────────────────────────────────────────────
+
+export function deleteReport(id: string): void {
+  const all = read<Report[]>("ct-reports", []).filter((r) => r.id !== id);
+  write("ct-reports", all);
+}
+
+export function deleteRoadmapItem(id: string): void {
+  const all = read<RoadmapItem[]>("ct-roadmap", []).filter((r) => r.id !== id);
+  write("ct-roadmap", all);
+}
+
+// ── Last Active Tracking ───────────────────────────────────────────────────
+
+export function trackLastActive(userId: string): void {
+  localStorage.setItem(`ct-last-active-${userId}`, new Date().toISOString());
+}
+
+export function getLastActive(userId: string): string | null {
+  return localStorage.getItem(`ct-last-active-${userId}`);
+}
+
+// ── Report Read State ──────────────────────────────────────────────────────
+
+export function getReadReports(userId: string): Set<string> {
+  const raw = localStorage.getItem(`ct-read-reports-${userId}`);
+  return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+}
+
+export function markReportRead(userId: string, reportId: string): void {
+  const existing = getReadReports(userId);
+  existing.add(reportId);
+  localStorage.setItem(`ct-read-reports-${userId}`, JSON.stringify([...existing]));
+}

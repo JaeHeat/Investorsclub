@@ -9,6 +9,9 @@ import {
   getAllReports,
   addRoadmapItem,
   addReport,
+  deleteReport,
+  deleteRoadmapItem,
+  getLastActive,
 } from "@/lib/localStore";
 import type { ClientProfile, Milestone, RoadmapItem, Report } from "@/lib/types";
 import { formatUSD, getMilestoneTier, getPortfolioTier } from "@/lib/utils";
@@ -16,7 +19,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import { usePrices } from "@/hooks/usePrices";
 import DonutChart from "@/components/DonutChart";
 import {
-  ChevronRight, Check, Loader2, X, Plus,
+  ChevronRight, Check, Loader2, X, Plus, Trash2,
   TrendingUp, TrendingDown, Target, BarChart2, RefreshCw,
 } from "lucide-react";
 
@@ -138,6 +141,16 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
     setReportForm({ title: "", content: "", is_global: false });
     setShowReportModal(false);
     setSaving(false);
+  }
+
+  function handleDeleteRoadmapItem(id: string) {
+    deleteRoadmapItem(id);
+    setRoadmapItems(getRoadmapItems(client.user_id));
+  }
+
+  function handleDeleteReport(id: string) {
+    deleteReport(id);
+    setReports(getAllReports().filter((r) => r.user_id === client.user_id || r.is_global));
   }
 
   function markMilestone(pct: number) {
@@ -306,6 +319,17 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
               { label: "Time Horizon", value: client.time_horizon?.replace(/_/g, " ") },
               { label: "Initial Portfolio Value", value: initialValue ? formatUSD(initialValue) : null },
               { label: "Discord", value: client.discord_username ? `@${client.discord_username}` : null },
+              { label: "Last Active", value: (() => {
+                const ts = getLastActive(client.user_id);
+                if (!ts) return null;
+                const d = new Date(ts);
+                const diffMs = Date.now() - d.getTime();
+                const diffDays = Math.floor(diffMs / 86400000);
+                if (diffDays === 0) return "Today";
+                if (diffDays === 1) return "Yesterday";
+                if (diffDays < 7) return `${diffDays}d ago`;
+                return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+              })() },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between text-sm">
                 <span className="text-[hsl(0_0%_40%)]">{label}</span>
@@ -394,7 +418,16 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
               <div key={item.id} className="rounded-xl p-3.5" style={{ background: "hsl(0 0% 10%)" }}>
                 <div className="flex items-start justify-between gap-3 mb-1">
                   <p className="text-sm font-medium text-white">{item.title}</p>
-                  <span className="text-[11px] text-[hsl(0_0%_35%)] shrink-0">{new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] text-[hsl(0_0%_35%)]">{new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                    <button
+                      onClick={() => handleDeleteRoadmapItem(item.id)}
+                      className="p-1 rounded hover:bg-red-500/10 text-[hsl(0_0%_35%)] hover:text-red-400 transition-colors"
+                      title="Delete roadmap item"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
                 <p className="text-xs text-[hsl(0_0%_45%)] leading-relaxed line-clamp-2">{item.content}</p>
                 {!item.user_id && <span className="inline-block mt-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}>Global</span>}
@@ -417,12 +450,21 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
         ) : (
           <div className="space-y-2">
             {reports.map((report) => (
-              <div key={report.id} className="flex items-center justify-between py-2" style={{ borderBottom: "1px solid hsl(0 0% 10%)" }}>
-                <div>
-                  <p className="text-sm text-white">{report.title}</p>
+              <div key={report.id} className="flex items-center justify-between gap-3 py-2" style={{ borderBottom: "1px solid hsl(0 0% 10%)" }}>
+                <div className="min-w-0">
+                  <p className="text-sm text-white truncate">{report.title}</p>
                   {report.is_global && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5 inline-block" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}>Global</span>}
                 </div>
-                <span className="text-xs text-[hsl(0_0%_40%)] shrink-0">{new Date(report.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-[hsl(0_0%_40%)]">{new Date(report.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                  <button
+                    onClick={() => handleDeleteReport(report.id)}
+                    className="p-1 rounded hover:bg-red-500/10 text-[hsl(0_0%_35%)] hover:text-red-400 transition-colors"
+                    title="Delete report"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

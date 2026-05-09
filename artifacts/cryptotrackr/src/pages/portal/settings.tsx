@@ -350,7 +350,27 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <InputRow label="Starting portfolio value ($)">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold text-[hsl(0_0%_55%)] uppercase tracking-wide">Starting portfolio value ($)</label>
+              {holdingRows.some((r) => r.amount && r.avg_cost) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const total = holdingRows.reduce((s, r) => {
+                      const amt = parseFloat(r.amount) || 0;
+                      const cost = parseFloat(r.avg_cost) || 0;
+                      return s + amt * cost;
+                    }, 0);
+                    if (total > 0) { setInitValue(String(Math.round(total))); markDirty(); }
+                  }}
+                  className="text-[11px] font-semibold px-2 py-0.5 rounded transition-colors"
+                  style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}
+                >
+                  Auto-calculate from holdings
+                </button>
+              )}
+            </div>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
               <input
@@ -363,7 +383,7 @@ export default function SettingsPage() {
               />
             </div>
             <p className="text-xs text-[hsl(0_0%_35%)] mt-1.5">Used as the baseline for milestone % return targets</p>
-          </InputRow>
+          </div>
         </div>
 
         {/* Strategy */}

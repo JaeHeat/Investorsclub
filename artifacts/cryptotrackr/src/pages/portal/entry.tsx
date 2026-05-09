@@ -11,7 +11,7 @@ import {
   getDaysUntil,
 } from "@/lib/cycleData";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { TrendingUp, Calendar, Zap, Shield, Clock, Info, AlertTriangle } from "lucide-react";
+import { TrendingUp, Calendar, Zap, Shield, Clock, Info, AlertTriangle, DollarSign } from "lucide-react";
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
@@ -160,6 +160,12 @@ export default function EntryStrategyPage() {
 
   const portfolioBase = livePortfolio > 0 ? livePortfolio : initialValue;
 
+  const dryPowder = useMemo(() => {
+    return holdings
+      .filter((h) => ["tether", "usd-coin"].includes(h.coingecko_id))
+      .reduce((s, h) => s + h.amount, 0);
+  }, [holdings]);
+
   return (
     <PortalLayout>
       <div className="mb-8">
@@ -194,6 +200,28 @@ export default function EntryStrategyPage() {
           <p className="text-[11px] text-[hsl(0_0%_38%)]">~Oct 2026</p>
         </div>
       </div>
+
+      {/* Dry powder banner */}
+      {dryPowder > 0 && (
+        <div
+          className="rounded-2xl p-4 mb-6 flex items-center justify-between gap-4"
+          style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.18)" }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(16,185,129,0.12)" }}>
+              <DollarSign className="w-4 h-4 text-[#10b981]" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#10b981]">Dry powder available</p>
+              <p className="text-xs text-[hsl(0_0%_45%)] mt-0.5">Stablecoin holdings ready to deploy in the buy zone</p>
+            </div>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-xl font-bold text-[#10b981]">{formatUSD(dryPowder)}</p>
+            <p className="text-[11px] text-[hsl(0_0%_40%)]">USDC / USDT</p>
+          </div>
+        </div>
+      )}
 
       {/* Bear market alert */}
       <div

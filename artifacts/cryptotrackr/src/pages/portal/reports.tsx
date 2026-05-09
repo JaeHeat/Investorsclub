@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getReports } from "@/lib/localStore";
+import { getReports, getReadReports, markReportRead } from "@/lib/localStore";
 import type { Report } from "@/lib/types";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { FileText, ChevronRight, ChevronLeft } from "lucide-react";
 
-function isNew(report: Report) {
+function isNew(report: Report, readIds: Set<string>) {
+  if (readIds.has(report.id)) return false;
   const ageDays = (Date.now() - new Date(report.published_at).getTime()) / 86400000;
   return ageDays <= 7;
 }
@@ -13,6 +14,7 @@ function isNew(report: Report) {
 export default function ReportsPage() {
   const { user } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Report | null>(null);
 
   useEffect(() => {
@@ -23,8 +25,17 @@ export default function ReportsPage() {
   useEffect(() => {
     if (user) {
       setReports(getReports(user.id));
+      setReadIds(getReadReports(user.id));
     }
   }, [user]);
+
+  function openReport(report: Report) {
+    if (user && !readIds.has(report.id)) {
+      markReportRead(user.id, report.id);
+      setReadIds((prev) => new Set([...prev, report.id]));
+    }
+    setSelected(report);
+  }
 
   if (selected) {
     return (
@@ -72,11 +83,11 @@ export default function ReportsPage() {
       ) : (
         <div className="space-y-2">
           {reports.map((report) => {
-            const fresh = isNew(report);
+            const fresh = isNew(report, readIds);
             return (
               <button
                 key={report.id}
-                onClick={() => setSelected(report)}
+                onClick={() => openReport(report)}
                 className="w-full rounded-2xl p-5 flex items-center justify-between gap-4 text-left transition-all hover:border-[hsl(0_0%_18%)]"
                 style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}
                 data-testid={`report-${report.id}`}

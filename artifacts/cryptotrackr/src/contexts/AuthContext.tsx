@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth as useReplitAuth } from "@workspace/replit-auth-web";
 import type { AuthUser } from "@workspace/replit-auth-web";
-import { getClientProfile, upsertClientProfile } from "@/lib/localStore";
+import { getClientProfile, upsertClientProfile, trackLastActive } from "@/lib/localStore";
 import type { ClientProfile } from "@/lib/types";
 
 export type { AuthUser };
@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
 
   function loadClientProfile(userId: string, replitUser?: AuthUser | null) {
+    trackLastActive(userId);
     const cp = getClientProfile(userId);
     if (!cp) {
       const name = [replitUser?.firstName, replitUser?.lastName].filter(Boolean).join(" ") || "";

@@ -1,12 +1,18 @@
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getWatchlist, addWatchlistItem, removeWatchlistItem } from "@/lib/localStore";
+import { getWatchlist, addWatchlistItem, removeWatchlistItem, getHoldings } from "@/lib/localStore";
 import { usePrices } from "@/hooks/usePrices";
 import { formatUSD } from "@/lib/utils";
 import { CURATED_ALTS, ALT_CATEGORY_COLORS } from "@/lib/portfolioPlans";
 import type { WatchlistItem } from "@/lib/types";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { Eye, Plus, Trash2 } from "lucide-react";
+
+const CORE_ASSETS = [
+  { coingecko_id: "bitcoin",  symbol: "BTC", name: "Bitcoin",  category: "Core" as const },
+  { coingecko_id: "ethereum", symbol: "ETH", name: "Ethereum", category: "Core" as const },
+  { coingecko_id: "solana",   symbol: "SOL", name: "Solana",   category: "Core" as const },
+];
 
 export default function WatchlistPage() {
   const { user } = useAuth();
@@ -20,29 +26,44 @@ export default function WatchlistPage() {
   }, []);
 
   useEffect(() => {
-    if (user) setWatchlist(getWatchlist(user.id));
+    if (!user) return;
+    const wl = getWatchlist(user.id);
+    if (wl.length === 0) {
+      const holdings = getHoldings(user.id);
+      for (const h of holdings) {
+        addWatchlistItem(user.id, { coingecko_id: h.coingecko_id, symbol: h.symbol, name: h.name });
+      }
+    }
+    setWatchlist(getWatchlist(user.id));
   }, [user]);
 
   const allCoinIds = useMemo(() => watchlist.map((w) => w.coingecko_id), [watchlist]);
   const { prices, changes24h } = usePrices(allCoinIds);
 
-  const filteredAlts = useMemo(() =>
-    CURATED_ALTS.filter(
+  const allPickerAssets = useMemo(() => {
+    return [
+      ...CORE_ASSETS.map((a) => ({ ...a, isCore: true, rationale: "" })),
+      ...CURATED_ALTS.map((a) => ({ ...a, isCore: false })),
+    ];
+  }, []);
+
+  const filteredPicker = useMemo(() =>
+    allPickerAssets.filter(
       (a) =>
         !watchlist.some((w) => w.coingecko_id === a.coingecko_id) &&
         (search === "" ||
           a.name.toLowerCase().includes(search.toLowerCase()) ||
           a.symbol.toLowerCase().includes(search.toLowerCase()))
     ),
-    [watchlist, search]
+    [watchlist, search, allPickerAssets]
   );
 
-  function handleAdd(alt: typeof CURATED_ALTS[0]) {
+  function handleAdd(asset: { coingecko_id: string; symbol: string; name: string }) {
     if (!user) return;
-    const item = addWatchlistItem(user.id, {
-      coingecko_id: alt.coingecko_id,
-      symbol: alt.symbol,
-      name: alt.name,
+    addWatchlistItem(user.id, {
+      coingecko_id: asset.coingecko_id,
+      symbol: asset.symbol,
+      name: asset.name,
     });
     setWatchlist(getWatchlist(user.id));
     setShowPicker(false);
@@ -58,6 +79,12 @@ export default function WatchlistPage() {
   const altInfoMap = useMemo(() => {
     const m: Record<string, typeof CURATED_ALTS[0]> = {};
     for (const a of CURATED_ALTS) m[a.coingecko_id] = a;
+    return m;
+  }, []);
+
+  const coreInfoMap = useMemo(() => {
+    const m: Record<string, typeof CORE_ASSETS[0]> = {};
+    for (const a of CORE_ASSETS) m[a.coingecko_id] = a;
     return m;
   }, []);
 
@@ -84,7 +111,7 @@ export default function WatchlistPage() {
             Add asset
           </button>
         </div>
-        <p className="text-sm text-[hsl(0_0%_42%)] mt-2">Track assets from our curated Top-25 universe with live prices.</p>
+        <p className="text-sm text-[hsl(0_0%_42%)] mt-2">Track assets with live prices and 24h change.</p>
       </div>
 
       {/* Asset picker */}
@@ -101,31 +128,33 @@ export default function WatchlistPage() {
             autoFocus
           />
           <div className="space-y-1 max-h-52 overflow-y-auto">
-            {filteredAlts.length === 0 ? (
-              <p className="text-xs text-[hsl(0_0%_40%)] py-2 text-center">All curated alts already in watchlist</p>
+            {filteredPicker.length === 0 ? (
+              <p className="text-xs text-[hsl(0_0%_40%)] py-2 text-center">All assets already in watchlist</p>
             ) : (
-              filteredAlts.map((alt) => (
-                <button
-                  key={alt.coingecko_id}
-                  onClick={() => handleAdd(alt)}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-[hsl(0,0%,12%)] transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-                      style={{
-                        background: `${ALT_CATEGORY_COLORS[alt.category]}18`,
-                        color: ALT_CATEGORY_COLORS[alt.category],
-                      }}
-                    >
-                      {alt.category}
-                    </span>
-                    <span className="text-sm font-semibold text-white">{alt.symbol}</span>
-                    <span className="text-xs text-[hsl(0_0%_45%)]">{alt.name}</span>
-                  </div>
-                  <Plus className="w-3.5 h-3.5 text-[hsl(0_0%_40%)]" />
-                </button>
-              ))
+              filteredPicker.map((asset) => {
+                const isCore = "isCore" in asset && asset.isCore;
+                const categoryColor = isCore ? "#F7931A" : ALT_CATEGORY_COLORS[(asset as typeof CURATED_ALTS[0]).category];
+                const categoryLabel = isCore ? "Core" : (asset as typeof CURATED_ALTS[0]).category;
+                return (
+                  <button
+                    key={asset.coingecko_id}
+                    onClick={() => handleAdd(asset)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-[hsl(0,0%,12%)] transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                        style={{ background: `${categoryColor}18`, color: categoryColor }}
+                      >
+                        {categoryLabel}
+                      </span>
+                      <span className="text-sm font-semibold text-white">{asset.symbol}</span>
+                      <span className="text-xs text-[hsl(0_0%_45%)]">{asset.name}</span>
+                    </div>
+                    <Plus className="w-3.5 h-3.5 text-[hsl(0_0%_40%)]" />
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
@@ -139,14 +168,27 @@ export default function WatchlistPage() {
         >
           <Eye className="w-8 h-8 mx-auto mb-3 text-[hsl(0_0%_25%)]" />
           <p className="text-sm font-semibold text-[hsl(0_0%_40%)]">No assets watched yet</p>
-          <p className="text-xs text-[hsl(0_0%_30%)] mt-1">Add assets from our curated Top-25 universe to track their price.</p>
+          <p className="text-xs text-[hsl(0_0%_30%)] mt-1 mb-4">Track BTC, ETH, SOL, and top-25 alts with live prices.</p>
+          <button
+            onClick={() => setShowPicker(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
+            style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}
+          >
+            <Plus className="w-3.5 h-3.5" /> Add your first asset
+          </button>
         </div>
       ) : (
         <div className="space-y-2">
           {watchlist.map((item) => {
             const price = prices[item.coingecko_id];
             const change24h = changes24h[item.coingecko_id];
-            const info = altInfoMap[item.coingecko_id];
+            const altInfo = altInfoMap[item.coingecko_id];
+            const coreInfo = coreInfoMap[item.coingecko_id];
+
+            const categoryColor = coreInfo
+              ? "#F7931A"
+              : altInfo ? ALT_CATEGORY_COLORS[altInfo.category] : "#6b7280";
+            const categoryLabel = coreInfo ? "Core" : altInfo ? altInfo.category : null;
 
             return (
               <div
@@ -158,19 +200,16 @@ export default function WatchlistPage() {
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="text-sm font-bold text-white">{item.symbol}</p>
                     <p className="text-xs text-[hsl(0_0%_45%)] truncate">{item.name}</p>
-                    {info && (
+                    {categoryLabel && (
                       <span
                         className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0"
-                        style={{
-                          background: `${ALT_CATEGORY_COLORS[info.category]}18`,
-                          color: ALT_CATEGORY_COLORS[info.category],
-                        }}
+                        style={{ background: `${categoryColor}18`, color: categoryColor }}
                       >
-                        {info.category}
+                        {categoryLabel}
                       </span>
                     )}
                   </div>
-                  {info && <p className="text-[10px] text-[hsl(0_0%_38%)] leading-relaxed">{info.rationale}</p>}
+                  {altInfo && <p className="text-[10px] text-[hsl(0_0%_38%)] leading-relaxed">{altInfo.rationale}</p>}
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-bold text-white">
@@ -181,7 +220,7 @@ export default function WatchlistPage() {
                       {change24h >= 0 ? "+" : ""}{change24h.toFixed(2)}%
                     </p>
                   ) : (
-                    <p className="text-[10px] text-[hsl(0_0%_35%)]">Loading...</p>
+                    <p className="text-[10px] text-[hsl(0_0%_35%)]">—</p>
                   )}
                 </div>
                 <button

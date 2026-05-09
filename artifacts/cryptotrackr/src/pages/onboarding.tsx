@@ -275,10 +275,9 @@ export default function OnboardingPage() {
               </p>
               <div className="space-y-3 mb-8">
                 {[
-                  { icon: ClipboardList, label: "Your details",         desc: "Name, country, timezone, Discord" },
-                  { icon: Wallet,        label: "Your holdings",        desc: "Each asset, quantity, and average entry price" },
-                  { icon: BarChart2,     label: "Cash position",        desc: "Dry powder available for the next cycle" },
-                  { icon: Calendar,      label: "Investment goals",     desc: "Target value, risk, and time horizon" },
+                  { icon: ClipboardList, label: "Your details",         desc: "Name, country, timezone, and Discord handle" },
+                  { icon: Wallet,        label: "Your holdings",        desc: "Each asset, quantity, avg entry price, and any cash / dry powder" },
+                  { icon: Calendar,      label: "Investment goals",     desc: "Target portfolio value, risk tolerance, and time horizon" },
                 ].map(({ icon: Icon, label, desc }) => (
                   <div
                     key={label}
@@ -302,7 +301,7 @@ export default function OnboardingPage() {
                 type="button"
                 onClick={() => setStep(1)}
                 data-testid="button-start"
-                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold"
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold transition-opacity hover:opacity-85 active:opacity-70"
                 style={{ background: "#F7931A", color: "#0A0A0A" }}
               >
                 Get started <ChevronRight className="w-4 h-4" />
