@@ -8,7 +8,7 @@ import {
   Calendar, ClipboardList, BarChart2, Plus, X, Wallet,
 } from "lucide-react";
 
-const STEPS = 4;
+const STEPS = 3;
 
 const RISK_LEVELS = [
   { value: "conservative", label: "Conservative", description: "Capital preservation first" },
@@ -158,6 +158,7 @@ export default function OnboardingPage() {
       if (!form.risk_tolerance) errors.risk_tolerance = "Select a risk tolerance";
       if (!form.time_horizon) errors.time_horizon = "Select a time horizon";
     }
+
     return errors;
   }
 
@@ -207,7 +208,7 @@ export default function OnboardingPage() {
     });
 
     refreshClientProfile();
-    setStep(5);
+    setStep(4);
     setSubmitting(false);
   }
 
@@ -585,158 +586,9 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── STEP 3: Experience & context ─────────────────────────────── */}
+          {/* ── STEP 3: Investment goals ──────────────────────────────────── */}
           {step === 3 && (
             <div data-testid="onboarding-step-3">
-              <h2 className="text-xl font-semibold text-white mb-1">Experience & context</h2>
-              <p className="text-sm text-[hsl(0_0%_50%)] mb-7 leading-relaxed">
-                Helps your consultant tailor the strategy and communication style for you.
-              </p>
-              <div className="space-y-6">
-                {/* Experience level */}
-                <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
-                    Crypto experience
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { value: "new",      label: "New",      desc: "First cycle" },
-                      { value: "some",     label: "Some",     desc: "1–2 cycles" },
-                      { value: "veteran",  label: "Veteran",  desc: "3+ cycles" },
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => update("experience_level", opt.value)}
-                        className="p-3 rounded-xl text-center transition-all"
-                        style={{
-                          background: form.experience_level === opt.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
-                          border: `1px solid ${form.experience_level === opt.value ? "rgba(247,147,26,0.4)" : "hsl(0 0% 16%)"}`,
-                        }}
-                      >
-                        <p className="text-xs font-medium text-white">{opt.label}</p>
-                        <p className="text-[10px] text-[hsl(0_0%_45%)] mt-0.5">{opt.desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Current approach */}
-                <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
-                    Current approach
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { value: "hold",       label: "Holding",       desc: "Waiting for the cycle" },
-                      { value: "dca_in",     label: "DCA-ing in",    desc: "Regular buys" },
-                      { value: "in_cash",    label: "In cash",       desc: "Waiting to deploy" },
-                      { value: "active",     label: "Active trader", desc: "Buying & selling" },
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => update("current_approach", opt.value)}
-                        className="p-3 rounded-xl text-left transition-all"
-                        style={{
-                          background: form.current_approach === opt.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
-                          border: `1px solid ${form.current_approach === opt.value ? "rgba(247,147,26,0.4)" : "hsl(0 0% 16%)"}`,
-                        }}
-                      >
-                        <p className="text-xs font-medium text-white">{opt.label}</p>
-                        <p className="text-[10px] text-[hsl(0_0%_45%)] mt-0.5">{opt.desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Tax situation */}
-                <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
-                    Tax on crypto gains?
-                  </label>
-                  <div className="flex gap-2">
-                    {[
-                      { value: "yes",     label: "Yes",          desc: "Capital gains applies" },
-                      { value: "no",      label: "No",           desc: "Tax-exempt jurisdiction" },
-                      { value: "unsure",  label: "Not sure",     desc: "Will check" },
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => update("tax_situation", opt.value)}
-                        className="flex-1 p-3 rounded-xl text-center transition-all"
-                        style={{
-                          background: form.tax_situation === opt.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
-                          border: `1px solid ${form.tax_situation === opt.value ? "rgba(247,147,26,0.4)" : "hsl(0 0% 16%)"}`,
-                        }}
-                      >
-                        <p className="text-xs font-medium text-white">{opt.label}</p>
-                        <p className="text-[10px] text-[hsl(0_0%_45%)] mt-0.5">{opt.desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Custody */}
-                <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
-                    How do you hold your crypto?
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { value: "self_custody",  label: "Self-custody",  desc: "Hardware / software wallet" },
-                      { value: "exchange",       label: "Exchange",      desc: "Centralized exchange" },
-                      { value: "mix",            label: "Both",         desc: "Mix of self + exchange" },
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => update("custody", opt.value)}
-                        className="p-3 rounded-xl text-center transition-all"
-                        style={{
-                          background: form.custody === opt.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
-                          border: `1px solid ${form.custody === opt.value ? "rgba(247,147,26,0.4)" : "hsl(0 0% 16%)"}`,
-                        }}
-                      >
-                        <p className="text-xs font-medium text-white">{opt.label}</p>
-                        <p className="text-[10px] text-[hsl(0_0%_45%)] mt-0.5">{opt.desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Preferred call time */}
-                <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
-                    Best time for calls{" "}
-                    <span className="text-[hsl(0_0%_40%)] normal-case font-normal">(optional)</span>
-                  </label>
-                  <div className="flex gap-2">
-                    {["Morning", "Afternoon", "Evening"].map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => update("call_preference", t)}
-                        className="flex-1 py-2.5 rounded-xl text-sm text-center transition-all"
-                        style={{
-                          background: form.call_preference === t ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
-                          border: `1px solid ${form.call_preference === t ? "rgba(247,147,26,0.4)" : "hsl(0 0% 16%)"}`,
-                          color: form.call_preference === t ? "#F7931A" : "hsl(0 0% 70%)",
-                        }}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── STEP 4: Investment goals ──────────────────────────────────── */}
-          {step === 4 && (
-            <div data-testid="onboarding-step-4">
               <h2 className="text-xl font-semibold text-white mb-1">Investment goals</h2>
               <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Your target for this cycle</p>
               <div className="space-y-6">
@@ -842,8 +694,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── STEP 5: Done ──────────────────────────────────────────────── */}
-          {step === 5 && (
+          {/* ── STEP 4: Done ──────────────────────────────────────────────── */}
+          {step === 4 && (
             <div data-testid="onboarding-complete" className="text-center">
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5"
