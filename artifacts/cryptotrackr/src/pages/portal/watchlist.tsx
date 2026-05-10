@@ -70,7 +70,6 @@ export default function WatchlistPage() {
       name: asset.name,
     });
     setWatchlist(getWatchlist(user.id));
-    setShowPicker(false);
     setSearch("");
   }
 

@@ -120,7 +120,7 @@ export default function NotesPage() {
           </p>
           <p
             className="text-xs tabular-nums"
-            style={{ color: remaining < 100 ? "#F7931A" : "hsl(0 0% 32%)" }}
+            style={{ color: remaining < 500 ? (remaining < 100 ? "#ef4444" : "#F7931A") : "hsl(0 0% 32%)" }}
           >
             {text.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
           </p>

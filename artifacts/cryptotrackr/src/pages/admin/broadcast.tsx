@@ -68,6 +68,7 @@ export default function BroadcastPage() {
   const [success, setSuccess]   = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Broadcast | null>(null);
+  const [scheduledDeleteTarget, setScheduledDeleteTarget] = useState<ScheduledBroadcast | null>(null);
   const [activeTab, setActiveTab] = useState<"compose" | "drafts">("compose");
   const [autoPublishedCount, setAutoPublishedCount] = useState(0);
 
@@ -143,9 +144,15 @@ export default function BroadcastPage() {
     setScheduled(getScheduledBroadcasts());
   }
 
-  function handleDeleteScheduled(id: string) {
-    deleteScheduledBroadcast(id);
+  function handleDeleteScheduled(broadcast: ScheduledBroadcast) {
+    setScheduledDeleteTarget(broadcast);
+  }
+
+  function confirmDeleteScheduled() {
+    if (!scheduledDeleteTarget) return;
+    deleteScheduledBroadcast(scheduledDeleteTarget.id);
     setScheduled(getScheduledBroadcasts());
+    setScheduledDeleteTarget(null);
   }
 
   const inputClass = "w-full px-3 py-2.5 rounded-xl text-sm text-white bg-[hsl(0,0%,9%)] border border-[hsl(0,0%,16%)] outline-none focus:border-[#F7931A] transition-colors";
@@ -156,6 +163,9 @@ export default function BroadcastPage() {
     <AdminLayout>
       {deleteTarget && (
         <DeleteConfirmDialog broadcast={deleteTarget} onConfirm={confirmDelete} onCancel={() => setDeleteTarget(null)} />
+      )}
+      {scheduledDeleteTarget && (
+        <DeleteConfirmDialog broadcast={scheduledDeleteTarget} onConfirm={confirmDeleteScheduled} onCancel={() => setScheduledDeleteTarget(null)} />
       )}
 
       <div className="mb-8">
@@ -406,7 +416,7 @@ export default function BroadcastPage() {
                         <Send className="w-3.5 h-3.5" />
                         Publish
                       </button>
-                      <button onClick={() => handleDeleteScheduled(b.id)} className="p-1.5 rounded-lg text-[hsl(0_0%_35%)] hover:text-[#ef4444] transition-colors">
+                      <button onClick={() => handleDeleteScheduled(b)} className="p-1.5 rounded-lg text-[hsl(0_0%_35%)] hover:text-[#ef4444] transition-colors" title="Delete">
                         <X className="w-4 h-4" />
                       </button>
                     </div>

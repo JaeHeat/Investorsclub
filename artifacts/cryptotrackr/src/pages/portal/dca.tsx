@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHoldings } from "@/lib/localStore";
 import { usePrices } from "@/hooks/usePrices";
@@ -181,13 +182,14 @@ export default function DcaPage() {
             <p className="text-xs text-[hsl(0_0%_35%)] mt-1.5 mb-4 leading-relaxed">
               Add your holdings and starting portfolio value in Settings to see personalised DCA projections.
             </p>
-            <a
-              href="/portal/settings"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-              style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}
-            >
-              Go to Settings
-            </a>
+            <Link href="/portal/settings">
+              <a
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}
+              >
+                Go to Settings
+              </a>
+            </Link>
           </div>
         )}
         {projections?.map(({ scenario, noAdd, withAdd, dcaGain, improvement }) => {

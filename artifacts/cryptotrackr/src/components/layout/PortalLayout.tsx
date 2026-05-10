@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { getReports, getReadReports } from "@/lib/localStore";
 import { Link, useLocation } from "wouter";
 import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, PieChart, LogOut, Menu, X, TrendingDown, TrendingUp, RefreshCw, Eye, Shield, Settings, BookOpen, Calculator } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -47,11 +48,12 @@ const NAV_GROUPS = [
 
 const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
-function NavItem({ icon: Icon, label, href, location, onClick }: {
+function NavItem({ icon: Icon, label, href, location, badge, onClick }: {
   icon: React.ElementType;
   label: string;
   href: string;
   location: string;
+  badge?: number;
   onClick?: () => void;
 }) {
   const active = href === "/portal" ? location === "/portal" : location.startsWith(href);
@@ -67,20 +69,42 @@ function NavItem({ icon: Icon, label, href, location, onClick }: {
         onClick={onClick}
       >
         <Icon className="w-4 h-4 shrink-0" />
-        {label}
+        <span className="flex-1">{label}</span>
+        {badge != null && badge > 0 && (
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ background: "#F7931A" }}
+          />
+        )}
       </a>
     </Link>
   );
 }
 
+function countUnreadReports(userId: string): number {
+  try {
+    const reports = getReports(userId);
+    const readIds = getReadReports(userId);
+    return reports.filter((r) => {
+      if (readIds.has(r.id)) return false;
+      const ageDays = (Date.now() - new Date(r.published_at).getTime()) / 86400000;
+      return ageDays <= 7;
+    }).length;
+  } catch {
+    return 0;
+  }
+}
+
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
-  const { clientProfile, signOut } = useAuth();
+  const { user, clientProfile, signOut } = useAuth();
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [unreadReports, setUnreadReports] = useState(0);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
-  }, [location]);
+    if (user) setUnreadReports(countUnreadReports(user.id));
+  }, [location, user]);
 
   function handleSignOut() {
     setMobileOpen(false);
@@ -113,7 +137,14 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 </p>
                 <div className="space-y-0.5">
                   {group.items.map(({ icon, label, href }) => (
-                    <NavItem key={href} icon={icon} label={label} href={href} location={location} />
+                    <NavItem
+                      key={href}
+                      icon={icon}
+                      label={label}
+                      href={href}
+                      location={location}
+                      badge={href === "/portal/reports" ? unreadReports : undefined}
+                    />
                   ))}
                 </div>
               </div>
@@ -169,6 +200,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 <div className="space-y-0.5">
                   {group.items.map(({ icon: Icon, label, href }) => {
                     const active = href === "/portal" ? location === "/portal" : location.startsWith(href);
+                    const hasUnread = href === "/portal/reports" && unreadReports > 0;
                     return (
                       <Link key={href} href={href}>
                         <a
@@ -180,7 +212,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                           }}
                         >
                           <Icon className="w-4 h-4" />
-                          {label}
+                          <span className="flex-1">{label}</span>
+                          {hasUnread && (
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#F7931A" }} />
+                          )}
                         </a>
                       </Link>
                     );

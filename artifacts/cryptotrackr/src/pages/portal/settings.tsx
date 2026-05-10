@@ -19,8 +19,12 @@ const TIME_HORIZON_OPTIONS = [
 
 const TIMEZONES = [
   "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-  "Europe/London", "Europe/Berlin", "Europe/Paris", "Asia/Dubai",
-  "Asia/Singapore", "Asia/Tokyo", "Australia/Sydney",
+  "America/Toronto", "America/Vancouver", "America/Sao_Paulo",
+  "Europe/London", "Europe/Berlin", "Europe/Paris", "Europe/Amsterdam",
+  "Europe/Madrid", "Europe/Rome", "Europe/Zurich",
+  "Asia/Dubai", "Asia/Kolkata", "Asia/Singapore", "Asia/Tokyo",
+  "Asia/Seoul", "Asia/Hong_Kong", "Asia/Shanghai",
+  "Australia/Sydney", "Australia/Melbourne", "Pacific/Auckland",
 ];
 
 const COUNTRIES = [

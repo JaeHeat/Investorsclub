@@ -140,6 +140,14 @@ export default function TradeJournalPage() {
         <div className="flex items-center gap-3 mb-2">
           <BookOpen className="w-5 h-5" style={{ color: "#F7931A" }} />
           <h1 className="text-2xl font-semibold text-white">Trade Journal</h1>
+          {entries.length > 0 && (
+            <span
+              className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: "hsl(0 0% 12%)", color: "hsl(0 0% 55%)" }}
+            >
+              {entries.length} {entries.length === 1 ? "entry" : "entries"}
+            </span>
+          )}
         </div>
         <p className="text-sm text-[hsl(0_0%_42%)]">Log every buy and sell. Your consultant sees this as context for advice.</p>
       </div>
@@ -292,10 +300,21 @@ export default function TradeJournalPage() {
       {filtered.length === 0 ? (
         <div className="rounded-2xl p-10 flex flex-col items-center text-center" style={{ background: "hsl(0 0% 7%)", border: "1px dashed hsl(0 0% 16%)" }}>
           <BookOpen className="w-7 h-7 text-[hsl(0_0%_25%)] mb-3" />
-          <p className="text-sm font-medium text-white mb-1">No trades logged yet</p>
-          <p className="text-xs text-[hsl(0_0%_40%)] max-w-xs leading-relaxed">
-            Start logging your buys and sells to keep a record of your decision-making across the cycle.
-          </p>
+          {entries.length === 0 ? (
+            <>
+              <p className="text-sm font-medium text-white mb-1">No trades logged yet</p>
+              <p className="text-xs text-[hsl(0_0%_40%)] max-w-xs leading-relaxed">
+                Start logging your buys and sells to keep a record of your decision-making across the cycle.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-medium text-white mb-1">No {filter} trades found</p>
+              <p className="text-xs text-[hsl(0_0%_40%)] max-w-xs leading-relaxed">
+                You have {entries.length} {entries.length === 1 ? "entry" : "entries"} total — try switching the filter above.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className="space-y-2.5">
