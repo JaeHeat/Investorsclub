@@ -12,6 +12,8 @@ import {
   deleteReport,
   deleteRoadmapItem,
   getLastActive,
+  getReadReports,
+  getTradeJournal,
 } from "@/lib/localStore";
 import type { ClientProfile, Milestone, RoadmapItem, Report } from "@/lib/types";
 import { formatUSD, getMilestoneTier, getPortfolioTier } from "@/lib/utils";
@@ -569,6 +571,50 @@ export default function AdminClients() {
     );
   }
 
+  // ── Health score computation ─────────────────────────────────────────────
+  function computeHealthScore(client: ClientProfile): { score: number; label: string; color: string; breakdown: { label: string; pts: number; max: number }[] } {
+    const breakdown: { label: string; pts: number; max: number }[] = [];
+
+    // 1. Last active (max 25pts)
+    const lastActive = getLastActive(client.user_id);
+    const daysSince = lastActive ? Math.floor((Date.now() - new Date(lastActive).getTime()) / 86400000) : 999;
+    const activePts = daysSince <= 1 ? 25 : daysSince <= 7 ? 18 : daysSince <= 30 ? 10 : 0;
+    breakdown.push({ label: "Last active", pts: activePts, max: 25 });
+
+    // 2. Holdings configured (max 20pts)
+    const holdings = getHoldings(client.user_id);
+    const holdingsPts = holdings.length >= 2 ? 20 : holdings.length === 1 ? 10 : 0;
+    breakdown.push({ label: "Holdings set up", pts: holdingsPts, max: 20 });
+
+    // 3. Starting value set (max 15pts)
+    const initPts = (client.initial_portfolio_value ?? 0) > 0 ? 15 : 0;
+    breakdown.push({ label: "Starting value set", pts: initPts, max: 15 });
+
+    // 4. Reports read (max 20pts)
+    const allReports = getAllReports().filter((r) => r.is_global || r.user_id === client.user_id);
+    const readSet = getReadReports(client.user_id);
+    const readPct = allReports.length > 0 ? readSet.size / allReports.length : 0;
+    const reportPts = Math.round(readPct * 20);
+    breakdown.push({ label: "Reports read", pts: reportPts, max: 20 });
+
+    // 5. Trade journal (max 10pts)
+    const journal = getTradeJournal(client.user_id);
+    const journalPts = journal.length >= 5 ? 10 : journal.length >= 1 ? 5 : 0;
+    breakdown.push({ label: "Trade journal entries", pts: journalPts, max: 10 });
+
+    // 6. Profile complete (max 10pts)
+    const profileFields = [client.full_name, client.country, client.timezone, client.risk_tolerance, client.investment_goal];
+    const filledFields = profileFields.filter(Boolean).length;
+    const profilePts = Math.round((filledFields / profileFields.length) * 10);
+    breakdown.push({ label: "Profile complete", pts: profilePts, max: 10 });
+
+    const score = breakdown.reduce((s, b) => s + b.pts, 0);
+    const label = score >= 80 ? "Excellent" : score >= 60 ? "Good" : score >= 40 ? "Fair" : "Low";
+    const color = score >= 80 ? "#22c55e" : score >= 60 ? "#F7931A" : score >= 40 ? "#f59e0b" : "#ef4444";
+
+    return { score, label, color, breakdown };
+  }
+
   return (
     <AdminLayout>
       <div className="mb-8">
@@ -586,6 +632,9 @@ export default function AdminClients() {
             const portfolioTier = getPortfolioTier(client.initial_portfolio_value ?? 0);
             const milestoneTier = getMilestoneTier(client.risk_tolerance, client.initial_portfolio_value ?? 0);
             const holdings = getHoldings(client.user_id);
+            const health = computeHealthScore(client);
+            const lastActive = getLastActive(client.user_id);
+            const daysSince = lastActive ? Math.floor((Date.now() - new Date(lastActive).getTime()) / 86400000) : null;
             return (
               <button
                 key={client.user_id}
@@ -600,15 +649,38 @@ export default function AdminClients() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-white">{client.full_name || "Unnamed"}</p>
                   <p className="text-xs text-[hsl(0_0%_40%)] mt-0.5">
-                    {portfolioTier} · {milestoneTier.riskLabel} · up to {milestoneTier.maxReturnLabel}
+                    {portfolioTier} · {milestoneTier.riskLabel}
                     {holdings.length > 0 && ` · ${holdings.map((h) => h.symbol).join(", ")}`}
                   </p>
                 </div>
+
+                {/* Health score */}
+                <div className="shrink-0 flex flex-col items-center gap-1" title={`Health score breakdown:\n${health.breakdown.map((b) => `${b.label}: ${b.pts}/${b.max}`).join("\n")}`}>
+                  <div className="relative w-10 h-10">
+                    <svg viewBox="0 0 36 36" className="w-10 h-10 -rotate-90">
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="hsl(0 0% 14%)" strokeWidth="3" />
+                      <circle
+                        cx="18" cy="18" r="14" fill="none"
+                        stroke={health.color}
+                        strokeWidth="3"
+                        strokeDasharray={`${(health.score / 100) * 87.96} 87.96`}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold" style={{ color: health.color }}>
+                      {health.score}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-semibold" style={{ color: health.color }}>{health.label}</span>
+                </div>
+
                 <div className="text-right shrink-0">
                   <p className="text-sm font-semibold text-white">
                     {client.initial_portfolio_value ? formatUSD(client.initial_portfolio_value) : "—"}
                   </p>
-                  <p className="text-xs text-[hsl(0_0%_40%)] mt-0.5">{holdings.length} asset{holdings.length !== 1 ? "s" : ""}</p>
+                  <p className="text-xs mt-0.5" style={{ color: daysSince === null ? "hsl(0 0% 35%)" : daysSince <= 1 ? "#22c55e" : daysSince <= 7 ? "#F7931A" : "hsl(0 0% 40%)" }}>
+                    {daysSince === null ? "Never active" : daysSince === 0 ? "Active today" : `${daysSince}d ago`}
+                  </p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-[hsl(0_0%_30%)] shrink-0" />
               </button>

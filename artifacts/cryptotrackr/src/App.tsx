@@ -16,6 +16,8 @@ import DcaPage from "@/pages/portal/dca";
 import WatchlistPage from "@/pages/portal/watchlist";
 import BearProtectionPage from "@/pages/portal/bear";
 import SettingsPage from "@/pages/portal/settings";
+import TradeJournalPage from "@/pages/portal/journal";
+import TaxPage from "@/pages/portal/tax";
 import AdminDashboard from "@/pages/admin/index";
 import AdminClients from "@/pages/admin/clients";
 import CycleIntelligence from "@/pages/admin/cycle";
@@ -112,6 +114,12 @@ function AppRoutes() {
       </Route>
       <Route path="/portal/settings">
         <ProtectedRoute requireRole="client"><SettingsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/portal/journal">
+        <ProtectedRoute requireRole="client"><TradeJournalPage /></ProtectedRoute>
+      </Route>
+      <Route path="/portal/tax">
+        <ProtectedRoute requireRole="client"><TaxPage /></ProtectedRoute>
       </Route>
 
       <Route path="/admin">

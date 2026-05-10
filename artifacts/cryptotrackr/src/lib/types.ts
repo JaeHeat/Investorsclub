@@ -69,3 +69,29 @@ export interface WatchlistItem {
   name: string;
   added_at: string;
 }
+
+export interface TradeJournalEntry {
+  id: string;
+  user_id: string;
+  date: string;           // ISO date string
+  type: "buy" | "sell";
+  asset_symbol: string;
+  asset_name: string;
+  amount: number;
+  price: number;          // USD per unit at time of trade
+  total_usd: number;
+  notes: string;
+  created_at: string;
+}
+
+export interface PriceAlert {
+  id: string;
+  user_id: string;
+  coingecko_id: string;
+  symbol: string;
+  target_price: number;
+  direction: "above" | "below"; // trigger when price goes above or below
+  triggered: boolean;
+  triggered_at: string | null;
+  created_at: string;
+}

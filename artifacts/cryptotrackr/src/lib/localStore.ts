@@ -1,4 +1,4 @@
-import type { ClientProfile, HoldingAsset, Milestone, RoadmapItem, Report, Broadcast, PortfolioSnapshot, WatchlistItem } from "./types";
+import type { ClientProfile, HoldingAsset, Milestone, RoadmapItem, Report, Broadcast, PortfolioSnapshot, WatchlistItem, TradeJournalEntry, PriceAlert } from "./types";
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -401,4 +401,99 @@ export function markReportRead(userId: string, reportId: string): void {
   const existing = getReadReports(userId);
   existing.add(reportId);
   localStorage.setItem(`ct-read-reports-${userId}`, JSON.stringify([...existing]));
+}
+
+// ── Trade Journal ──────────────────────────────────────────────────────────
+
+export function getTradeJournal(userId: string): TradeJournalEntry[] {
+  const all = read<TradeJournalEntry[]>("ct-journal", []);
+  return all.filter((e) => e.user_id === userId).sort((a, b) => b.date.localeCompare(a.date));
+}
+
+export function addTradeJournalEntry(entry: Omit<TradeJournalEntry, "id" | "created_at">): TradeJournalEntry {
+  const all = read<TradeJournalEntry[]>("ct-journal", []);
+  const newEntry: TradeJournalEntry = {
+    ...entry,
+    id: uid(),
+    created_at: new Date().toISOString(),
+  };
+  all.push(newEntry);
+  write("ct-journal", all);
+  return newEntry;
+}
+
+export function deleteTradeJournalEntry(id: string, userId: string): void {
+  const all = read<TradeJournalEntry[]>("ct-journal", []).filter(
+    (e) => !(e.id === id && e.user_id === userId)
+  );
+  write("ct-journal", all);
+}
+
+// Returns all journal entries for all clients — admin view
+export function getAllTradeJournalEntries(): TradeJournalEntry[] {
+  return read<TradeJournalEntry[]>("ct-journal", []).sort((a, b) => b.date.localeCompare(a.date));
+}
+
+// ── Price Alerts ───────────────────────────────────────────────────────────
+
+export function getPriceAlerts(userId: string): PriceAlert[] {
+  return read<PriceAlert[]>("ct-price-alerts", []).filter((a) => a.user_id === userId);
+}
+
+export function addPriceAlert(alert: Omit<PriceAlert, "id" | "created_at" | "triggered" | "triggered_at">): PriceAlert {
+  const all = read<PriceAlert[]>("ct-price-alerts", []);
+  const newAlert: PriceAlert = {
+    ...alert,
+    id: uid(),
+    triggered: false,
+    triggered_at: null,
+    created_at: new Date().toISOString(),
+  };
+  all.push(newAlert);
+  write("ct-price-alerts", all);
+  return newAlert;
+}
+
+export function triggerPriceAlert(id: string): void {
+  const all = read<PriceAlert[]>("ct-price-alerts", []);
+  const idx = all.findIndex((a) => a.id === id);
+  if (idx >= 0) {
+    all[idx] = { ...all[idx], triggered: true, triggered_at: new Date().toISOString() };
+    write("ct-price-alerts", all);
+  }
+}
+
+export function deletePriceAlert(id: string): void {
+  const all = read<PriceAlert[]>("ct-price-alerts", []).filter((a) => a.id !== id);
+  write("ct-price-alerts", all);
+}
+
+// ── Broadcast scheduling ───────────────────────────────────────────────────
+
+export function getScheduledBroadcasts(): (Broadcast & { scheduled_for: string | null; status: "draft" | "scheduled" | "published" })[] {
+  return read<(Broadcast & { scheduled_for: string | null; status: "draft" | "scheduled" | "published" })[]>("ct-broadcasts-scheduled", []);
+}
+
+export function saveScheduledBroadcast(b: Omit<Broadcast, "id" | "created_at"> & { scheduled_for: string | null; status: "draft" | "scheduled" | "published" }): void {
+  const all = getScheduledBroadcasts();
+  const entry = { ...b, id: uid(), created_at: new Date().toISOString() };
+  all.push(entry);
+  write("ct-broadcasts-scheduled", all);
+}
+
+export function deleteScheduledBroadcast(id: string): void {
+  const all = getScheduledBroadcasts().filter((b) => b.id !== id);
+  write("ct-broadcasts-scheduled", all);
+}
+
+export function publishScheduledBroadcast(id: string): void {
+  const all = getScheduledBroadcasts();
+  const idx = all.findIndex((b) => b.id === id);
+  if (idx < 0) return;
+  const b = all[idx];
+  // Mark as published in scheduled list
+  all[idx] = { ...b, status: "published" };
+  write("ct-broadcasts-scheduled", all);
+  // Also push to live broadcasts
+  addBroadcast({ title: b.title, content: b.content, phase_tag: b.phase_tag });
 }
