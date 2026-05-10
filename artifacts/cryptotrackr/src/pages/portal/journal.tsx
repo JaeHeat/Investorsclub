@@ -202,7 +202,7 @@ export default function TradeJournalPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-[hsl(0_0%_45%)] mb-1.5">Date</label>
-              <input type="date" className={inputClass} value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
+              <input type="date" className={inputClass} value={form.date} max={new Date().toISOString().split("T")[0]} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs text-[hsl(0_0%_45%)] mb-1.5">Type</label>

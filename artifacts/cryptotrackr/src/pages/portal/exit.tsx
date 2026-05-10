@@ -6,7 +6,8 @@ import { formatUSD } from "@/lib/utils";
 import { EXIT_TRANCHES, getExitPlan, ASSET_CONFIG } from "@/lib/portfolioPlans";
 import { getCurrentCyclePhase } from "@/lib/cycleData";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { TrendingDown, Shield, AlertTriangle, CheckCircle2, Clock, Zap } from "lucide-react";
+import { TrendingDown, Shield, AlertTriangle, CheckCircle2, Clock, Zap, Settings } from "lucide-react";
+import { Link } from "wouter";
 
 const URGENCY_CONFIG: Record<string, { color: string; bg: string; icon: typeof Shield; label: string }> = {
   hold:   { color: "#10b981", bg: "rgba(16,185,129,0.07)",  icon: CheckCircle2,   label: "Hold" },
@@ -93,8 +94,29 @@ export default function ExitStrategyPage() {
         </div>
       </div>
 
+      {/* Empty state — no holdings */}
+      {holdings.length === 0 && (
+        <div
+          className="rounded-2xl p-10 flex flex-col items-center justify-center text-center mb-6"
+          style={{ background: "hsl(0 0% 7%)", border: "1px dashed hsl(0 0% 16%)" }}
+        >
+          <TrendingDown className="w-8 h-8 mb-3" style={{ color: "hsl(0 0% 28%)" }} />
+          <p className="text-sm font-semibold text-white mb-1">No holdings on file</p>
+          <p className="text-xs text-[hsl(0_0%_42%)] mb-5 max-w-xs leading-relaxed">
+            Add your BTC, ETH, SOL, and alt positions in Settings so your personalised exit amounts calculate correctly.
+          </p>
+          <Link
+            href="/portal/settings"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: "#F7931A", color: "#0A0A0A" }}
+          >
+            <Settings className="w-3.5 h-3.5" /> Go to Settings
+          </Link>
+        </div>
+      )}
+
       {/* Summary strip — only show columns for assets the user actually holds */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      {holdings.length > 0 && <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
           { label: "BTC to exit", value: formatUSD(plan.reduce((s, t) => s + t.btcSellUsd, 0)), color: ASSET_CONFIG.BTC.color, held: btcValue > 0 },
           { label: "ETH to exit", value: formatUSD(plan.reduce((s, t) => s + t.ethSellUsd, 0)), color: ASSET_CONFIG.ETH.color, held: ethValue > 0 },
@@ -110,10 +132,10 @@ export default function ExitStrategyPage() {
             <p className="text-sm font-bold" style={{ color }}>{value}</p>
           </div>
         ))}
-      </div>
+      </div>}
 
-      {/* Phase rows */}
-      <div className="space-y-3">
+      {/* Phase rows — only when user has holdings */}
+      {holdings.length > 0 && <div className="space-y-3">
         {plan.map((t) => {
           const cfg = URGENCY_CONFIG[t.urgency];
           const UrgencyIcon = cfg.icon;
@@ -193,9 +215,9 @@ export default function ExitStrategyPage() {
             </div>
           );
         })}
-      </div>
+      </div>}
 
-      <div
+      {holdings.length > 0 && <div
         className="mt-6 rounded-xl px-4 py-3 flex items-start gap-2"
         style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 13%)" }}
       >
@@ -203,7 +225,7 @@ export default function ExitStrategyPage() {
         <p className="text-[10px] text-[hsl(0_0%_38%)] leading-relaxed">
           Exit amounts are calculated from your current live portfolio value of {totalValue > 0 ? formatUSD(totalValue) : "—"}. Percentages represent portion of each asset class to sell at that phase, not cumulative. Adjust your actual exit based on market conditions and your personal tax situation.
         </p>
-      </div>
+      </div>}
     </PortalLayout>
   );
 }

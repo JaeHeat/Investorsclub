@@ -1,7 +1,7 @@
 import { getAllClientProfiles, getMilestones, getHoldings } from "@/lib/localStore";
 import { formatUSD, getPortfolioTier } from "@/lib/utils";
 import AdminLayout from "@/components/layout/AdminLayout";
-import { Users, TrendingUp, Target, DollarSign } from "lucide-react";
+import { Users, TrendingUp, Target, DollarSign, LayoutDashboard } from "lucide-react";
 import { useBtcPrice } from "@/hooks/useBtcPrice";
 import { useLocation } from "wouter";
 
@@ -41,7 +41,15 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
+        <div className="flex items-center gap-3 mb-2">
+          <LayoutDashboard className="w-5 h-5" style={{ color: "#F7931A" }} />
+          <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
+          {price && (
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full ml-1" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A", border: "1px solid rgba(247,147,26,0.2)" }}>
+              BTC {formatUSD(price)}
+            </span>
+          )}
+        </div>
         <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Overview of all clients and activity</p>
       </div>
 

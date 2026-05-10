@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getReports, getReadReports, markReportRead } from "@/lib/localStore";
 import type { Report } from "@/lib/types";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { FileText, ChevronRight, ChevronLeft } from "lucide-react";
+import { FileText, ChevronRight, ChevronLeft, Newspaper } from "lucide-react";
 
 function isNew(report: Report, readIds: Set<string>) {
   if (readIds.has(report.id)) return false;
@@ -67,7 +67,10 @@ export default function ReportsPage() {
   return (
     <PortalLayout>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-white">Reports</h1>
+        <div className="flex items-center gap-3 mb-2">
+          <Newspaper className="w-5 h-5" style={{ color: "#F7931A" }} />
+          <h1 className="text-2xl font-semibold text-white">Reports</h1>
+        </div>
         <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Updates and analysis from your consultant</p>
       </div>
 

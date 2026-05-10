@@ -47,7 +47,7 @@ function TaxBand({ label, rate, highlighted }: { label: string; rate: string; hi
 
 export default function TaxPage() {
   const { user } = useAuth();
-  const [income, setIncome] = useState("100000");
+  const [income, setIncome] = useState("");
   const [showBrackets, setShowBrackets] = useState(false);
 
   useEffect(() => {

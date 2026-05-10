@@ -511,7 +511,9 @@ export default function CyclePage() {
         </Card>
         <Card>
           <p className="text-[11px] text-[hsl(0_0%_40%)] uppercase tracking-wide mb-1.5">Buy Zone In</p>
-          <p className="text-lg font-semibold text-white">~{daysUntilBuyZone}d</p>
+          <p className="text-lg font-semibold" style={{ color: daysUntilBuyZone <= 0 ? "#22c55e" : "white" }}>
+            {daysUntilBuyZone <= 0 ? "Open!" : `~${daysUntilBuyZone}d`}
+          </p>
           <p className="text-[11px] text-[hsl(0_0%_38%)] mt-1">~Oct 2026</p>
         </Card>
         <Card>
@@ -533,7 +535,9 @@ export default function CyclePage() {
             <div className="mt-3">
               <div className="flex justify-between text-xs mb-1.5">
                 <span className="text-[hsl(0_0%_40%)]">Cash phase progress · {daysSincePeak} days in</span>
-                <span style={{ color: "#F7931A" }}>Buy zone: ~{daysUntilBuyZone} days</span>
+                <span style={{ color: daysUntilBuyZone <= 0 ? "#22c55e" : "#F7931A" }}>
+                  {daysUntilBuyZone <= 0 ? "Buy zone: Open now!" : `Buy zone: ~${daysUntilBuyZone} days`}
+                </span>
               </div>
               <div className="h-2 rounded-full overflow-hidden" style={{ background: "hsl(0 0% 12%)" }}>
                 <div className="h-2 rounded-full" style={{ width: `${cashPhasePct}%`, background: "#ef4444" }} />
