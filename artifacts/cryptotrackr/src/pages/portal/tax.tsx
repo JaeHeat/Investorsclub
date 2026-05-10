@@ -20,48 +20,49 @@ function bracketRate(brackets: Bracket[], amount: number): number {
 
 // ── Bracket data ──────────────────────────────────────────────────────────────
 
+// US — 2026 estimated (TCJA extended; IRS inflation-adjusted from 2025 actuals ~+2.8%)
 const US_LT: Bracket[] = [
-  { min: 0,       max: 47025,   rate: 0,  label: "0%" },
-  { min: 47025,   max: 518900,  rate: 15, label: "15%" },
-  { min: 518900,  max: Infinity, rate: 20, label: "20%" },
+  { min: 0,       max: 49550,   rate: 0,  label: "0%" },
+  { min: 49550,   max: 546800,  rate: 15, label: "15%" },
+  { min: 546800,  max: Infinity, rate: 20, label: "20%" },
 ];
 const US_ST: Bracket[] = [
-  { min: 0,       max: 11600,   rate: 10, label: "10%" },
-  { min: 11600,   max: 47150,   rate: 12, label: "12%" },
-  { min: 47150,   max: 100525,  rate: 22, label: "22%" },
-  { min: 100525,  max: 201050,  rate: 24, label: "24%" },
-  { min: 201050,  max: 383900,  rate: 32, label: "32%" },
-  { min: 383900,  max: 487450,  rate: 35, label: "35%" },
-  { min: 487450,  max: Infinity, rate: 37, label: "37%" },
+  { min: 0,       max: 12200,   rate: 10, label: "10%" },
+  { min: 12200,   max: 49550,   rate: 12, label: "12%" },
+  { min: 49550,   max: 106050,  rate: 22, label: "22%" },
+  { min: 106050,  max: 202350,  rate: 24, label: "24%" },
+  { min: 202350,  max: 404100,  rate: 32, label: "32%" },
+  { min: 404100,  max: 513000,  rate: 35, label: "35%" },
+  { min: 513000,  max: Infinity, rate: 37, label: "37%" },
 ];
 
-// Canada federal marginal rates (CAD → USD ~×0.74)
+// Canada — 2026 est. federal marginal rates (CAD → USD ~×0.73)
 const CA_MARGINAL: Bracket[] = [
-  { min: 0,       max: 41300,   rate: 15,   label: "15%" },
-  { min: 41300,   max: 82600,   rate: 20.5, label: "20.5%" },
-  { min: 82600,   max: 114600,  rate: 26,   label: "26%" },
-  { min: 114600,  max: 162700,  rate: 29,   label: "29%" },
-  { min: 162700,  max: Infinity, rate: 33,  label: "33%" },
+  { min: 0,       max: 43850,   rate: 15,   label: "15%" },
+  { min: 43850,   max: 87700,   rate: 20.5, label: "20.5%" },
+  { min: 87700,   max: 121500,  rate: 26,   label: "26%" },
+  { min: 121500,  max: 168000,  rate: 29,   label: "29%" },
+  { min: 168000,  max: Infinity, rate: 33,  label: "33%" },
 ];
 
-// Australia marginal rates (AUD → USD ~×0.65)
+// Australia — 2025/26 ATO rates post Stage 3 cuts (AUD → USD ~×0.64)
 const AU_MARGINAL: Bracket[] = [
-  { min: 0,       max: 11830,   rate: 0,    label: "0%" },
-  { min: 11830,   max: 29250,   rate: 19,   label: "19%" },
-  { min: 29250,   max: 78000,   rate: 32.5, label: "32.5%" },
-  { min: 78000,   max: 117000,  rate: 37,   label: "37%" },
-  { min: 117000,  max: Infinity, rate: 45,  label: "45%" },
+  { min: 0,       max: 12100,   rate: 0,    label: "0%" },
+  { min: 12100,   max: 28800,   rate: 19,   label: "19%" },
+  { min: 28800,   max: 86400,   rate: 32.5, label: "32.5%" },
+  { min: 86400,   max: 121600,  rate: 37,   label: "37%" },
+  { min: 121600,  max: Infinity, rate: 45,  label: "45%" },
 ];
 
-// Japan — income tax + 10% local levy (JPY → USD ~÷150)
+// Japan — income tax + 10% local levy (JPY → USD ~÷155)
 const JP_MARGINAL: Bracket[] = [
-  { min: 0,       max: 13000,   rate: 15, label: "15%" },
-  { min: 13000,   max: 22000,   rate: 20, label: "20%" },
-  { min: 22000,   max: 46333,   rate: 30, label: "30%" },
-  { min: 46333,   max: 60000,   rate: 33, label: "33%" },
-  { min: 60000,   max: 120000,  rate: 43, label: "43%" },
-  { min: 120000,  max: 266667,  rate: 50, label: "50%" },
-  { min: 266667,  max: Infinity, rate: 55, label: "55%" },
+  { min: 0,       max: 12580,   rate: 15, label: "15%" },
+  { min: 12580,   max: 21290,   rate: 20, label: "20%" },
+  { min: 21290,   max: 44840,   rate: 30, label: "30%" },
+  { min: 44840,   max: 58060,   rate: 33, label: "33%" },
+  { min: 58060,   max: 116130,  rate: 43, label: "43%" },
+  { min: 116130,  max: 258060,  rate: 50, label: "50%" },
+  { min: 258060,  max: Infinity, rate: 55, label: "55%" },
 ];
 
 // ── Country config ────────────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ const COUNTRIES: CountryConfig[] = [
     })),
     ltSectionLabel: "Long-term capital gains (held >1 year)",
     stSectionLabel: "Short-term / ordinary income (held <1 year)",
-    note: "2024 IRS rates, single filer. State taxes, Net Investment Income Tax, and AMT not included.",
+    note: "2026 est. rates — TCJA extended, inflation-adjusted from 2025 IRS actuals. Single filer. State taxes, NIIT, and AMT not included.",
   },
   {
     code: "GB",
@@ -110,16 +111,16 @@ const COUNTRIES: CountryConfig[] = [
     flag: "🇬🇧",
     needsIncome: true,
     annualExempt: 3800, // £3,000 at ~1.27 USD/GBP
-    getLtRate: (income) => (income < 63000 ? 10 : 20),
-    getStRate: (income) => (income < 63000 ? 10 : 20),
+    getLtRate: (income) => (income < 63800 ? 18 : 24),
+    getStRate: (income) => (income < 63800 ? 18 : 24),
     ltDisplay: [
-      { label: "Basic rate taxpayer (income < ~$63k USD)", rate: "10%" },
-      { label: "Higher/additional rate taxpayer (income ≥ ~$63k USD)", rate: "20%" },
+      { label: "Basic rate taxpayer (income < ~$63.8k USD)", rate: "18%" },
+      { label: "Higher/additional rate taxpayer (income ≥ ~$63.8k USD)", rate: "24%" },
     ],
     stDisplay: [],
     ltSectionLabel: "Capital gains rate (no LT/ST distinction in UK)",
     stSectionLabel: "",
-    note: "2024/25 HMRC rates. £3,000 annual CGT exempt amount applied. UK income thresholds converted to USD. Scottish rates not included.",
+    note: "2025/26 HMRC rates. CGT raised from 10%/20% to 18%/24% in Oct 2024 Autumn Budget. £3,000 annual exempt applied. Basic rate threshold £50,270 frozen (→ ~$63.8k USD). Scottish rates not included.",
   },
   {
     code: "CA",
@@ -136,7 +137,7 @@ const COUNTRIES: CountryConfig[] = [
     stDisplay: [],
     ltSectionLabel: "Capital gains — 50% inclusion rate (federal only)",
     stSectionLabel: "",
-    note: "2024 CRA federal rates. 50% of gains included in taxable income. Provincial tax (typically 5–25%) not included. CAD thresholds shown as USD equiv (×0.74).",
+    note: "2026 est. CRA federal rates. 50% inclusion rate (proposed 2/3 rate was withdrawn Mar 2025). Provincial tax (typically 5–25%) not included. CAD thresholds shown as USD equiv (×0.73).",
   },
   {
     code: "AU",
@@ -156,7 +157,7 @@ const COUNTRIES: CountryConfig[] = [
     })),
     ltSectionLabel: "Long-term (held >1 year, 50% CGT discount applies)",
     stSectionLabel: "Short-term (held <1 year, no discount)",
-    note: "2023/24 ATO rates. Long-term gains receive 50% discount. AUD thresholds converted to USD (×0.65). Medicare levy and offsets not included.",
+    note: "2025/26 ATO rates — Stage 3 tax cuts in effect from Jul 2024. Long-term gains receive 50% discount. AUD thresholds converted to USD (×0.64). Medicare levy (2%) and low-income offsets not included.",
   },
   {
     code: "DE",
@@ -170,7 +171,7 @@ const COUNTRIES: CountryConfig[] = [
     stDisplay: [{ label: "Held ≤ 1 year (Abgeltungsteuer + Solidaritätszuschlag)", rate: "26.375%" }],
     ltSectionLabel: "Long-term (held >1 year) — exempt",
     stSectionLabel: "Short-term (held ≤1 year)",
-    note: "German tax law 2024. Crypto held >1 year is completely tax-free. €1,000 annual gains allowance. Kirchensteuer (church tax) not included.",
+    note: "German tax law 2026. Crypto held >1 year is completely tax-free (Spekulationsfrist). €1,000 annual gains allowance (~$1,090 USD). Kirchensteuer (church tax) not included.",
   },
   {
     code: "FR",
@@ -184,7 +185,7 @@ const COUNTRIES: CountryConfig[] = [
     stDisplay: [],
     ltSectionLabel: "Capital gains rate (no LT/ST distinction in France)",
     stSectionLabel: "",
-    note: "2024 French Prélèvement Forfaitaire Unique (PFU). Progressive option (barème) may be more favourable for low earners — consult an expert.",
+    note: "2026 French Prélèvement Forfaitaire Unique (PFU): 12.8% income tax + 17.2% social charges. Progressive option (barème) may be more favourable for low earners — consult an expert.",
   },
   {
     code: "SG",
@@ -229,7 +230,7 @@ const COUNTRIES: CountryConfig[] = [
     stDisplay: [],
     ltSectionLabel: "All gains — taxed as miscellaneous income (雑所得)",
     stSectionLabel: "",
-    note: "Japan taxes crypto as miscellaneous income (up to 55%). Rates include 10% local tax. JPY thresholds converted to USD (÷150). Strongly recommended to consult a Japanese tax accountant (税理士).",
+    note: "Japan taxes crypto as miscellaneous income (雑所得) up to 55%. Rates include 10% local inhabitant tax. JPY thresholds converted to USD (÷155). Strongly recommended to consult a Japanese tax accountant (税理士).",
   },
   {
     code: "AE",
