@@ -42,6 +42,7 @@ function seedIfEmpty() {
       time_horizon: "2_3_years",
       notes: "Looking to exit near the cycle top and re-enter in the bear market. Comfortable with medium drawdowns but wants to protect the $150K base.",
       discord_username: null,
+      discord_role_claimed: false,
       onboarding_completed: true,
       initial_portfolio_value: 150000,
       high_water_mark: 150000,
@@ -347,7 +348,7 @@ export function updateClientSettings(
   userId: string,
   updates: Partial<Pick<ClientProfile,
     "risk_tolerance" | "investment_goal" | "initial_portfolio_value" |
-    "full_name" | "timezone" | "country" | "btc_holdings" | "avg_cost_basis" | "discord_username" | "time_horizon"
+    "full_name" | "timezone" | "country" | "btc_holdings" | "avg_cost_basis" | "discord_username" | "discord_role_claimed" | "time_horizon"
   >>
 ): void {
   const all = read<ClientProfile[]>("ct-profiles", []);

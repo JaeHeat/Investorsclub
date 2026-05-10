@@ -6,7 +6,12 @@ import type { HoldingAsset } from "@/lib/types";
 import {
   Bitcoin, ChevronRight, ChevronLeft, Check, AlertCircle,
   Calendar, ClipboardList, BarChart2, Plus, X, Wallet,
+  MessageCircle, Bell, Users, ExternalLink, Shield,
 } from "lucide-react";
+import { updateClientSettings } from "@/lib/localStore";
+
+// ── Update this to your actual Discord server invite URL ──────────────────
+const DISCORD_INVITE_URL = "https://discord.gg/your-invite-code";
 
 const STEPS = 3;
 
@@ -94,6 +99,7 @@ export default function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const [showMoreAssets, setShowMoreAssets] = useState(false);
+  const [discordJoined, setDiscordJoined] = useState(false);
 
   // ── Form state ──────────────────────────────────────────────────────────────
   const [form, setForm] = useState({
@@ -206,6 +212,7 @@ export default function OnboardingPage() {
       country: form.country,
       timezone: form.timezone,
       discord_username: form.discord_username || null,
+      discord_role_claimed: false,
       btc_holdings: null,
       avg_cost_basis: null,
       investment_goal: form.investment_goal_usd,
@@ -218,7 +225,7 @@ export default function OnboardingPage() {
     });
 
     refreshClientProfile();
-    setStep(4);
+    setStep(4); // Discord connect step
     setSubmitting(false);
   }
 
@@ -709,8 +716,118 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── STEP 4: Done ──────────────────────────────────────────────── */}
+          {/* ── STEP 4: Discord connect ───────────────────────────────────── */}
           {step === 4 && (
+            <div data-testid="onboarding-discord">
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-6">
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(88,101,242,0.15)", border: "1px solid rgba(88,101,242,0.25)" }}
+                >
+                  <MessageCircle className="w-5 h-5" style={{ color: "#5865F2" }} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-white">Join the community</h2>
+                  <p className="text-sm text-[hsl(0_0%_50%)]">Connect your Discord to claim your client role</p>
+                </div>
+              </div>
+
+              {/* Benefits */}
+              <div className="space-y-2.5 mb-6">
+                {[
+                  { icon: Bell,   label: "Cycle alerts",        desc: "Real-time notifications at key BTC price levels" },
+                  { icon: BarChart2, label: "Weekly updates",   desc: "On-chain analysis and market structure breakdowns" },
+                  { icon: Shield, label: "#clients-only channel", desc: "Private access for verified consulting clients" },
+                  { icon: Users,  label: "Community",           desc: "Connect with other serious Bitcoin investors" },
+                ].map(({ icon: Icon, label, desc }) => (
+                  <div
+                    key={label}
+                    className="flex items-center gap-3 rounded-xl px-3.5 py-3"
+                    style={{ background: "hsl(0 0% 9%)", border: "1px solid hsl(0 0% 14%)" }}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" style={{ color: "#5865F2" }} />
+                    <div>
+                      <p className="text-sm font-medium text-white">{label}</p>
+                      <p className="text-xs text-[hsl(0_0%_45%)]">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Discord username reminder */}
+              {form.discord_username && (
+                <div
+                  className="flex items-center gap-2 rounded-xl px-3.5 py-3 mb-5"
+                  style={{ background: "rgba(88,101,242,0.07)", border: "1px solid rgba(88,101,242,0.2)" }}
+                >
+                  <MessageCircle className="w-4 h-4 shrink-0" style={{ color: "#5865F2" }} />
+                  <p className="text-sm text-[hsl(0_0%_65%)]">
+                    Your handle: <span className="text-white font-medium">@{form.discord_username}</span>
+                    <span className="text-[hsl(0_0%_40%)] ml-1.5 text-xs">— mention this when prompted in the server</span>
+                  </p>
+                </div>
+              )}
+
+              {/* CTA */}
+              {!discordJoined ? (
+                <button
+                  type="button"
+                  data-testid="button-join-discord"
+                  onClick={() => {
+                    window.open(DISCORD_INVITE_URL, "_blank", "noopener,noreferrer");
+                    if (user) {
+                      updateClientSettings(user.id, { discord_role_claimed: true });
+                    }
+                    setDiscordJoined(true);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-85"
+                  style={{ background: "#5865F2", color: "#fff" }}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Join the Discord server
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <div
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
+                    style={{ background: "rgba(88,101,242,0.12)", border: "1px solid rgba(88,101,242,0.3)", color: "#5865F2" }}
+                  >
+                    <Check className="w-4 h-4" />
+                    Discord opened — welcome to the server!
+                  </div>
+                  <p className="text-xs text-center text-[hsl(0_0%_40%)]">
+                    Find the <span className="text-[hsl(0_0%_60%)]">#role-claim</span> channel and follow the bot instructions to get your client role.
+                  </p>
+                  <button
+                    type="button"
+                    data-testid="button-discord-continue"
+                    onClick={() => setStep(5)}
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold"
+                    style={{ background: "#F7931A", color: "#0A0A0A" }}
+                  >
+                    Continue to my portal <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Skip */}
+              {!discordJoined && (
+                <button
+                  type="button"
+                  data-testid="button-skip-discord"
+                  onClick={() => setStep(5)}
+                  className="w-full mt-3 py-2 text-sm text-center transition-colors"
+                  style={{ color: "hsl(0 0% 38%)" }}
+                >
+                  Skip for now
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* ── STEP 5: Done ──────────────────────────────────────────────── */}
+          {step === 5 && (
             <div data-testid="onboarding-complete" className="text-center">
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5"

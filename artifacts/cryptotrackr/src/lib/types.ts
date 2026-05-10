@@ -20,6 +20,7 @@ export interface ClientProfile {
   time_horizon: string | null;
   notes: string | null;
   discord_username: string | null;
+  discord_role_claimed: boolean;
   onboarding_completed: boolean;
   initial_portfolio_value: number | null;
   high_water_mark: number | null;
