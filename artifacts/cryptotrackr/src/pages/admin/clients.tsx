@@ -482,8 +482,11 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
               <input type="text" value={roadmapForm.title} onChange={(e) => setRoadmapForm({ ...roadmapForm, title: e.target.value })} placeholder="e.g. Cycle Top Target" className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} data-testid="input-roadmap-title" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[hsl(0_0%_55%)] mb-1.5 uppercase tracking-wide">Content</label>
-              <textarea value={roadmapForm.content} onChange={(e) => setRoadmapForm({ ...roadmapForm, content: e.target.value })} placeholder="Cycle stage notes..." rows={4} className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none resize-none" style={inputStyle} data-testid="input-roadmap-content" />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-medium text-[hsl(0_0%_55%)] uppercase tracking-wide">Content</label>
+                <span className="text-[11px] text-[hsl(0_0%_35%)]">{roadmapForm.content.length}/2000</span>
+              </div>
+              <textarea value={roadmapForm.content} onChange={(e) => setRoadmapForm({ ...roadmapForm, content: e.target.value })} placeholder="Cycle stage notes..." rows={4} maxLength={2000} className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none resize-none" style={inputStyle} data-testid="input-roadmap-content" />
             </div>
             <button onClick={saveRoadmapItem} disabled={saving} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "#F7931A", color: "#0A0A0A" }} data-testid="button-save-roadmap">
               {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving…</> : "Save"}
@@ -507,6 +510,14 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
               <input type="checkbox" checked={reportForm.is_global} onChange={(e) => setReportForm({ ...reportForm, is_global: e.target.checked })} data-testid="checkbox-global" />
               <span className="text-sm text-[hsl(0_0%_65%)]">Send to all clients</span>
             </label>
+            {reportForm.is_global && (
+              <div className="rounded-lg px-3.5 py-2.5 flex items-start gap-2" style={{ background: "rgba(247,147,26,0.08)", border: "1px solid rgba(247,147,26,0.2)" }}>
+                <span className="text-[#F7931A] text-xs mt-0.5">⚠</span>
+                <p className="text-xs text-[hsl(0_0%_60%)] leading-relaxed">
+                  This report will be visible to <span className="font-semibold text-[#F7931A]">all clients</span>, not just {client.full_name || "this client"}.
+                </p>
+              </div>
+            )}
             <button onClick={saveReport} disabled={saving} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "#F7931A", color: "#0A0A0A" }} data-testid="button-save-report">
               {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Publishing…</> : "Publish Report"}
             </button>

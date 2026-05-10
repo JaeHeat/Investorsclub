@@ -71,6 +71,7 @@ export default function RoadmapPage() {
     <PortalLayout>
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
+          <Map className="w-5 h-5" style={{ color: "#F7931A" }} />
           <h1 className="text-2xl font-semibold text-white">Roadmap</h1>
           {newCount > 0 && (
             <span

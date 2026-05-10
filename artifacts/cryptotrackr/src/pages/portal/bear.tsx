@@ -203,46 +203,58 @@ export default function BearProtectionPage() {
           const completedDate = checkedAt[item.id];
 
           return (
-            <button
-              key={item.id}
-              onClick={() => toggle(item.id)}
-              className="w-full rounded-2xl p-4 text-left transition-all flex items-start gap-3"
-              style={{
-                background: "hsl(0 0% 7%)",
-                border: done ? "1px solid rgba(16,185,129,0.25)" : "1px solid hsl(0 0% 13%)",
-                opacity: done ? 0.75 : 1,
-              }}
-            >
-              <div className="shrink-0 mt-0.5">
-                {done ? (
-                  <CheckCircle2 className="w-5 h-5 text-[#10b981]" />
-                ) : (
-                  <Circle className="w-5 h-5 text-[hsl(0_0%_30%)]" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                  <p
-                    className="text-sm font-semibold"
-                    style={{ color: done ? "hsl(0 0% 45%)" : "white", textDecoration: done ? "line-through" : "none" }}
-                  >
-                    {item.label}
-                  </p>
-                  <span
-                    className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0"
-                    style={{ background: `${pCfg.color}18`, color: pCfg.color }}
-                  >
-                    {pCfg.label}
-                  </span>
+            <div key={item.id}>
+              <button
+                onClick={() => toggle(item.id)}
+                className="w-full rounded-2xl p-4 text-left transition-all flex items-start gap-3"
+                style={{
+                  background: "hsl(0 0% 7%)",
+                  border: done ? "1px solid rgba(16,185,129,0.25)" : "1px solid hsl(0 0% 13%)",
+                  opacity: done ? 0.75 : 1,
+                }}
+              >
+                <div className="shrink-0 mt-0.5">
+                  {done ? (
+                    <CheckCircle2 className="w-5 h-5 text-[#10b981]" />
+                  ) : (
+                    <Circle className="w-5 h-5 text-[hsl(0_0%_30%)]" />
+                  )}
                 </div>
-                <p className="text-xs text-[hsl(0_0%_42%)] leading-relaxed">{item.description}</p>
-                {done && completedDate && (
-                  <p className="text-[10px] text-[#10b981] mt-1.5">
-                    Completed {formatCheckedAt(completedDate)}
-                  </p>
-                )}
-              </div>
-            </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                    <p
+                      className="text-sm font-semibold"
+                      style={{ color: done ? "hsl(0 0% 45%)" : "white", textDecoration: done ? "line-through" : "none" }}
+                    >
+                      {item.label}
+                    </p>
+                    <span
+                      className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0"
+                      style={{ background: `${pCfg.color}18`, color: pCfg.color }}
+                    >
+                      {pCfg.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[hsl(0_0%_42%)] leading-relaxed">{item.description}</p>
+                  {done && completedDate && (
+                    <p className="text-[10px] text-[#10b981] mt-1.5">
+                      Completed {formatCheckedAt(completedDate)}
+                    </p>
+                  )}
+                </div>
+              </button>
+              {item.id === "track-on-chain" && !done && (
+                <div className="px-4 pt-1.5 pb-0.5">
+                  <Link
+                    href="/portal/cycle"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold transition-opacity hover:opacity-70"
+                    style={{ color: "#F7931A" }}
+                  >
+                    → Set alerts in Cycle Outlook
+                  </Link>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

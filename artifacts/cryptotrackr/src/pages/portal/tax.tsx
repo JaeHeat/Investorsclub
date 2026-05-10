@@ -109,7 +109,7 @@ export default function TaxPage() {
           <Calculator className="w-5 h-5" style={{ color: "#F7931A" }} />
           <h1 className="text-2xl font-semibold text-white">Tax Estimator</h1>
           <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "hsl(0 0% 12%)", color: "hsl(0 0% 55%)" }}>
-            US · 2024 rates
+            US · reference rates
           </span>
         </div>
         <p className="text-sm text-[hsl(0_0%_42%)]">

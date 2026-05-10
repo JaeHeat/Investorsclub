@@ -67,10 +67,10 @@ export default function TradeJournalPage() {
     [entries]
   );
 
-  const filtered = useMemo(
-    () => (filter === "all" ? entries : entries.filter((e) => e.type === filter)),
-    [entries, filter]
-  );
+  const filtered = useMemo(() => {
+    const list = filter === "all" ? entries : entries.filter((e) => e.type === filter);
+    return [...list].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [entries, filter]);
 
   function handleAdd() {
     if (!user || !form.amount || !form.price) return;

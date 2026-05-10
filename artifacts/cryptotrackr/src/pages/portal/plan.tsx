@@ -21,6 +21,7 @@ import {
   PieChart, Layers, TrendingUp, Shield, Zap,
   AlertTriangle, Info, ChevronRight, Target,
 } from "lucide-react";
+import { Link } from "wouter";
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
@@ -352,13 +353,13 @@ export default function PlanPage() {
                   Cycle projections and the rebalancing calculator activate once your portfolio data is saved in Settings.
                 </p>
               </div>
-              <a
+              <Link
                 href="/portal/settings"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
                 style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}
               >
                 Go to Settings <ChevronRight className="w-3.5 h-3.5" />
-              </a>
+              </Link>
             </div>
           </Card>
         )}

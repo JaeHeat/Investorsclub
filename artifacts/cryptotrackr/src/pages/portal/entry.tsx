@@ -195,9 +195,19 @@ export default function EntryStrategyPage() {
           <p className="text-xs text-[hsl(0_0%_45%)] mt-0.5">{currentPhase.description}</p>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-xs text-[hsl(0_0%_40%)] mb-1">Buy zone opens in</p>
-          <p className="text-base font-bold" style={{ color: "#F7931A" }}>~{daysUntilBuyZone}d</p>
-          <p className="text-[11px] text-[hsl(0_0%_38%)]">~Oct 2026</p>
+          {daysUntilBuyZone > 0 ? (
+            <>
+              <p className="text-xs text-[hsl(0_0%_40%)] mb-1">Buy zone opens in</p>
+              <p className="text-base font-bold" style={{ color: "#F7931A" }}>~{daysUntilBuyZone}d</p>
+              <p className="text-[11px] text-[hsl(0_0%_38%)]">~Oct 2026</p>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-[hsl(0_0%_40%)] mb-1">Buy zone</p>
+              <p className="text-base font-bold" style={{ color: "#10b981" }}>Open now!</p>
+              <p className="text-[11px] text-[hsl(0_0%_38%)]">Phase 2 active</p>
+            </>
+          )}
         </div>
       </div>
 
