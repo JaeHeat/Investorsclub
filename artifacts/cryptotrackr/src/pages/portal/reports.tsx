@@ -112,7 +112,14 @@ export default function ReportsPage() {
                       })}
                     </p>
                     <p className="text-xs text-[hsl(0_0%_45%)] leading-relaxed line-clamp-2">
-                      {report.content.split("\n")[0]}
+                      {(() => {
+                        const lines = report.content.split("\n").map((l) => l.trim()).filter(Boolean);
+                        const firstLine = lines[0] ?? "";
+                        const preview = firstLine.toLowerCase() === report.title.toLowerCase()
+                          ? (lines[1] ?? firstLine)
+                          : firstLine;
+                        return preview;
+                      })()}
                     </p>
                   </div>
                 </div>

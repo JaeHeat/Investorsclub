@@ -392,6 +392,15 @@ export default function PortalIndex() {
               </div>
             </div>
           )}
+          <div className="mt-3 pt-3" style={{ borderTop: "1px solid hsl(0 0% 12%)" }}>
+            <Link
+              href="/portal/milestones"
+              className="text-xs font-semibold flex items-center gap-1 transition-opacity hover:opacity-70"
+              style={{ color: "#F7931A" }}
+            >
+              View all milestones <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
         </div>
       )}
     </PortalLayout>

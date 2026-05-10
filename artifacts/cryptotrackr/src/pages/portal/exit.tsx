@@ -125,9 +125,8 @@ export default function ExitStrategyPage() {
               key={t.phaseId}
               className="rounded-2xl overflow-hidden"
               style={{
-                border: isCurrent ? `1px solid ${cfg.color}` : "1px solid hsl(0 0% 13%)",
-                background: isCurrent ? cfg.bg : "hsl(0 0% 7%)",
-                opacity: isPast ? 0.5 : 1,
+                border: isCurrent ? `1px solid ${cfg.color}` : isPast ? "1px solid hsl(0 0% 10%)" : "1px solid hsl(0 0% 13%)",
+                background: isPast ? "hsl(0 0% 6%)" : isCurrent ? cfg.bg : "hsl(0 0% 7%)",
               }}
             >
               <div className="p-4">
@@ -135,15 +134,23 @@ export default function ExitStrategyPage() {
                   <div className="flex items-center gap-2">
                     <div
                       className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
-                      style={{ background: isCurrent ? cfg.color : "hsl(0 0% 14%)", color: isCurrent ? "#000" : "hsl(0 0% 50%)" }}
+                      style={{
+                        background: isCurrent ? cfg.color : isPast ? "hsl(0 0% 12%)" : "hsl(0 0% 14%)",
+                        color: isCurrent ? "#000" : "hsl(0 0% 45%)",
+                      }}
                     >
                       {t.phaseId}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{t.phaseLabel}</p>
+                      <p className="text-sm font-semibold" style={{ color: isPast ? "hsl(0 0% 50%)" : "white" }}>{t.phaseLabel}</p>
                       {isCurrent && (
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: cfg.color, color: "#000" }}>
                           CURRENT PHASE
+                        </span>
+                      )}
+                      {isPast && (
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "hsl(0 0% 12%)", color: "hsl(0 0% 40%)" }}>
+                          PAST PHASE
                         </span>
                       )}
                     </div>

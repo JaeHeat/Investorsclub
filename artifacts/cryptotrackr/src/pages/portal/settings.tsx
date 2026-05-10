@@ -323,40 +323,52 @@ export default function SettingsPage() {
                 <span />
               </div>
 
-              {holdingRows.map((row, idx) => (
-                <div key={row.coingecko_id} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center">
-                  <div className="px-3 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}>
-                    {row.symbol}
+              {holdingRows.map((row, idx) => {
+                const rowAmt = parseFloat(row.amount) || 0;
+                const rowCost = parseFloat(row.avg_cost) || 0;
+                const rowValue = rowAmt * rowCost;
+                return (
+                  <div key={row.coingecko_id} className="space-y-1">
+                    <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center">
+                      <div className="px-3 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }}>
+                        {row.symbol}
+                      </div>
+                      <input
+                        type="number"
+                        className={inputClass}
+                        value={row.amount}
+                        onChange={(e) => updateRow(idx, "amount", e.target.value)}
+                        placeholder="0"
+                        min="0"
+                        step="any"
+                      />
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[hsl(0_0%_40%)]">$</span>
+                        <input
+                          type="number"
+                          className={`${inputClass} pl-6`}
+                          value={row.avg_cost}
+                          onChange={(e) => updateRow(idx, "avg_cost", e.target.value)}
+                          placeholder="0"
+                          min="0"
+                          step="any"
+                        />
+                      </div>
+                      <button
+                        onClick={() => removeRow(idx)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-[hsl(0_0%_35%)] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {rowValue > 0 && (
+                      <p className="text-[10px] text-[hsl(0_0%_40%)] pl-1">
+                        ≈ <span className="text-[hsl(0_0%_55%)] font-medium">${rowValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}</span> total value
+                      </p>
+                    )}
                   </div>
-                  <input
-                    type="number"
-                    className={inputClass}
-                    value={row.amount}
-                    onChange={(e) => updateRow(idx, "amount", e.target.value)}
-                    placeholder="0"
-                    min="0"
-                    step="any"
-                  />
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[hsl(0_0%_40%)]">$</span>
-                    <input
-                      type="number"
-                      className={`${inputClass} pl-6`}
-                      value={row.avg_cost}
-                      onChange={(e) => updateRow(idx, "avg_cost", e.target.value)}
-                      placeholder="0"
-                      min="0"
-                      step="any"
-                    />
-                  </div>
-                  <button
-                    onClick={() => removeRow(idx)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-[hsl(0_0%_35%)] hover:text-red-400 hover:bg-red-500/10 transition-all"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

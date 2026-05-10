@@ -3,7 +3,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getBearChecklist, setBearChecklistItem } from "@/lib/localStore";
 import { getCurrentCyclePhase } from "@/lib/cycleData";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { Shield, CheckCircle2, Circle, AlertTriangle } from "lucide-react";
+import { Shield, CheckCircle2, Circle, AlertTriangle, BookOpen } from "lucide-react";
+import { Link } from "wouter";
 
 const CHECKLIST = [
   {
@@ -139,6 +140,30 @@ export default function BearProtectionPage() {
             <p className="text-xs text-[hsl(0_0%_52%)] mt-0.5">
               Current phase: {currentPhase.name}. Capital protection should be your primary focus. Work through this checklist now.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* 100% complete banner */}
+      {doneCount === CHECKLIST.length && (
+        <div
+          className="rounded-2xl p-4 mb-6 flex items-start gap-3"
+          style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)" }}
+        >
+          <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-[#10b981]" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-[#10b981]">Portfolio fully protected</p>
+            <p className="text-xs text-[hsl(0_0%_52%)] mt-0.5 mb-3">
+              All 8 protection steps complete. Consider documenting your re-entry levels for the next cycle.
+            </p>
+            <Link
+              href="/portal/journal"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+              style={{ background: "rgba(16,185,129,0.12)", color: "#10b981" }}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              Open Trade Journal
+            </Link>
           </div>
         </div>
       )}

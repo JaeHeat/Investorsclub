@@ -3,9 +3,10 @@ import { Bitcoin, Loader2, Check } from "lucide-react";
 
 const FEATURES = [
   "Live portfolio P&L across all your assets",
-  "6-phase Bitcoin cycle exit plan, personalised to your holdings",
+  "6-phase personalised Bitcoin exit strategy",
   "Milestone tracker with tiered return targets",
-  "Monthly cycle reports and direct consultant roadmap",
+  "Trade journal, tax estimator & price alerts",
+  "Cycle phase indicator with on-chain signals",
 ];
 
 export default function LoginPage() {

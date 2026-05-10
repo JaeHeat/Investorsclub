@@ -16,7 +16,7 @@ const PHASE_TAGS = [
 
 const MODE_OPTIONS = [
   { value: "publish",  label: "Publish now",       icon: Send,         desc: "Goes live immediately to all clients" },
-  { value: "schedule", label: "Schedule",           icon: CalendarClock, desc: "Set a future date and time" },
+  { value: "schedule", label: "Schedule",           icon: CalendarClock, desc: "Auto-publishes on your next visit after the set time" },
   { value: "draft",    label: "Save as draft",      icon: FileEdit,     desc: "Save for later, not visible to clients" },
 ] as const;
 
@@ -69,8 +69,22 @@ export default function BroadcastPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Broadcast | null>(null);
   const [activeTab, setActiveTab] = useState<"compose" | "drafts">("compose");
+  const [autoPublishedCount, setAutoPublishedCount] = useState(0);
 
   useEffect(() => {
+    // Auto-publish any scheduled broadcasts whose time has passed
+    const now = new Date();
+    const pending = getScheduledBroadcasts();
+    let anyPublished = false;
+    for (const b of pending) {
+      if (b.status === "scheduled" && b.scheduled_for && new Date(b.scheduled_for) <= now) {
+        publishScheduledBroadcast(b.id);
+        anyPublished = true;
+      }
+    }
+    if (anyPublished) {
+      setAutoPublishedCount((c) => c + 1);
+    }
     setBroadcasts(getBroadcasts());
     setScheduled(getScheduledBroadcasts());
   }, []);
@@ -161,6 +175,18 @@ export default function BroadcastPage() {
           Post cycle updates visible to all clients. Schedule them in advance or save as drafts.
         </p>
       </div>
+
+      {autoPublishedCount > 0 && (
+        <div
+          className="rounded-xl px-4 py-3 mb-5 flex items-center gap-3"
+          style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}
+        >
+          <CheckCircle2 className="w-4 h-4 text-[#10b981] shrink-0" />
+          <p className="text-sm text-[#10b981]">
+            {autoPublishedCount} scheduled broadcast{autoPublishedCount > 1 ? "s were" : " was"} automatically published on page load.
+          </p>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-5 p-1 rounded-xl w-fit" style={{ background: "hsl(0 0% 9%)" }}>

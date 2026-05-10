@@ -28,6 +28,16 @@ const COUNTRIES = [
   "United Arab Emirates", "Brazil", "India", "South Korea", "Other",
 ];
 
+const TIMEZONES = [
+  "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+  "America/Toronto", "America/Vancouver", "America/Sao_Paulo",
+  "Europe/London", "Europe/Berlin", "Europe/Paris", "Europe/Amsterdam",
+  "Europe/Madrid", "Europe/Rome", "Europe/Zurich",
+  "Asia/Dubai", "Asia/Kolkata", "Asia/Singapore", "Asia/Tokyo",
+  "Asia/Seoul", "Asia/Hong_Kong", "Asia/Shanghai",
+  "Australia/Sydney", "Australia/Melbourne", "Pacific/Auckland",
+];
+
 const QUICK_ADD_ASSETS = [
   { coingecko_id: "bitcoin",    symbol: "BTC",  name: "Bitcoin",   color: "#F7931A" },
   { coingecko_id: "ethereum",   symbol: "ETH",  name: "Ethereum",  color: "#627EEA" },
@@ -350,14 +360,20 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">Timezone</label>
-                  <input
-                    type="text"
-                    value={form.timezone}
+                  <select
+                    value={TIMEZONES.includes(form.timezone) ? form.timezone : ""}
                     onChange={(e) => update("timezone", e.target.value)}
                     data-testid="input-timezone"
                     className={inputClass}
                     style={inputStyle}
-                  />
+                  >
+                    {!TIMEZONES.includes(form.timezone) && form.timezone && (
+                      <option value="">{form.timezone} (auto-detected)</option>
+                    )}
+                    {TIMEZONES.map((tz) => (
+                      <option key={tz} value={tz}>{tz.replace(/_/g, " ")}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">

@@ -6,7 +6,7 @@ import { formatUSD } from "@/lib/utils";
 import { CURATED_ALTS, ALT_CATEGORY_COLORS } from "@/lib/portfolioPlans";
 import type { WatchlistItem } from "@/lib/types";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { Eye, Plus, Trash2 } from "lucide-react";
+import { Eye, Plus, Trash2, ArrowUpDown, AlertTriangle, X } from "lucide-react";
 
 const CORE_ASSETS = [
   { coingecko_id: "bitcoin",  symbol: "BTC", name: "Bitcoin",  category: "Core" as const },
@@ -14,11 +14,15 @@ const CORE_ASSETS = [
   { coingecko_id: "solana",   symbol: "SOL", name: "Solana",   category: "Core" as const },
 ];
 
+type SortMode = "default" | "change_desc" | "change_asc";
+
 export default function WatchlistPage() {
   const { user } = useAuth();
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [search, setSearch] = useState("");
+  const [sortMode, setSortMode] = useState<SortMode>("default");
+  const [removeConfirm, setRemoveConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Watchlist — CryptoTrackr";
@@ -71,10 +75,30 @@ export default function WatchlistPage() {
   }
 
   function handleRemove(coingecko_id: string) {
-    if (!user) return;
-    removeWatchlistItem(user.id, coingecko_id);
-    setWatchlist(getWatchlist(user.id));
+    setRemoveConfirm(coingecko_id);
   }
+
+  function confirmRemove() {
+    if (!user || !removeConfirm) return;
+    removeWatchlistItem(user.id, removeConfirm);
+    setWatchlist(getWatchlist(user.id));
+    setRemoveConfirm(null);
+  }
+
+  function cycleSortMode() {
+    setSortMode((prev) =>
+      prev === "default" ? "change_desc" : prev === "change_desc" ? "change_asc" : "default"
+    );
+  }
+
+  const sortedWatchlist = useMemo(() => {
+    if (sortMode === "default") return watchlist;
+    return [...watchlist].sort((a, b) => {
+      const ca = changes24h[a.coingecko_id] ?? 0;
+      const cb = changes24h[b.coingecko_id] ?? 0;
+      return sortMode === "change_desc" ? cb - ca : ca - cb;
+    });
+  }, [watchlist, changes24h, sortMode]);
 
   const altInfoMap = useMemo(() => {
     const m: Record<string, typeof CURATED_ALTS[0]> = {};
@@ -88,8 +112,46 @@ export default function WatchlistPage() {
     return m;
   }, []);
 
+  const sortLabel =
+    sortMode === "change_desc" ? "24h ▼" : sortMode === "change_asc" ? "24h ▲" : "Default";
+
   return (
     <PortalLayout>
+      {/* Delete confirmation dialog */}
+      {removeConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.6)" }}>
+          <div className="w-full max-w-xs rounded-2xl p-5" style={{ background: "hsl(0 0% 9%)", border: "1px solid hsl(0 0% 16%)" }}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(239,68,68,0.12)" }}>
+                <AlertTriangle className="w-4 h-4 text-red-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Remove from watchlist?</p>
+                <p className="text-xs text-[hsl(0_0%_45%)] mt-0.5">
+                  {watchlist.find((w) => w.coingecko_id === removeConfirm)?.symbol ?? removeConfirm}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setRemoveConfirm(null)}
+                className="flex-1 py-2 rounded-xl text-sm font-medium text-[hsl(0_0%_65%)]"
+                style={{ background: "hsl(0 0% 12%)", border: "1px solid hsl(0 0% 18%)" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRemove}
+                className="flex-1 py-2 rounded-xl text-sm font-semibold text-white"
+                style={{ background: "rgba(239,68,68,0.2)", border: "1px solid rgba(239,68,68,0.35)" }}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -102,14 +164,31 @@ export default function WatchlistPage() {
               {watchlist.length} assets
             </span>
           </div>
-          <button
-            onClick={() => setShowPicker(!showPicker)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: "#F7931A", color: "#000" }}
-          >
-            <Plus className="w-4 h-4" />
-            Add asset
-          </button>
+          <div className="flex items-center gap-2">
+            {watchlist.length > 1 && (
+              <button
+                onClick={cycleSortMode}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  background: sortMode !== "default" ? "rgba(247,147,26,0.08)" : "hsl(0 0% 10%)",
+                  color: sortMode !== "default" ? "#F7931A" : "hsl(0 0% 55%)",
+                  border: `1px solid ${sortMode !== "default" ? "rgba(247,147,26,0.25)" : "hsl(0 0% 16%)"}`,
+                }}
+                title="Sort by 24h change"
+              >
+                <ArrowUpDown className="w-3 h-3" />
+                {sortLabel}
+              </button>
+            )}
+            <button
+              onClick={() => setShowPicker(!showPicker)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold transition-all"
+              style={{ background: "#F7931A", color: "#000" }}
+            >
+              <Plus className="w-4 h-4" />
+              Add asset
+            </button>
+          </div>
         </div>
         <p className="text-sm text-[hsl(0_0%_42%)] mt-2">Track assets with live prices and 24h change.</p>
       </div>
@@ -120,13 +199,18 @@ export default function WatchlistPage() {
           className="rounded-2xl p-4 mb-6"
           style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 14%)" }}
         >
-          <input
-            className="w-full px-3 py-2 rounded-xl text-sm text-white bg-[hsl(0,0%,10%)] border border-[hsl(0,0%,18%)] outline-none focus:border-[#F7931A] mb-3"
-            placeholder="Search by name or ticker..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autoFocus
-          />
+          <div className="flex items-center justify-between mb-3">
+            <input
+              className="flex-1 px-3 py-2 rounded-xl text-sm text-white bg-[hsl(0,0%,10%)] border border-[hsl(0,0%,18%)] outline-none focus:border-[#F7931A] mr-2"
+              placeholder="Search by name or ticker..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+            />
+            <button onClick={() => { setShowPicker(false); setSearch(""); }} className="text-[hsl(0_0%_40%)] hover:text-white">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
           <div className="space-y-1 max-h-52 overflow-y-auto">
             {filteredPicker.length === 0 ? (
               <p className="text-xs text-[hsl(0_0%_40%)] py-2 text-center">All assets already in watchlist</p>
@@ -179,7 +263,7 @@ export default function WatchlistPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {watchlist.map((item) => {
+          {sortedWatchlist.map((item) => {
             const price = prices[item.coingecko_id];
             const change24h = changes24h[item.coingecko_id];
             const altInfo = altInfoMap[item.coingecko_id];

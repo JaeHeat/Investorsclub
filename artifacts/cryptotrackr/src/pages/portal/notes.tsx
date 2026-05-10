@@ -4,6 +4,8 @@ import { getPersonalNotes, savePersonalNotes } from "@/lib/localStore";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { MessageSquare, Save, Check } from "lucide-react";
 
+const NOTES_TS_KEY = (uid: string) => `ct-notes-saved-at-${uid}`;
+
 const MAX_CHARS = 5000;
 
 export default function NotesPage() {
@@ -11,6 +13,7 @@ export default function NotesPage() {
   const [text, setText] = useState("");
   const [saved, setSaved] = useState(true);
   const [justSaved, setJustSaved] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   useEffect(() => {
     document.title = "Notes — CryptoTrackr";
@@ -20,6 +23,10 @@ export default function NotesPage() {
   useEffect(() => {
     if (user) {
       setText(getPersonalNotes(user.id));
+      try {
+        const ts = localStorage.getItem(NOTES_TS_KEY(user.id));
+        if (ts) setLastSavedAt(new Date(ts));
+      } catch { /* ignore */ }
     }
   }, [user]);
 
@@ -45,6 +52,9 @@ export default function NotesPage() {
   const handleSave = useCallback(() => {
     if (!user) return;
     savePersonalNotes(user.id, text);
+    const now = new Date();
+    setLastSavedAt(now);
+    try { localStorage.setItem(NOTES_TS_KEY(user.id), now.toISOString()); } catch { /* ignore */ }
     setSaved(true);
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 2000);
@@ -104,7 +114,9 @@ export default function NotesPage() {
           style={{ borderTop: "1px solid hsl(0 0% 11%)" }}
         >
           <p className="text-xs text-[hsl(0_0%_32%)]">
-            Auto-saved as you type
+            {lastSavedAt
+              ? `Last edited ${lastSavedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} at ${lastSavedAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`
+              : "Auto-saved as you type"}
           </p>
           <p
             className="text-xs tabular-nums"

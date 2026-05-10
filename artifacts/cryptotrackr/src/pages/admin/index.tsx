@@ -69,8 +69,8 @@ export default function AdminDashboard() {
               style={{ borderBottom: "1px solid hsl(0 0% 10%)" }}
             >
               <span className="col-span-2">Name</span>
-              <span>Portfolio</span>
-              <span>Return</span>
+              <span title="Initial portfolio value at onboarding">Portfolio¹</span>
+              <span title="BTC uses live price; other assets use cost basis">Return²</span>
               <span>Tier</span>
             </div>
             {clients.map((client) => {
@@ -124,6 +124,12 @@ export default function AdminDashboard() {
             })}
           </div>
         )}
+      </div>
+
+      <div className="mt-4 px-1">
+        <p className="text-[10px] text-[hsl(0_0%_30%)] leading-relaxed">
+          ¹ Portfolio = initial value recorded at onboarding, not live value. &nbsp;² Return = BTC at live price; all other assets use cost basis as a proxy.
+        </p>
       </div>
     </AdminLayout>
   );

@@ -168,6 +168,17 @@ export default function MilestonesPage() {
                 </div>
               )}
 
+              {!isHit && !isNext && totalCurrent && targetValue && progressPct > 0 && (
+                <div className="mt-3">
+                  <div className="h-1 rounded-full" style={{ background: "hsl(0 0% 11%)" }}>
+                    <div
+                      className="h-1 rounded-full"
+                      style={{ width: `${progressPct}%`, background: "hsl(0 0% 25%)" }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {isHit && (
                 <div className="mt-3">
                   <div className="flex justify-between text-xs text-[hsl(0_0%_40%)] mb-1">
