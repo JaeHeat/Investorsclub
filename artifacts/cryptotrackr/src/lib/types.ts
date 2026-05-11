@@ -16,6 +16,9 @@ export interface ClientProfile {
   btc_holdings: number | null;
   avg_cost_basis: number | null;
   investment_goal: string | null;
+  goal_conservative: string | null;
+  goal_moderate: string | null;
+  goal_moonshot: string | null;
   risk_tolerance: string | null;
   time_horizon: string | null;
   notes: string | null;

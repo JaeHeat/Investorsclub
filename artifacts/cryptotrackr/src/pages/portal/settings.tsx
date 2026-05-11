@@ -77,7 +77,9 @@ export default function SettingsPage() {
   const [timezone,        setTimezone]        = useState("America/New_York");
   const [risk,            setRisk]            = useState("moderate");
   const [timeHorizon,     setTimeHorizon]     = useState("2_3_years");
-  const [goal,            setGoal]            = useState("");
+  const [goalConservative, setGoalConservative] = useState("");
+  const [goalModerate,     setGoalModerate]     = useState("");
+  const [goalMoonshot,     setGoalMoonshot]     = useState("");
   const [initValue,       setInitValue]       = useState("");
 
   // ── Holdings ────────────────────────────────────────────────────────────────
@@ -103,10 +105,13 @@ export default function SettingsPage() {
       setTimezone(clientProfile.timezone ?? "America/New_York");
       setRisk(clientProfile.risk_tolerance ?? "moderate");
       setTimeHorizon(clientProfile.time_horizon ?? "2_3_years");
-      // Goal is a dollar string from onboarding; handle legacy "Nx" values
-      const g = clientProfile.investment_goal ?? "";
-      const parsed = parseFloat(g);
-      setGoal(!isNaN(parsed) && parsed > 0 ? String(parsed) : "");
+      const toGoalStr = (v: string | null | undefined) => {
+        const n = parseFloat(v ?? "");
+        return !isNaN(n) && n > 0 ? String(n) : "";
+      };
+      setGoalConservative(toGoalStr(clientProfile.goal_conservative ?? clientProfile.investment_goal));
+      setGoalModerate(toGoalStr(clientProfile.goal_moderate ?? clientProfile.investment_goal));
+      setGoalMoonshot(toGoalStr(clientProfile.goal_moonshot));
       setInitValue(
         clientProfile.initial_portfolio_value != null
           ? String(clientProfile.initial_portfolio_value)
@@ -144,7 +149,10 @@ export default function SettingsPage() {
       timezone:  timezone || null,
       risk_tolerance: risk,
       time_horizon: timeHorizon,
-      investment_goal: goal || null,
+      investment_goal: goalModerate || null,
+      goal_conservative: goalConservative || null,
+      goal_moderate: goalModerate || null,
+      goal_moonshot: goalMoonshot || null,
       initial_portfolio_value: initValue ? Number(initValue) : undefined,
     });
 
@@ -454,33 +462,40 @@ export default function SettingsPage() {
             </div>
           </InputRow>
 
-          <InputRow label="Target portfolio value this cycle ($)">
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
-              <input
-                type="number"
-                className={`${inputClass} pl-7`}
-                value={goal}
-                onChange={(e) => { setGoal(e.target.value); markDirty(); }}
-                placeholder="e.g. 500000"
-                min={0}
-                step={10000}
-              />
-            </div>
-            {(() => {
-              const target = parseFloat(goal);
-              const base = parseFloat(initValue);
-              if (!isNaN(target) && target > 0 && !isNaN(base) && base > 0) {
-                const multiple = (target / base).toFixed(1);
-                return (
-                  <p className="text-xs text-[hsl(0_0%_40%)] mt-1.5">
-                    That's a <span className="text-white font-medium">{multiple}×</span> return on your ${base.toLocaleString()} starting value
-                  </p>
-                );
-              }
-              return null;
-            })()}
-          </InputRow>
+          {(
+            [
+              { label: "Conservative target ($)", val: goalConservative, set: setGoalConservative, placeholder: "e.g. 200000", accent: "#10b981" },
+              { label: "Middle target ($)",        val: goalModerate,     set: setGoalModerate,     placeholder: "e.g. 500000", accent: "#F7931A" },
+              { label: "Moonshot target ($)",      val: goalMoonshot,     set: setGoalMoonshot,     placeholder: "e.g. 1000000", accent: "#a855f7" },
+            ] as { label: string; val: string; set: (v: string) => void; placeholder: string; accent: string }[]
+          ).map(({ label, val, set, placeholder, accent }) => (
+            <InputRow key={label} label={label}>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
+                <input
+                  type="number"
+                  className={`${inputClass} pl-7`}
+                  value={val}
+                  onChange={(e) => { set(e.target.value); markDirty(); }}
+                  placeholder={placeholder}
+                  min={0}
+                  step={10000}
+                />
+              </div>
+              {(() => {
+                const target = parseFloat(val);
+                const base = parseFloat(initValue);
+                if (!isNaN(target) && target > 0 && !isNaN(base) && base > 0) {
+                  return (
+                    <p className="text-xs mt-1.5" style={{ color: accent }}>
+                      {(target / base).toFixed(1)}× on your ${base.toLocaleString()} starting value
+                    </p>
+                  );
+                }
+                return null;
+              })()}
+            </InputRow>
+          ))}
         </div>
 
         <button

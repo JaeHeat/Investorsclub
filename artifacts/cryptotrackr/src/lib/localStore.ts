@@ -19,7 +19,7 @@ function uid() {
 
 // ── Seed data on first load ────────────────────────────────────────────────
 
-const SEED_KEY = "cryptotrackr-seeded-v5";
+const SEED_KEY = "cryptotrackr-seeded-v6";
 
 function seedIfEmpty() {
   if (localStorage.getItem(SEED_KEY)) return;
@@ -43,6 +43,9 @@ function seedIfEmpty() {
       notes: "Looking to exit near the cycle top and re-enter in the bear market. Comfortable with medium drawdowns but wants to protect the $150K base.",
       discord_username: null,
       discord_role_claimed: false,
+      goal_conservative: null,
+      goal_moderate: null,
+      goal_moonshot: null,
       onboarding_completed: true,
       initial_portfolio_value: 150000,
       high_water_mark: 150000,
@@ -348,7 +351,8 @@ export function updateClientSettings(
   userId: string,
   updates: Partial<Pick<ClientProfile,
     "risk_tolerance" | "investment_goal" | "initial_portfolio_value" |
-    "full_name" | "timezone" | "country" | "btc_holdings" | "avg_cost_basis" | "discord_username" | "discord_role_claimed" | "time_horizon"
+    "full_name" | "timezone" | "country" | "btc_holdings" | "avg_cost_basis" | "discord_username" | "discord_role_claimed" | "time_horizon" |
+    "goal_conservative" | "goal_moderate" | "goal_moonshot"
   >>
 ): void {
   const all = read<ClientProfile[]>("ct-profiles", []);

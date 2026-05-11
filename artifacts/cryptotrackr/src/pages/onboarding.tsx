@@ -114,7 +114,9 @@ export default function OnboardingPage() {
     tax_situation: "",
     custody: "",
     call_preference: "",
-    investment_goal_usd: "",
+    goal_conservative: "",
+    goal_moderate: "",
+    goal_moonshot: "",
     risk_tolerance: "",
     time_horizon: "",
     notes: "",
@@ -168,9 +170,15 @@ export default function OnboardingPage() {
       }
     }
     if (s === 3) {
-      const goalUsd = parseFloat(form.investment_goal_usd);
-      if (!form.investment_goal_usd || isNaN(goalUsd) || goalUsd <= 0)
-        errors.investment_goal_usd = "Enter your target portfolio value";
+      const cv = parseFloat(form.goal_conservative);
+      const mv = parseFloat(form.goal_moderate);
+      const sv = parseFloat(form.goal_moonshot);
+      if (!form.goal_conservative || isNaN(cv) || cv <= 0)
+        errors.goal_conservative = "Enter your conservative target";
+      if (!form.goal_moderate || isNaN(mv) || mv <= 0)
+        errors.goal_moderate = "Enter your target goal";
+      if (!form.goal_moonshot || isNaN(sv) || sv <= 0)
+        errors.goal_moonshot = "Enter your moonshot target";
       if (!form.risk_tolerance) errors.risk_tolerance = "Select a risk tolerance";
       if (!form.time_horizon) errors.time_horizon = "Select a time horizon";
     }
@@ -215,7 +223,10 @@ export default function OnboardingPage() {
       discord_role_claimed: false,
       btc_holdings: null,
       avg_cost_basis: null,
-      investment_goal: form.investment_goal_usd,
+      investment_goal: form.goal_moderate,
+      goal_conservative: form.goal_conservative || null,
+      goal_moderate: form.goal_moderate || null,
+      goal_moonshot: form.goal_moonshot || null,
       risk_tolerance: form.risk_tolerance,
       time_horizon: form.time_horizon,
       notes: form.notes,
@@ -245,11 +256,11 @@ export default function OnboardingPage() {
     );
   }
 
-  const goalUsd = parseFloat(form.investment_goal_usd);
-  const goalMultiple =
-    portfolioTotal > 0 && !isNaN(goalUsd) && goalUsd > 0
-      ? (goalUsd / portfolioTotal).toFixed(1)
-      : null;
+  function goalMultiple(val: string): string | null {
+    const parsed = parseFloat(val);
+    if (portfolioTotal <= 0 || isNaN(parsed) || parsed <= 0) return null;
+    return (parsed / portfolioTotal).toFixed(1);
+  }
 
   const addedIds = new Set(holdingRows.map((r) => r.coingecko_id));
 
@@ -294,7 +305,7 @@ export default function OnboardingPage() {
                 {[
                   { icon: ClipboardList, label: "Your details",         desc: "Name, country, timezone, and Discord handle" },
                   { icon: Wallet,        label: "Your holdings",        desc: "Each asset, quantity, avg entry price, and any cash / dry powder" },
-                  { icon: Calendar,      label: "Investment goals",     desc: "Target portfolio value, risk tolerance, and time horizon" },
+                  { icon: Calendar,      label: "Investment goals",     desc: "Conservative, target, and moonshot exit values + risk and time horizon" },
                 ].map(({ icon: Icon, label, desc }) => (
                   <div
                     key={label}
@@ -612,36 +623,66 @@ export default function OnboardingPage() {
           {step === 3 && (
             <div data-testid="onboarding-step-3">
               <h2 className="text-xl font-semibold text-white mb-1">Investment goals</h2>
-              <p className="text-sm text-[hsl(0_0%_50%)] mb-7">Your target for this cycle</p>
+              <p className="text-sm text-[hsl(0_0%_50%)] mb-6">Set three exit targets for this cycle</p>
               <div className="space-y-6">
-                {/* Dollar target */}
-                <div>
-                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
-                    Target portfolio value this cycle <span className="text-red-400">*</span>
+                {/* 3 goal tiers */}
+                <div className="space-y-3">
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] uppercase tracking-wide">
+                    Exit targets <span className="text-red-400">*</span>
                   </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
-                    <input
-                      type="number"
-                      value={form.investment_goal_usd}
-                      onChange={(e) => update("investment_goal_usd", e.target.value)}
-                      placeholder="500000"
-                      step="10000"
-                      min="1"
-                      data-testid="input-investment-goal"
-                      className={`${inputClass} pl-7 pr-14`}
-                      style={stepErrors.investment_goal_usd ? errorStyle : inputStyle}
-                    />
-                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">USD</span>
-                  </div>
-                  {goalMultiple && (
-                    <p className="text-xs text-[hsl(0_0%_42%)] mt-1.5">
-                      That's a{" "}
-                      <span className="text-white font-medium">{goalMultiple}x</span>{" "}
-                      return on your ${portfolioTotal.toLocaleString("en-US", { maximumFractionDigits: 0 })} portfolio
-                    </p>
-                  )}
-                  <FieldError field="investment_goal_usd" />
+                  {(
+                    [
+                      { field: "goal_conservative" as const, label: "Conservative", badge: "Happy exit",    desc: "Minimum return you'd be satisfied with",        accent: "#10b981", placeholder: "200000",  testId: "input-goal-conservative" },
+                      { field: "goal_moderate"     as const, label: "Target",       badge: "Realistic",     desc: "Your planned, realistic exit for this cycle",   accent: "#F7931A", placeholder: "500000",  testId: "input-goal-moderate"     },
+                      { field: "goal_moonshot"     as const, label: "Moonshot",     badge: "Best case",     desc: "If everything goes perfectly this cycle",       accent: "#a855f7", placeholder: "1000000", testId: "input-goal-moonshot"     },
+                    ]
+                  ).map(({ field, label, badge, desc, accent, placeholder, testId }) => {
+                    const multiple = goalMultiple(form[field]);
+                    return (
+                      <div key={field}>
+                        <div
+                          className="rounded-xl p-4"
+                          style={{
+                            background: "hsl(0 0% 9%)",
+                            border: `1px solid ${stepErrors[field] ? "rgba(239,68,68,0.4)" : `${accent}22`}`,
+                            borderLeft: `3px solid ${stepErrors[field] ? "rgba(239,68,68,0.7)" : accent}`,
+                          }}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-semibold text-white">{label}</span>
+                            <span
+                              className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                              style={{ background: `${accent}18`, color: accent }}
+                            >
+                              {badge}
+                            </span>
+                            {multiple && (
+                              <span className="ml-auto text-xs font-bold" style={{ color: accent }}>
+                                {multiple}×
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-[hsl(0_0%_42%)] mb-3">{desc}</p>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
+                            <input
+                              type="number"
+                              value={form[field]}
+                              onChange={(e) => update(field, e.target.value)}
+                              placeholder={placeholder}
+                              step="10000"
+                              min="1"
+                              data-testid={testId}
+                              className={`${inputClass} pl-7 pr-14`}
+                              style={stepErrors[field] ? errorStyle : { background: "hsl(0 0% 12%)", border: "1px solid hsl(0 0% 18%)" }}
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">USD</span>
+                          </div>
+                        </div>
+                        <FieldError field={field} />
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Risk tolerance */}
