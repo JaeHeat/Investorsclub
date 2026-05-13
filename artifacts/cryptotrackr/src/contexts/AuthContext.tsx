@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         goal_conservative: null,
         goal_moderate: null,
         goal_moonshot: null,
+        joined_at: null,
         onboarding_completed: false,
         initial_portfolio_value: null,
         high_water_mark: null,

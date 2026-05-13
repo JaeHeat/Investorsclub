@@ -27,6 +27,7 @@ export interface ClientProfile {
   onboarding_completed: boolean;
   initial_portfolio_value: number | null;
   high_water_mark: number | null;
+  joined_at: string | null;
 }
 
 export interface Milestone {

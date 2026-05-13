@@ -134,50 +134,52 @@ function CyclePhaseIndicator() {
 
 // ── On-Chain Signals Panel ─────────────────────────────────────────────────
 
+const ONCHAIN_LAST_UPDATED = "May 12, 2026";
+
 const ONCHAIN_SIGNALS = [
   {
     id: "mvrv",
     label: "MVRV-Z Score",
-    value: "1.4",
+    value: "0.8",
     unit: "",
-    current: 1.4,
+    current: 0.8,
     range: { min: -1, max: 7, low: -1, caution: 3, danger: 6 },
     status: "healthy" as const,
-    interpretation: "Market value vs. realized value. Below 3.5 = healthy. Above 7 = cycle top warning.",
-    detail: "Currently in 'neutral' territory. No overheating. Bull market intact — historically you see 5–7 at cycle tops.",
+    interpretation: "Market value vs. realized value. Below 1.0 = accumulation zone. Above 7 = cycle top warning.",
+    detail: "In accumulation territory (0.5–1.0). Historically signals deep value — 2018 and 2022 bear bottoms hit 0.1–0.4. Current reading: favourable long-term entry zone.",
   },
   {
     id: "nupl",
     label: "NUPL",
-    value: "0.45",
+    value: "0.18",
     unit: "",
-    current: 0.45,
+    current: 0.18,
     range: { min: -0.5, max: 1, low: 0, caution: 0.6, danger: 0.75 },
-    status: "healthy" as const,
+    status: "fear" as const,
     interpretation: "Net unrealised profit/loss. 0.75+ = Euphoria. 0–0.25 = Fear. Negative = Capitulation.",
-    detail: "'Belief' phase (0.4–0.6). Investors are in profit but not yet euphoric. Room to run.",
+    detail: "Fear phase (0–0.25). Most holders near break-even or slight loss. Previous bear bottoms hit 0.0 to -0.2 — historically a strong accumulation window.",
   },
   {
     id: "fear_greed",
     label: "Fear & Greed Index",
-    value: "28",
+    value: "22",
     unit: "/100",
-    current: 28,
+    current: 22,
     range: { min: 0, max: 100, low: 25, caution: 60, danger: 80 },
     status: "fear" as const,
     interpretation: "Extreme Fear (0–24) = potential buy zone. Greed (60–79) = caution. Extreme Greed (80+) = sell.",
-    detail: "Fear reading. Historically, buying during fear and selling during greed outperforms. Current reading is a buy signal on a macro basis.",
+    detail: "Extreme Fear territory. Historically, buying at Extreme Fear and selling at Extreme Greed outperforms all other timing strategies over 12+ months. Patience is the edge.",
   },
   {
     id: "puell",
     label: "Puell Multiple",
-    value: "0.72",
+    value: "0.48",
     unit: "×",
-    current: 0.72,
+    current: 0.48,
     range: { min: 0, max: 4, low: 0.5, caution: 2, danger: 4 },
     status: "healthy" as const,
-    interpretation: "Miner revenue relative to 1-year moving average. &lt;0.5 = undervalued. &gt;4 = cycle top.",
-    detail: "Below 1× means miners are earning less than their yearly average — historically a buy zone. Current reading: accumulation territory.",
+    interpretation: "Miner revenue vs. 1-year average. Below 0.5 = miner capitulation / deep buy zone. Above 4 = cycle top.",
+    detail: "Below 0.5 — miner capitulation zone. Historically one of the strongest buy signals in Bitcoin history. All previous bear bottoms saw Puell below 0.5 before reversing.",
   },
 ];
 
@@ -224,7 +226,7 @@ function OnChainSignalsPanel() {
       <div className="flex items-center gap-2 mb-5">
         <Activity className="w-4 h-4" style={{ color: "#F7931A" }} />
         <h2 className="text-sm font-semibold text-white">On-Chain Signal Panel</h2>
-        <span className="ml-auto text-[10px] text-[hsl(0_0%_35%)]">Updated daily · indicative only</span>
+        <span className="ml-auto text-[10px] text-[hsl(0_0%_35%)]">Updated {ONCHAIN_LAST_UPDATED} · indicative only</span>
       </div>
       <div className="grid sm:grid-cols-2 gap-3">
         {ONCHAIN_SIGNALS.map((sig) => {
@@ -628,7 +630,7 @@ export default function CyclePage() {
         </div>
         <div className="space-y-0">
           {KEY_DATES.map((kd, idx) => (
-            <div key={idx} className="flex gap-3 pb-4 relative">
+            <div key={idx} className="flex gap-3 pb-4 relative rounded-xl" style={kd.status === "active" ? { background: "rgba(247,147,26,0.07)", outline: "1px solid rgba(247,147,26,0.18)" } : {}}>
               <div className="flex flex-col items-center">
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 z-10"

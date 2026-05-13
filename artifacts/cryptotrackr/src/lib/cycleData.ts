@@ -180,12 +180,12 @@ export const KEY_DATES = [
 export const BEAR_SCENARIOS = [
   {
     label: "Already Bottomed",
-    drawdownPct: -41,
-    price: Math.round(CURRENT_CYCLE_PEAK * 0.59),
-    targetDate: "Floor set · Q1 2025",
-    basis: "BTC held $74K — structure intact, re-accumulation phase underway",
+    drawdownPct: -53,
+    price: 59000,
+    targetDate: "Floor set · Q4 2025",
+    basis: "BTC found support at ~$59K — prior cycle ATH zone, re-accumulation underway",
     color: "#06b6d4",
-    probability: 35,
+    probability: 40,
     confirmed: true,
   },
   {

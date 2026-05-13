@@ -85,6 +85,8 @@ export default function SettingsPage() {
   // ── Holdings ────────────────────────────────────────────────────────────────
   const [holdingRows,    setHoldingRows]    = useState<HoldingRow[]>([]);
   const [showPicker,     setShowPicker]     = useState(false);
+  const [showCustom,     setShowCustom]     = useState(false);
+  const [customCoin,     setCustomCoin]     = useState({ symbol: "", name: "", coingecko_id: "" });
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [profileLoaded,  setProfileLoaded]  = useState(false);
@@ -192,6 +194,21 @@ export default function SettingsPage() {
       ...prev,
       { coingecko_id: asset.coingecko_id, symbol: asset.symbol, name: asset.name, amount: "", avg_cost: "" },
     ]);
+    setShowPicker(false);
+    markDirty();
+  }
+
+  function addCustomAsset() {
+    const sym = customCoin.symbol.trim().toUpperCase();
+    if (!sym) return;
+    const id = customCoin.coingecko_id.trim() || `custom_${sym.toLowerCase()}`;
+    if (holdingRows.find((r) => r.coingecko_id === id)) { setShowCustom(false); return; }
+    setHoldingRows((prev) => [
+      ...prev,
+      { coingecko_id: id, symbol: sym, name: customCoin.name.trim() || sym, amount: "", avg_cost: "" },
+    ]);
+    setCustomCoin({ symbol: "", name: "", coingecko_id: "" });
+    setShowCustom(false);
     setShowPicker(false);
     markDirty();
   }
@@ -320,6 +337,67 @@ export default function SettingsPage() {
                   );
                 })}
               </div>
+              <div className="mt-2 pt-2" style={{ borderTop: "1px solid hsl(0 0% 15%)" }}>
+                {!showCustom ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowCustom(true)}
+                    className="flex items-center gap-1.5 w-full px-2.5 py-2 rounded-lg text-xs text-[hsl(0_0%_50%)] hover:text-white transition-colors"
+                    style={{ background: "hsl(0 0% 12%)" }}
+                  >
+                    <Plus className="w-3 h-3" /> Custom coin
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-semibold text-[hsl(0_0%_45%)] uppercase tracking-wide mb-1">Custom coin</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        className="w-full px-2.5 py-1.5 rounded-lg text-xs text-white outline-none"
+                        style={{ background: "hsl(0 0% 12%)", border: "1px solid hsl(0 0% 20%)" }}
+                        placeholder="Ticker (e.g. DOGE)"
+                        value={customCoin.symbol}
+                        onChange={(e) => setCustomCoin((c) => ({ ...c, symbol: e.target.value }))}
+                      />
+                      <input
+                        type="text"
+                        className="w-full px-2.5 py-1.5 rounded-lg text-xs text-white outline-none"
+                        style={{ background: "hsl(0 0% 12%)", border: "1px solid hsl(0 0% 20%)" }}
+                        placeholder="Name (e.g. Dogecoin)"
+                        value={customCoin.name}
+                        onChange={(e) => setCustomCoin((c) => ({ ...c, name: e.target.value }))}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      className="w-full px-2.5 py-1.5 rounded-lg text-xs text-white outline-none"
+                      style={{ background: "hsl(0 0% 12%)", border: "1px solid hsl(0 0% 20%)" }}
+                      placeholder="CoinGecko ID (optional — enables live price)"
+                      value={customCoin.coingecko_id}
+                      onChange={(e) => setCustomCoin((c) => ({ ...c, coingecko_id: e.target.value }))}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={addCustomAsset}
+                        disabled={!customCoin.symbol.trim()}
+                        className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                        style={{ background: customCoin.symbol.trim() ? "#F7931A" : "hsl(0 0% 14%)", color: customCoin.symbol.trim() ? "#000" : "hsl(0 0% 40%)" }}
+                      >
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowCustom(false); setCustomCoin({ symbol: "", name: "", coingecko_id: "" }); }}
+                        className="px-3 py-1.5 rounded-lg text-xs text-[hsl(0_0%_40%)] hover:text-white transition-colors"
+                        style={{ background: "hsl(0 0% 12%)" }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -386,7 +464,7 @@ export default function SettingsPage() {
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold text-[hsl(0_0%_55%)] uppercase tracking-wide">Starting portfolio value ($)</label>
+              <label className="text-xs font-semibold text-[hsl(0_0%_55%)] uppercase tracking-wide">Portfolio value when you joined ($)</label>
               {holdingRows.some((r) => r.amount && r.avg_cost) && (
                 <button
                   type="button"
@@ -416,7 +494,7 @@ export default function SettingsPage() {
                 min={0}
               />
             </div>
-            <p className="text-xs text-[hsl(0_0%_35%)] mt-1.5">Used as the baseline for milestone % return targets</p>
+            <p className="text-xs text-[hsl(0_0%_35%)] mt-1.5">Your portfolio's total market value on the day you joined — not your cost basis. Used for all milestone targets.</p>
           </div>
         </div>
 

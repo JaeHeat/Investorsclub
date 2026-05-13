@@ -98,7 +98,9 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
-  const [showMoreAssets, setShowMoreAssets] = useState(false);
+  const [showMoreAssets,  setShowMoreAssets]  = useState(false);
+  const [showCustomCoin,  setShowCustomCoin]  = useState(false);
+  const [customCoinForm,  setCustomCoinForm]  = useState({ symbol: "", name: "", coingecko_id: "" });
   const [discordJoined, setDiscordJoined] = useState(false);
 
   // ── Form state ──────────────────────────────────────────────────────────────
@@ -137,6 +139,19 @@ export default function OnboardingPage() {
 
   function removeAsset(id: string) {
     setHoldingRows((prev) => prev.filter((r) => r.coingecko_id !== id));
+  }
+
+  function addCustomCoin() {
+    const sym = customCoinForm.symbol.trim().toUpperCase();
+    if (!sym) return;
+    const id = customCoinForm.coingecko_id.trim() || `custom_${sym.toLowerCase()}`;
+    if (holdingRows.find((r) => r.coingecko_id === id)) { setShowCustomCoin(false); return; }
+    setHoldingRows((prev) => [
+      ...prev,
+      { coingecko_id: id, symbol: sym, name: customCoinForm.name.trim() || sym, color: "hsl(0 0% 55%)", amount: "", avg_cost: "" },
+    ]);
+    setCustomCoinForm({ symbol: "", name: "", coingecko_id: "" });
+    setShowCustomCoin(false);
   }
 
   function updateHoldingRow(id: string, field: "amount" | "avg_cost", value: string) {
@@ -230,6 +245,7 @@ export default function OnboardingPage() {
       risk_tolerance: form.risk_tolerance,
       time_horizon: form.time_horizon,
       notes: form.notes,
+      joined_at: new Date().toISOString(),
       onboarding_completed: true,
       initial_portfolio_value: portfolioTotal || null,
       high_water_mark: portfolioTotal || null,
@@ -462,6 +478,18 @@ export default function OnboardingPage() {
                   >
                     <Plus className="w-3 h-3" /> More assets
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowCustomCoin(!showCustomCoin); setShowMoreAssets(false); }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                    style={{
+                      background: showCustomCoin ? "rgba(247,147,26,0.08)" : "hsl(0 0% 11%)",
+                      border: `1px solid ${showCustomCoin ? "rgba(247,147,26,0.3)" : "hsl(0 0% 18%)"}`,
+                      color: showCustomCoin ? "#F7931A" : "hsl(0 0% 70%)",
+                    }}
+                  >
+                    <Plus className="w-3 h-3" /> Custom coin
+                  </button>
                 </div>
               </div>
 
@@ -493,6 +521,63 @@ export default function OnboardingPage() {
                         </button>
                       );
                     })}
+                  </div>
+                </div>
+              )}
+
+              {/* Custom coin form */}
+              {showCustomCoin && (
+                <div className="mb-4 rounded-xl p-3" style={{ background: "hsl(0 0% 9%)", border: "1px solid hsl(0 0% 15%)" }}>
+                  <p className="text-xs font-semibold text-[hsl(0_0%_50%)] mb-2.5 uppercase tracking-wide">Custom coin</p>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 rounded-xl text-sm text-white outline-none"
+                        style={{ background: "hsl(0 0% 11%)", border: "1px solid hsl(0 0% 18%)" }}
+                        placeholder="Ticker (e.g. DOGE)"
+                        value={customCoinForm.symbol}
+                        onChange={(e) => setCustomCoinForm((c) => ({ ...c, symbol: e.target.value }))}
+                      />
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 rounded-xl text-sm text-white outline-none"
+                        style={{ background: "hsl(0 0% 11%)", border: "1px solid hsl(0 0% 18%)" }}
+                        placeholder="Name (e.g. Dogecoin)"
+                        value={customCoinForm.name}
+                        onChange={(e) => setCustomCoinForm((c) => ({ ...c, name: e.target.value }))}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 rounded-xl text-sm text-white outline-none"
+                      style={{ background: "hsl(0 0% 11%)", border: "1px solid hsl(0 0% 18%)" }}
+                      placeholder="CoinGecko ID (optional — enables live price)"
+                      value={customCoinForm.coingecko_id}
+                      onChange={(e) => setCustomCoinForm((c) => ({ ...c, coingecko_id: e.target.value }))}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={addCustomCoin}
+                        disabled={!customCoinForm.symbol.trim()}
+                        className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all"
+                        style={{
+                          background: customCoinForm.symbol.trim() ? "#F7931A" : "hsl(0 0% 14%)",
+                          color: customCoinForm.symbol.trim() ? "#000" : "hsl(0 0% 40%)",
+                        }}
+                      >
+                        Add coin
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowCustomCoin(false); setCustomCoinForm({ symbol: "", name: "", coingecko_id: "" }); }}
+                        className="px-4 py-2 rounded-xl text-sm text-[hsl(0_0%_45%)] hover:text-white transition-colors"
+                        style={{ background: "hsl(0 0% 12%)" }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

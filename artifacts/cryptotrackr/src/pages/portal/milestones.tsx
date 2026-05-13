@@ -62,7 +62,7 @@ export default function MilestonesPage() {
           <TrendingUp className="w-5 h-5" style={{ color: "#F7931A" }} />
           <h1 className="text-2xl font-semibold text-white">Milestones</h1>
         </div>
-        <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Your personalised return targets for this cycle</p>
+        <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Your return targets measured from the day you joined</p>
       </div>
 
       {/* Tier badge */}
