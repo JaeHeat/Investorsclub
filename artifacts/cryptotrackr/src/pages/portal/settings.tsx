@@ -55,6 +55,7 @@ type HoldingRow = {
   name: string;
   amount: string;
   avg_cost: string;
+  manual_price?: string;
 };
 
 function toRows(hs: HoldingAsset[]): HoldingRow[] {
@@ -64,6 +65,7 @@ function toRows(hs: HoldingAsset[]): HoldingRow[] {
     name: h.name,
     amount: String(h.amount),
     avg_cost: String(h.avg_cost),
+    manual_price: h.manual_price != null ? String(h.manual_price) : "",
   }));
 }
 
@@ -86,7 +88,7 @@ export default function SettingsPage() {
   const [holdingRows,    setHoldingRows]    = useState<HoldingRow[]>([]);
   const [showPicker,     setShowPicker]     = useState(false);
   const [showCustom,     setShowCustom]     = useState(false);
-  const [customCoin,     setCustomCoin]     = useState({ symbol: "", name: "", coingecko_id: "" });
+  const [customCoin,     setCustomCoin]     = useState({ symbol: "", name: "", coingecko_id: "", manual_price: "" });
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [profileLoaded,  setProfileLoaded]  = useState(false);
@@ -166,6 +168,7 @@ export default function SettingsPage() {
         name:         r.name,
         amount:       parseFloat(r.amount),
         avg_cost:     parseFloat(r.avg_cost),
+        ...(r.manual_price?.trim() ? { manual_price: parseFloat(r.manual_price) } : {}),
       }));
     setHoldings(user.id, validHoldings);
 
@@ -175,7 +178,7 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2500);
   }
 
-  function updateRow(idx: number, field: "amount" | "avg_cost", val: string) {
+  function updateRow(idx: number, field: "amount" | "avg_cost" | "manual_price", val: string) {
     setHoldingRows((prev) => prev.map((r, i) => (i === idx ? { ...r, [field]: val } : r)));
     markDirty();
   }
@@ -205,9 +208,9 @@ export default function SettingsPage() {
     if (holdingRows.find((r) => r.coingecko_id === id)) { setShowCustom(false); return; }
     setHoldingRows((prev) => [
       ...prev,
-      { coingecko_id: id, symbol: sym, name: customCoin.name.trim() || sym, amount: "", avg_cost: "" },
+      { coingecko_id: id, symbol: sym, name: customCoin.name.trim() || sym, amount: "", avg_cost: "", manual_price: customCoin.manual_price || "" },
     ]);
-    setCustomCoin({ symbol: "", name: "", coingecko_id: "" });
+    setCustomCoin({ symbol: "", name: "", coingecko_id: "", manual_price: "" });
     setShowCustom(false);
     setShowPicker(false);
     markDirty();
@@ -376,6 +379,19 @@ export default function SettingsPage() {
                       value={customCoin.coingecko_id}
                       onChange={(e) => setCustomCoin((c) => ({ ...c, coingecko_id: e.target.value }))}
                     />
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[hsl(0_0%_40%)]">$</span>
+                      <input
+                        type="number"
+                        className="w-full pl-6 pr-2.5 py-1.5 rounded-lg text-xs text-white outline-none"
+                        style={{ background: "hsl(0 0% 12%)", border: "1px solid hsl(0 0% 20%)" }}
+                        placeholder={customCoin.coingecko_id.trim() ? "Current price (optional if CoinGecko ID set)" : "Current price (USD) — required for valuation"}
+                        value={customCoin.manual_price}
+                        onChange={(e) => setCustomCoin((c) => ({ ...c, manual_price: e.target.value }))}
+                        min="0"
+                        step="any"
+                      />
+                    </div>
                     <div className="flex gap-2">
                       <button
                         type="button"
@@ -388,7 +404,7 @@ export default function SettingsPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setShowCustom(false); setCustomCoin({ symbol: "", name: "", coingecko_id: "" }); }}
+                        onClick={() => { setShowCustom(false); setCustomCoin({ symbol: "", name: "", coingecko_id: "", manual_price: "" }); }}
                         className="px-3 py-1.5 rounded-lg text-xs text-[hsl(0_0%_40%)] hover:text-white transition-colors"
                         style={{ background: "hsl(0 0% 12%)" }}
                       >
@@ -451,6 +467,20 @@ export default function SettingsPage() {
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
+                    {row.coingecko_id.startsWith("custom_") && (
+                      <div className="relative mt-1.5">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[hsl(0_0%_40%)]">$</span>
+                        <input
+                          type="number"
+                          className={`${inputClass} pl-6`}
+                          value={row.manual_price ?? ""}
+                          onChange={(e) => updateRow(idx, "manual_price", e.target.value)}
+                          placeholder="Current price (USD) — for portfolio valuation"
+                          min="0"
+                          step="any"
+                        />
+                      </div>
+                    )}
                     {rowValue > 0 && (
                       <p className="text-[10px] text-[hsl(0_0%_40%)] pl-1">
                         ≈ <span className="text-[hsl(0_0%_55%)] font-medium">${rowValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}</span> total value

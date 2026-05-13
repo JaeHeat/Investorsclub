@@ -33,7 +33,7 @@ export default function MilestonesPage() {
     if (holdings.length === 0) return null;
     const allPriced = holdings.every((h) => prices[h.coingecko_id] != null);
     if (!allPriced) return null;
-    return holdings.reduce((s, h) => s + h.amount * (prices[h.coingecko_id] ?? h.avg_cost), 0);
+    return holdings.reduce((s, h) => s + h.amount * (prices[h.coingecko_id] ?? h.manual_price ?? h.avg_cost), 0);
   }, [holdings, prices]);
 
   const tier = getMilestoneTier(clientProfile?.risk_tolerance, initialValue);

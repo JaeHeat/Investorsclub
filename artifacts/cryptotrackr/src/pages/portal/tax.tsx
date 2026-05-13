@@ -296,7 +296,7 @@ export default function TaxPage() {
   // Per-asset unrealized gain rows
   const assetRows = useMemo(() => {
     return holdings.map((h) => {
-      const currentPrice = prices[h.coingecko_id] ?? h.avg_cost;
+      const currentPrice = prices[h.coingecko_id] ?? h.manual_price ?? h.avg_cost;
       const costBasis = h.amount * h.avg_cost;
       const currentValue = h.amount * currentPrice;
       const unrealizedGain = currentValue - costBasis;

@@ -116,7 +116,7 @@ export default function PortalIndex() {
     if (holdings.length === 0) return null;
     const hasSomePrices = holdings.some((h) => prices[h.coingecko_id] != null);
     if (!hasSomePrices) return null;
-    return holdings.reduce((s, h) => s + h.amount * (prices[h.coingecko_id] ?? h.avg_cost), 0);
+    return holdings.reduce((s, h) => s + h.amount * (prices[h.coingecko_id] ?? h.manual_price ?? h.avg_cost), 0);
   }, [holdings, prices]);
 
   const gainLoss = totalCurrentValue !== null ? totalCurrentValue - totalCostBasis : null;

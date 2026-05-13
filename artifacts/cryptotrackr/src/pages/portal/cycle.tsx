@@ -691,11 +691,11 @@ export default function CyclePage() {
           ))}
         </div>
         <div className="rounded-xl p-3.5" style={{ background: "hsl(0 0% 9%)" }}>
-          <p className="text-xs font-semibold text-white mb-2">What to buy (based on 3-cycle bear bottom analysis)</p>
+          <p className="text-xs font-semibold text-white mb-2">What to buy — your 3-coin foundation (based on 3-cycle analysis)</p>
           <div className="space-y-1.5 text-[11px] text-[hsl(0_0%_42%)]">
-            <p>First 6 months: 100% BTC (up to 20% ETH)</p>
-            <p>Next 6–12 months: diversify 20–30% into top-25 alts once BTC trends up weekly</p>
-            <p style={{ color: "#ef4444" }}>Skip ranks 51–100. No leverage.</p>
+            <p>Months 1–6: Front-load BTC (60–80%). Build ETH and SOL alongside — these 3 are your foundation.</p>
+            <p>Months 6+: Rotate 15–25% into top-25 alts only once all 3 core positions are trending up on the weekly.</p>
+            <p style={{ color: "#ef4444" }}>Skip ranks 51–100. No leverage. No meme coins.</p>
           </div>
         </div>
       </Card>

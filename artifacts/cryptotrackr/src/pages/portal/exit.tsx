@@ -35,7 +35,7 @@ export default function ExitStrategyPage() {
   const liveValues = useMemo(() => {
     const map: Record<string, number> = {};
     for (const h of holdings) {
-      const price = prices[h.coingecko_id];
+      const price = prices[h.coingecko_id] ?? h.manual_price;
       if (price) map[h.coingecko_id] = h.amount * price;
     }
     return map;

@@ -82,24 +82,24 @@ const ASSET_ENTRY_ORDER = [
     rank: 2,
     asset: "Ethereum (ETH)",
     color: ASSET_CONFIG.ETH.color,
-    timing: "Months 3–9",
-    note: "Second priority. Once BTC reclaims the 20-week MA and weekly candles are green.",
+    timing: "Months 1–9",
+    note: "Stack alongside BTC from day one. ETH is your second core position — front-load once BTC shows weekly strength.",
     targetPct: "15–25% of entry capital",
   },
   {
     rank: 3,
     asset: "Solana (SOL)",
     color: ASSET_CONFIG.SOL.color,
-    timing: "Months 6–12",
-    note: "Third priority. High-beta to ETH. Only enter once ETH is showing relative strength.",
+    timing: "Months 1–9",
+    note: "Build SOL alongside BTC and ETH. These 3 are your foundation — accumulate together, weighted heavily to BTC.",
     targetPct: "5–15% of entry capital",
   },
   {
     rank: 4,
     asset: "Top-25 Alts",
     color: ASSET_CONFIG.ALTS.color,
-    timing: "Months 9–18",
-    note: "Last to enter, first to exit. Only your plan's curated list. No leverage, no rank 51+.",
+    timing: "Months 6–18",
+    note: "Last to enter, first to exit. Only once BTC, ETH, and SOL are all trending up on the weekly chart.",
     targetPct: "Per plan allocation",
   },
 ];
@@ -357,7 +357,7 @@ export default function EntryStrategyPage() {
           <h2 className="text-sm font-semibold text-white">Asset Entry Order</h2>
         </div>
         <p className="text-xs text-[hsl(0_0%_42%)] mb-4">
-          Buy in this sequence. Do not skip ahead. Each tier only unlocks after the previous one is trending up on the weekly chart.
+          Front-load BTC, but ETH and SOL can be built alongside from day one — these are your 3 core positions. Top-25 alts come last, only once all 3 are trending up weekly.
         </p>
         <div className="space-y-3">
           {ASSET_ENTRY_ORDER.map((asset) => (

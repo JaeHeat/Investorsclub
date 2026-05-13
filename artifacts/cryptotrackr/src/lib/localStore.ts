@@ -19,7 +19,7 @@ function uid() {
 
 // ── Seed data on first load ────────────────────────────────────────────────
 
-const SEED_KEY = "cryptotrackr-seeded-v7";
+const SEED_KEY = "cryptotrackr-seeded-v8";
 
 function seedIfEmpty() {
   if (localStorage.getItem(SEED_KEY)) return;
@@ -83,17 +83,17 @@ function seedIfEmpty() {
     {
       id: uid(),
       user_id: null,
-      title: "Cycle Top Watch Zone: $95K–$120K",
+      title: "Bear Market Confirmed — Accumulation Window Opens Oct 2026",
       content:
-        "Based on on-chain indicators and historical cycle analysis, we're watching the $95K–$120K range as a potential cycle top. MVRV-Z and NUPL are approaching overheated territory. We'll issue alerts as we approach this zone.",
+        "BTC has entered a confirmed bear market following the $126K peak in October 2025. Based on 3-cycle halving analysis (2016, 2020, 2024), the optimal accumulation window opens approximately 30 months post-halving — October 2026. On-chain signals (MVRV-Z below 0.5, Puell Multiple below 0.3) will confirm the deepest buy zone. Cash is your strongest position right now.",
       created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
       id: uid(),
       user_id: "client-1",
-      title: "Personal Target: Begin scaling out at $90K BTC",
+      title: "Your Playbook: Hold Remaining BTC — Do Not Sell Into This Bear",
       content:
-        "Given your moderate risk profile and cycle top exit strategy, we recommend beginning to scale out 20–25% of your BTC and ETH position around the $90K BTC level, with additional tranches at $100K and $110K.",
+        "Based on your portfolio and the current cycle phase, selling your remaining BTC here would lock in losses near the bear market floor. Every prior cycle shows this is negative EV — the 2022 example saw BTC rally 4× within 18 months of the bottom. Your strategy: hold cash, hold core positions, and deploy the DCA entry playbook when October 2026 accumulation signals confirm.",
       created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     },
   ];
@@ -104,7 +104,7 @@ function seedIfEmpty() {
       user_id: null,
       title: "May 2026 — Bear Market Update",
       content:
-        "Bitcoin has retraced approximately 53% from the October 2025 cycle peak of $126K, finding support near the $59K level — the prior cycle's all-time high and a historically significant zone.\n\nKey metrics (May 2026):\n- MVRV-Z Score: 0.8 (accumulation zone — historical buy signal below 1.0)\n- NUPL: 0.18 (Fear phase — most holders near break-even)\n- Fear & Greed Index: 22 (Extreme Fear — historically a long-term buy zone)\n- Puell Multiple: 0.48 (miner capitulation territory — strong buy signal below 0.5)\n\nOutlook: We are in a confirmed bear market. Cash is king. The accumulation playbook activates around October 2026 (H+30 months). Hold your position and prepare for the buy zone.",
+        "Bitcoin has retraced approximately 45% from the October 2025 cycle peak of $126K, finding support at $69K — the prior cycle's all-time high from November 2021, a historically proven long-term support zone.\n\nKey metrics (May 2026):\n- MVRV-Z Score: 0.8 (accumulation zone — historical buy signal below 1.0)\n- NUPL: 0.18 (Fear phase — most holders near break-even)\n- Fear & Greed Index: 22 (Extreme Fear — historically a long-term buy zone)\n- Puell Multiple: 0.48 (miner capitulation territory — strong buy signal below 0.5)\n\nOutlook: We are in a confirmed bear market. Cash is king. The accumulation playbook activates around October 2026 (H+30 months). Hold your position and prepare for the buy zone.",
       published_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       is_global: true,
     },
@@ -122,9 +122,9 @@ function seedIfEmpty() {
   const broadcasts: Broadcast[] = [
     {
       id: uid(),
-      title: "Bear Market Update: BTC Found Support Near $59K — Watching for Signals",
+      title: "Bear Market Update: BTC Holding the $69K Prior-Cycle ATH Zone",
       content:
-        "Bitcoin found a local low near $59K — the previous cycle's all-time high — and has been stabilising in the bear market following the $126K peak in October 2025. On-chain data shows long-term holders beginning to accumulate at these levels. We are monitoring MVRV-Z, NUPL, and Puell Multiple for early signs that the cycle bottom is in. Your next action: hold cash and follow the accumulation playbook when signals align.",
+        "Bitcoin has found support at $69K — the November 2021 all-time high and a historically reliable long-term floor. This level held as resistance for years before the 2024 bull run, and is now acting as support in the bear market. On-chain data (MVRV-Z: 0.8, Puell: 0.48) shows this is accumulation territory, not a time to sell. Hold cash, hold your core positions, and wait for the October 2026 buy window.",
       phase_tag: "Bear Market Watch",
       created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     },

@@ -6,6 +6,7 @@ export interface HoldingAsset {
   name: string;          // e.g. "Bitcoin", "Ethereum", "Solana"
   amount: number;        // quantity held
   avg_cost: number;      // average entry price in USD
+  manual_price?: number; // current price override for custom coins without a CoinGecko ID
 }
 
 export interface ClientProfile {

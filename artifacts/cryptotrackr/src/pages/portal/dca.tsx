@@ -28,7 +28,7 @@ export default function DcaPage() {
 
   const totalLive = useMemo(() => {
     return holdings.reduce((s, h) => {
-      const p = prices[h.coingecko_id];
+      const p = prices[h.coingecko_id] ?? h.manual_price;
       return p ? s + h.amount * p : s;
     }, 0);
   }, [holdings, prices]);

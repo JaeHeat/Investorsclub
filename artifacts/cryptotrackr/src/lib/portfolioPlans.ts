@@ -503,12 +503,12 @@ export const EXIT_TRANCHES: ExitTranche[] = [
   {
     phaseId: 6,
     phaseLabel: "Bear Market",
-    btcSellPct: 30,
-    ethSellPct: 100,
-    solSellPct: 100,
-    altsSellPct: 100,
-    action: "Exit remaining ETH/SOL/alts. Reduce BTC another 30%. Prepare stablecoin for re-entry.",
-    urgency: "exit",
+    btcSellPct: 0,
+    ethSellPct: 0,
+    solSellPct: 0,
+    altsSellPct: 0,
+    action: "The exit window is closed. Selling at bear market lows locks in losses at the worst possible price — this is negative EV. Hold your remaining positions and prepare for the Oct 2026 accumulation phase.",
+    urgency: "hold",
   },
 ];
 

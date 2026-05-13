@@ -180,10 +180,10 @@ export const KEY_DATES = [
 export const BEAR_SCENARIOS = [
   {
     label: "Already Bottomed",
-    drawdownPct: -53,
-    price: 59000,
+    drawdownPct: -45,
+    price: 69000,
     targetDate: "Floor set · Q4 2025",
-    basis: "BTC found support at ~$59K — prior cycle ATH zone, re-accumulation underway",
+    basis: "BTC held the Nov 2021 prior-cycle ATH at $69K — a historically proven long-term support zone",
     color: "#06b6d4",
     probability: 40,
     confirmed: true,

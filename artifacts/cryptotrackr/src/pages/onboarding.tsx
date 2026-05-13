@@ -69,6 +69,7 @@ type HoldingRow = {
   color: string;
   amount: string;
   avg_cost: string;
+  manual_price?: string;
 };
 
 function autoDetectCountry(): string {
@@ -100,7 +101,7 @@ export default function OnboardingPage() {
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const [showMoreAssets,  setShowMoreAssets]  = useState(false);
   const [showCustomCoin,  setShowCustomCoin]  = useState(false);
-  const [customCoinForm,  setCustomCoinForm]  = useState({ symbol: "", name: "", coingecko_id: "" });
+  const [customCoinForm,  setCustomCoinForm]  = useState({ symbol: "", name: "", coingecko_id: "", manual_price: "" });
   const [discordJoined, setDiscordJoined] = useState(false);
 
   // ── Form state ──────────────────────────────────────────────────────────────
@@ -148,13 +149,13 @@ export default function OnboardingPage() {
     if (holdingRows.find((r) => r.coingecko_id === id)) { setShowCustomCoin(false); return; }
     setHoldingRows((prev) => [
       ...prev,
-      { coingecko_id: id, symbol: sym, name: customCoinForm.name.trim() || sym, color: "hsl(0 0% 55%)", amount: "", avg_cost: "" },
+      { coingecko_id: id, symbol: sym, name: customCoinForm.name.trim() || sym, color: "hsl(0 0% 55%)", amount: "", avg_cost: "", manual_price: customCoinForm.manual_price || "" },
     ]);
-    setCustomCoinForm({ symbol: "", name: "", coingecko_id: "" });
+    setCustomCoinForm({ symbol: "", name: "", coingecko_id: "", manual_price: "" });
     setShowCustomCoin(false);
   }
 
-  function updateHoldingRow(id: string, field: "amount" | "avg_cost", value: string) {
+  function updateHoldingRow(id: string, field: "amount" | "avg_cost" | "manual_price", value: string) {
     setHoldingRows((prev) =>
       prev.map((r) => (r.coingecko_id === id ? { ...r, [field]: value } : r))
     );
@@ -223,6 +224,7 @@ export default function OnboardingPage() {
         name: r.name,
         amount: parseFloat(r.amount),
         avg_cost: parseFloat(r.avg_cost) || 0,
+        ...(r.manual_price?.trim() ? { manual_price: parseFloat(r.manual_price) } : {}),
       }));
 
     if (validHoldings.length > 0) {
@@ -556,6 +558,19 @@ export default function OnboardingPage() {
                       value={customCoinForm.coingecko_id}
                       onChange={(e) => setCustomCoinForm((c) => ({ ...c, coingecko_id: e.target.value }))}
                     />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[hsl(0_0%_40%)]">$</span>
+                      <input
+                        type="number"
+                        className="pl-8 pr-3 py-2 rounded-xl text-sm text-white placeholder-[hsl(0_0%_28%)] outline-none w-full"
+                        style={{ background: "hsl(0 0% 11%)", border: "1px solid hsl(0 0% 18%)" }}
+                        placeholder={customCoinForm.coingecko_id.trim() ? "Current price (optional if CoinGecko ID set)" : "Current price (USD) — required for valuation"}
+                        value={customCoinForm.manual_price}
+                        onChange={(e) => setCustomCoinForm((c) => ({ ...c, manual_price: e.target.value }))}
+                        min="0"
+                        step="any"
+                      />
+                    </div>
                     <div className="flex gap-2">
                       <button
                         type="button"
@@ -571,7 +586,7 @@ export default function OnboardingPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setShowCustomCoin(false); setCustomCoinForm({ symbol: "", name: "", coingecko_id: "" }); }}
+                        onClick={() => { setShowCustomCoin(false); setCustomCoinForm({ symbol: "", name: "", coingecko_id: "", manual_price: "" }); }}
                         className="px-4 py-2 rounded-xl text-sm text-[hsl(0_0%_45%)] hover:text-white transition-colors"
                         style={{ background: "hsl(0 0% 12%)" }}
                       >
@@ -644,6 +659,21 @@ export default function OnboardingPage() {
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                        {row.coingecko_id.startsWith("custom_") && (
+                          <div className="relative mt-2">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[hsl(0_0%_40%)]">$</span>
+                            <input
+                              type="number"
+                              value={row.manual_price ?? ""}
+                              onChange={(e) => updateHoldingRow(row.coingecko_id, "manual_price", e.target.value)}
+                              placeholder="Current price (USD) — for portfolio valuation"
+                              step="any"
+                              min="0"
+                              className="pl-6 pr-2 py-2 rounded-lg text-sm text-white placeholder-[hsl(0_0%_28%)] outline-none w-full"
+                              style={{ background: "hsl(0 0% 12%)", border: "1px solid hsl(0 0% 18%)" }}
+                            />
+                          </div>
+                        )}
                       </div>
                     );
                   })}
