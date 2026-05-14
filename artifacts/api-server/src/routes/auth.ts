@@ -7,7 +7,6 @@ import {
   LogoutMobileSessionResponse,
 } from "@workspace/api-zod";
 import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
 import {
   clearSession,
   getOidcConfig,
@@ -77,12 +76,7 @@ async function upsertUser(claims: Record<string, unknown>) {
     profileImageUrl: (claims.profile_image_url || claims.picture) as string | null,
   };
 
-  const [existing] = await db
-    .select({ role: usersTable.role })
-    .from(usersTable)
-    .where(eq(usersTable.id, userData.id));
-
-  const role = incomingRole === "admin" ? "admin" : (existing?.role ?? "client");
+  const role = incomingRole;
 
   const [user] = await db
     .insert(usersTable)
@@ -201,7 +195,7 @@ router.get("/callback", async (req: Request, res: Response) => {
   res.redirect(returnTo);
 });
 
-router.get("/logout", async (req: Request, res: Response) => {
+router.post("/logout", async (req: Request, res: Response) => {
   const config = await getOidcConfig();
   const origin = getOrigin(req);
 
@@ -213,7 +207,7 @@ router.get("/logout", async (req: Request, res: Response) => {
     post_logout_redirect_uri: origin,
   });
 
-  res.redirect(endSessionUrl.href);
+  res.json({ redirectUrl: endSessionUrl.href });
 });
 
 router.post(
