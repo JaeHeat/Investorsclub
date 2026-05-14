@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth as useReplitAuth } from "@workspace/replit-auth-web";
 import type { AuthUser } from "@workspace/replit-auth-web";
-import { getClientProfile, upsertClientProfile, trackLastActive } from "@/lib/localStore";
+import { getClientProfile, upsertClientProfile, trackLastActive, clearAllLocalStore } from "@/lib/localStore";
 import type { ClientProfile } from "@/lib/types";
 
 export type { AuthUser };
@@ -68,6 +68,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  function signOut() {
+    clearAllLocalStore();
+    logout();
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -75,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clientProfile,
         loading: isLoading,
         login,
-        signOut: logout,
+        signOut,
         refreshClientProfile,
       }}
     >

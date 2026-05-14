@@ -374,6 +374,52 @@ export function savePersonalNotes(userId: string, notes: string): void {
   localStorage.setItem(`ct-personal-notes-${userId}`, notes);
 }
 
+// ── Session Cleanup ────────────────────────────────────────────────────────
+
+const FIXED_STORE_KEYS = [
+  "ct-profiles",
+  "ct-holdings",
+  "ct-roadmap",
+  "ct-reports",
+  "ct-milestones",
+  "ct-broadcasts",
+  "ct-snapshots",
+  "ct-watchlist",
+  "ct-bear-checklist",
+  "ct-journal",
+  "ct-price-alerts",
+  "ct-broadcasts-scheduled",
+  SEED_KEY,
+];
+
+/**
+ * Removes all CryptoTrackr data from localStorage.
+ * Call this on logout so that sensitive client data does not persist
+ * in the browser for the next person who uses the same device.
+ */
+export function clearAllLocalStore(): void {
+  for (const key of FIXED_STORE_KEYS) {
+    localStorage.removeItem(key);
+  }
+  const dynamicPrefixes = [
+    "ct-personal-notes-",
+    "ct-last-active-",
+    "ct-read-reports-",
+    "ct-bear-checklist-at-",
+    "broadcast-dismissed-",
+  ];
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && dynamicPrefixes.some((prefix) => k.startsWith(prefix))) {
+      keysToRemove.push(k);
+    }
+  }
+  for (const k of keysToRemove) {
+    localStorage.removeItem(k);
+  }
+}
+
 // ── Delete helpers ─────────────────────────────────────────────────────────
 
 export function deleteReport(id: string): void {
