@@ -59,9 +59,16 @@ function getSafeReturnTo(value: unknown): string {
 
 function determineRole(claims: Record<string, unknown>): "admin" | "client" {
   const adminUsername = process.env.ADMIN_REPLIT_USERNAME;
-  if (!adminUsername) return "client";
   const username = claims.username as string | undefined;
-  if (username && username === adminUsername) return "admin";
+  if (adminUsername && username && username === adminUsername) return "admin";
+
+  const adminEmails = process.env.ADMIN_EMAILS;
+  if (adminEmails) {
+    const email = claims.email as string | undefined;
+    const list = adminEmails.split(",").map((e) => e.trim().toLowerCase());
+    if (email && list.includes(email.toLowerCase())) return "admin";
+  }
+
   return "client";
 }
 

@@ -17,13 +17,6 @@ const USERS: (LocalUser & { password: string })[] = [
     name: "Admin",
   },
   {
-    id: "admin-2",
-    email: "jaeheat@gmail.com",
-    password: "Jae2025!",
-    role: "admin",
-    name: "Jae",
-  },
-  {
     id: "client-1",
     email: "client@cryptotrackr.com",
     password: "client123",
