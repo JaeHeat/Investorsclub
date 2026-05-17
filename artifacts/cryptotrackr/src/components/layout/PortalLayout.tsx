@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { getReports, getReadReports } from "@/lib/localStore";
 import { Link, useLocation } from "wouter";
-import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, PieChart, LogOut, Menu, X, TrendingDown, TrendingUp, RefreshCw, Eye, Shield, Settings, BookOpen, Calculator } from "lucide-react";
+import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, PieChart, LogOut, Menu, X, TrendingDown, TrendingUp, RefreshCw, Eye, Shield, Settings, BookOpen, Calculator, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const NAV_GROUPS = [
@@ -20,6 +20,7 @@ const NAV_GROUPS = [
       { icon: TrendingUp,      label: "Entry Strategy",  href: "/portal/entry" },
       { icon: TrendingDown,    label: "Exit Strategy",   href: "/portal/exit" },
       { icon: RefreshCw,       label: "DCA Planner",     href: "/portal/dca" },
+      { icon: Zap,             label: "EV Tool",          href: "/portal/ev" },
     ],
   },
   {
