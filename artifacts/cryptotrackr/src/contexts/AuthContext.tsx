@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth as useReplitAuth } from "@workspace/replit-auth-web";
 import type { AuthUser } from "@workspace/replit-auth-web";
-import { getClientProfile, upsertClientProfile, trackLastActive, clearAllLocalStore } from "@/lib/localStore";
+import { getClientProfile, upsertClientProfile, trackLastActive, clearAllLocalStore, setHoldings } from "@/lib/localStore";
+import { syncProfileToServer, loadProfileFromServer } from "@/lib/profileApi";
 import type { ClientProfile } from "@/lib/types";
 
 export type { AuthUser };
@@ -21,8 +22,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { user, isLoading, login, logout } = useReplitAuth();
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
 
-  function loadClientProfile(userId: string, replitUser?: AuthUser | null) {
+  async function loadClientProfile(userId: string, replitUser?: AuthUser | null) {
     trackLastActive(userId);
+
+    // Try to load from server first (real users have server-side data)
+    const serverData = await loadProfileFromServer();
+
+    if (serverData?.profile) {
+      // Merge server profile into localStorage and state
+      const merged: ClientProfile = {
+        user_id: userId,
+        ...serverData.profile,
+      };
+      upsertClientProfile(merged);
+      if (serverData.holdings.length > 0) {
+        setHoldings(userId, serverData.holdings);
+      }
+      setClientProfile(merged);
+      return;
+    }
+
+    // Fall back to localStorage (handles demo "client-1" seed data)
     const cp = getClientProfile(userId);
     if (!cp) {
       const name = [replitUser?.firstName, replitUser?.lastName].filter(Boolean).join(" ") || "";

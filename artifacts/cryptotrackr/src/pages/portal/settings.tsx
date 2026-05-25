@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateClientSettings, getHoldings, setHoldings } from "@/lib/localStore";
+import { syncProfileToServer } from "@/lib/profileApi";
 import type { HoldingAsset } from "@/lib/types";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { Settings, Check, AlertTriangle, Plus, X } from "lucide-react";
@@ -171,6 +172,29 @@ export default function SettingsPage() {
         ...(r.manual_price?.trim() ? { manual_price: parseFloat(r.manual_price) } : {}),
       }));
     setHoldings(user.id, validHoldings);
+
+    const profileForSync = {
+      user_id: user.id,
+      full_name: fullName || null,
+      discord_username: discordUsername || null,
+      country: country || null,
+      timezone: timezone || null,
+      risk_tolerance: risk,
+      time_horizon: timeHorizon,
+      investment_goal: goalModerate || null,
+      goal_conservative: goalConservative || null,
+      goal_moderate: goalModerate || null,
+      goal_moonshot: goalMoonshot || null,
+      initial_portfolio_value: initValue ? Number(initValue) : (clientProfile?.initial_portfolio_value ?? null),
+      high_water_mark: clientProfile?.high_water_mark ?? null,
+      btc_holdings: clientProfile?.btc_holdings ?? null,
+      avg_cost_basis: clientProfile?.avg_cost_basis ?? null,
+      notes: clientProfile?.notes ?? null,
+      joined_at: clientProfile?.joined_at ?? null,
+      onboarding_completed: clientProfile?.onboarding_completed ?? false,
+      discord_role_claimed: clientProfile?.discord_role_claimed ?? false,
+    };
+    syncProfileToServer(profileForSync, validHoldings);
 
     if (refreshClientProfile) refreshClientProfile();
     setIsDirty(false);

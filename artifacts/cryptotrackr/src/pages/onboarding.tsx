@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { upsertClientProfile, setHoldings } from "@/lib/localStore";
+import { syncProfileToServer } from "@/lib/profileApi";
 import type { HoldingAsset } from "@/lib/types";
 import {
   Bitcoin, ChevronRight, ChevronLeft, Check, AlertCircle,
@@ -231,7 +232,7 @@ export default function OnboardingPage() {
       setHoldings(user.id, validHoldings);
     }
 
-    upsertClientProfile({
+    const profileData = {
       user_id: user.id,
       full_name: form.full_name,
       country: form.country,
@@ -251,7 +252,10 @@ export default function OnboardingPage() {
       onboarding_completed: true,
       initial_portfolio_value: portfolioTotal || null,
       high_water_mark: portfolioTotal || null,
-    });
+    };
+
+    upsertClientProfile(profileData);
+    syncProfileToServer(profileData, validHoldings);
 
     refreshClientProfile();
     setStep(4); // Discord connect step

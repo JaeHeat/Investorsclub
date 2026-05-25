@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import {
-  getAllClientProfiles,
   getHoldings,
   getMilestones,
   upsertMilestone,
@@ -15,7 +14,8 @@ import {
   getReadReports,
   getTradeJournal,
 } from "@/lib/localStore";
-import type { ClientProfile, Milestone, RoadmapItem, Report } from "@/lib/types";
+import { loadClientsFromServer } from "@/lib/profileApi";
+import type { ClientProfile, HoldingAsset, Milestone, RoadmapItem, Report } from "@/lib/types";
 import { formatUSD, getMilestoneTier, getPortfolioTier } from "@/lib/utils";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { usePrices } from "@/hooks/usePrices";
@@ -70,8 +70,8 @@ function StatTile({ label, value, sub, color }: { label: string; value: string; 
 
 // ── Client Detail ──────────────────────────────────────────────────────────
 
-function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () => void }) {
-  const holdings = useMemo(() => getHoldings(client.user_id), [client.user_id]);
+function ClientDetail({ client, serverHoldings, onBack }: { client: ClientProfile; serverHoldings?: HoldingAsset[]; onBack: () => void }) {
+  const holdings = useMemo(() => serverHoldings ?? getHoldings(client.user_id), [client.user_id, serverHoldings]);
   const coinIds = useMemo(() => holdings.map((h) => h.coingecko_id), [holdings]);
   const { prices, loading: pricesLoading } = usePrices(coinIds);
 
@@ -560,13 +560,43 @@ function ClientDetail({ client, onBack }: { client: ClientProfile; onBack: () =>
 // ── Client List ────────────────────────────────────────────────────────────
 export default function AdminClients() {
   const [location] = useLocation();
-  const [clients] = useState<ClientProfile[]>(() => getAllClientProfiles());
-  const [selected, setSelected] = useState<ClientProfile | null>(() => {
-    const params = new URLSearchParams(window.location.search);
-    const clientId = params.get("client");
-    if (clientId) return getAllClientProfiles().find((c) => c.user_id === clientId) ?? null;
-    return null;
-  });
+  const [clients, setClients] = useState<ClientProfile[]>([]);
+  const [holdingsMap, setHoldingsMap] = useState<Map<string, HoldingAsset[]>>(new Map());
+  const [clientsLoading, setClientsLoading] = useState(true);
+
+  useEffect(() => {
+    loadClientsFromServer().then((apiClients) => {
+      const profiles: ClientProfile[] = apiClients.map((c) => ({
+        user_id: c.id,
+        full_name: c.profile?.full_name ?? ([c.firstName, c.lastName].filter(Boolean).join(" ") || null),
+        country: c.profile?.country ?? null,
+        timezone: c.profile?.timezone ?? null,
+        btc_holdings: c.profile?.btc_holdings ?? null,
+        avg_cost_basis: c.profile?.avg_cost_basis ?? null,
+        investment_goal: c.profile?.investment_goal ?? null,
+        goal_conservative: c.profile?.goal_conservative ?? null,
+        goal_moderate: c.profile?.goal_moderate ?? null,
+        goal_moonshot: c.profile?.goal_moonshot ?? null,
+        risk_tolerance: c.profile?.risk_tolerance ?? null,
+        time_horizon: c.profile?.time_horizon ?? null,
+        notes: c.profile?.notes ?? null,
+        discord_username: c.profile?.discord_username ?? null,
+        discord_role_claimed: c.profile?.discord_role_claimed ?? false,
+        onboarding_completed: c.profile?.onboarding_completed ?? false,
+        initial_portfolio_value: c.profile?.initial_portfolio_value ?? null,
+        high_water_mark: c.profile?.high_water_mark ?? null,
+        joined_at: c.profile?.joined_at ?? c.createdAt ?? null,
+      }));
+      const map = new Map<string, HoldingAsset[]>(
+        apiClients.map((c) => [c.id, c.holdings as HoldingAsset[]])
+      );
+      setClients(profiles);
+      setHoldingsMap(map);
+      setClientsLoading(false);
+    });
+  }, []);
+
+  const [selected, setSelected] = useState<ClientProfile | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -577,12 +607,13 @@ export default function AdminClients() {
     } else {
       setSelected(null);
     }
-  }, [location]);
+  }, [location, clients]);
 
   if (selected) {
     return (
       <ClientDetail
         client={selected}
+        serverHoldings={holdingsMap.get(selected.user_id)}
         onBack={() => {
           setSelected(null);
           window.history.pushState({}, "", window.location.pathname);
@@ -592,7 +623,7 @@ export default function AdminClients() {
   }
 
   // ── Health score computation ─────────────────────────────────────────────
-  function computeHealthScore(client: ClientProfile): { score: number; label: string; color: string; breakdown: { label: string; pts: number; max: number }[] } {
+  function computeHealthScore(client: ClientProfile, holdings: HoldingAsset[]): { score: number; label: string; color: string; breakdown: { label: string; pts: number; max: number }[] } {
     const breakdown: { label: string; pts: number; max: number }[] = [];
 
     // 1. Last active (max 25pts)
@@ -602,7 +633,6 @@ export default function AdminClients() {
     breakdown.push({ label: "Last active", pts: activePts, max: 25 });
 
     // 2. Holdings configured (max 20pts)
-    const holdings = getHoldings(client.user_id);
     const holdingsPts = holdings.length >= 2 ? 20 : holdings.length === 1 ? 10 : 0;
     breakdown.push({ label: "Holdings set up", pts: holdingsPts, max: 20 });
 
@@ -642,17 +672,21 @@ export default function AdminClients() {
         <p className="text-sm text-[hsl(0_0%_45%)] mt-1">Click any client to view their analytics</p>
       </div>
 
-      {clients.length === 0 ? (
+      {clientsLoading ? (
         <div className="rounded-2xl p-12 text-center" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
-          <p className="text-sm text-[hsl(0_0%_40%)]">No clients have completed onboarding yet</p>
+          <p className="text-sm text-[hsl(0_0%_40%)]">Loading clients…</p>
+        </div>
+      ) : clients.length === 0 ? (
+        <div className="rounded-2xl p-12 text-center" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
+          <p className="text-sm text-[hsl(0_0%_40%)]">No clients have signed up yet</p>
         </div>
       ) : (
         <div className="space-y-2">
           {clients.map((client) => {
             const portfolioTier = getPortfolioTier(client.initial_portfolio_value ?? 0);
             const milestoneTier = getMilestoneTier(client.risk_tolerance, client.initial_portfolio_value ?? 0);
-            const holdings = getHoldings(client.user_id);
-            const health = computeHealthScore(client);
+            const holdings = holdingsMap.get(client.user_id) ?? [];
+            const health = computeHealthScore(client, holdings);
             const lastActive = getLastActive(client.user_id);
             const daysSince = lastActive ? Math.floor((Date.now() - new Date(lastActive).getTime()) / 86400000) : null;
             return (
