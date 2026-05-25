@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth as useReplitAuth } from "@workspace/replit-auth-web";
 import type { AuthUser } from "@workspace/replit-auth-web";
-import { getClientProfile, upsertClientProfile, trackLastActive, clearAllLocalStore, setHoldings } from "@/lib/localStore";
+import { getClientProfile, upsertClientProfile, trackLastActive, clearAllLocalStore, setHoldings, getHoldings } from "@/lib/localStore";
 import { syncProfileToServer, loadProfileFromServer } from "@/lib/profileApi";
 import type { ClientProfile } from "@/lib/types";
 
@@ -70,6 +70,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setClientProfile(getClientProfile(userId));
     } else {
       setClientProfile(cp);
+      // Auto-sync to server if the client has completed onboarding but
+      // their data isn't on the server yet (e.g. signed up before this migration)
+      if (cp.onboarding_completed) {
+        const holdings = getHoldings(userId);
+        syncProfileToServer(cp, holdings);
+      }
     }
   }
 
