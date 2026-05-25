@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Try to load from server first (real users have server-side data)
     const serverData = await loadProfileFromServer();
 
-    if (serverData?.profile) {
+    if (serverData?.profile?.onboarding_completed) {
       // Merge server profile into localStorage and state
       const merged: ClientProfile = {
         user_id: userId,
