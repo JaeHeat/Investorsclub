@@ -22,7 +22,7 @@ import { usePrices } from "@/hooks/usePrices";
 import DonutChart from "@/components/DonutChart";
 import {
   ChevronRight, Check, Loader2, X, Plus, Trash2,
-  TrendingUp, TrendingDown, Target, BarChart2, RefreshCw,
+  TrendingUp, TrendingDown, Target, BarChart2, RefreshCw, Pencil,
 } from "lucide-react";
 
 const ASSET_COLORS: Record<string, string> = {
@@ -64,6 +64,243 @@ function StatTile({ label, value, sub, color }: { label: string; value: string; 
       <p className="text-xs text-[hsl(0_0%_40%)] uppercase tracking-wide mb-1.5">{label}</p>
       <p className="text-xl font-semibold" style={{ color: color ?? "white" }}>{value}</p>
       {sub && <p className="text-xs text-[hsl(0_0%_40%)] mt-1">{sub}</p>}
+    </div>
+  );
+}
+
+// ── Edit Client Modal ───────────────────────────────────────────────────────
+
+const KNOWN_ASSETS = [
+  { coingecko_id: "bitcoin", symbol: "BTC", name: "Bitcoin" },
+  { coingecko_id: "ethereum", symbol: "ETH", name: "Ethereum" },
+  { coingecko_id: "solana", symbol: "SOL", name: "Solana" },
+];
+
+function EditClientModal({
+  client,
+  currentHoldings,
+  onClose,
+  onSaved,
+}: {
+  client: ClientProfile;
+  currentHoldings: HoldingAsset[];
+  onClose: () => void;
+  onSaved: (updated: ClientProfile, holdings: HoldingAsset[]) => void;
+}) {
+  const inputStyle = { background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)", color: "white" as const };
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [form, setForm] = useState({
+    full_name: client.full_name ?? "",
+    initial_portfolio_value: client.initial_portfolio_value != null ? String(client.initial_portfolio_value) : "",
+    risk_tolerance: client.risk_tolerance ?? "moderate",
+    time_horizon: client.time_horizon ?? "long_term",
+    investment_goal: client.investment_goal ?? "",
+    goal_conservative: client.goal_conservative ?? "",
+    goal_moderate: client.goal_moderate ?? "",
+    goal_moonshot: client.goal_moonshot ?? "",
+    country: client.country ?? "",
+    discord_username: client.discord_username ?? "",
+    notes: client.notes ?? "",
+  });
+
+  const [holdings, setHoldings] = useState<HoldingAsset[]>(
+    currentHoldings.length > 0 ? currentHoldings : []
+  );
+
+  function addHolding() {
+    setHoldings((prev) => [
+      ...prev,
+      { coingecko_id: "bitcoin", symbol: "BTC", name: "Bitcoin", amount: 0, avg_cost: 0 },
+    ]);
+  }
+
+  function removeHolding(idx: number) {
+    setHoldings((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function updateHolding(idx: number, field: keyof HoldingAsset, value: string | number) {
+    setHoldings((prev) =>
+      prev.map((h, i) => {
+        if (i !== idx) return h;
+        if (field === "coingecko_id") {
+          const asset = KNOWN_ASSETS.find((a) => a.coingecko_id === value);
+          return asset ? { ...h, coingecko_id: asset.coingecko_id, symbol: asset.symbol, name: asset.name } : h;
+        }
+        return { ...h, [field]: value };
+      })
+    );
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+    try {
+      const updatedProfile: Omit<ClientProfile, "user_id"> = {
+        full_name: form.full_name || null,
+        initial_portfolio_value: form.initial_portfolio_value ? parseFloat(form.initial_portfolio_value) : null,
+        risk_tolerance: form.risk_tolerance || null,
+        time_horizon: form.time_horizon || null,
+        investment_goal: form.investment_goal || null,
+        goal_conservative: form.goal_conservative || null,
+        goal_moderate: form.goal_moderate || null,
+        goal_moonshot: form.goal_moonshot || null,
+        country: form.country || null,
+        timezone: client.timezone,
+        btc_holdings: null,
+        avg_cost_basis: null,
+        discord_username: form.discord_username || null,
+        discord_role_claimed: client.discord_role_claimed,
+        notes: form.notes || null,
+        onboarding_completed: true,
+        joined_at: client.joined_at,
+        high_water_mark: client.high_water_mark,
+      };
+
+      const res = await fetch(`/api/clients/${client.user_id}/profile`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ profile: updatedProfile, holdings }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save");
+
+      onSaved({ ...client, ...updatedProfile }, holdings);
+    } catch {
+      setError("Failed to save. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.8)" }}>
+      <div className="w-full max-w-xl rounded-2xl overflow-hidden" style={{ background: "hsl(0 0% 8%)", border: "1px solid hsl(0 0% 15%)", maxHeight: "90vh", overflowY: "auto" }}>
+        <div className="flex items-center justify-between px-6 py-4 sticky top-0 z-10" style={{ background: "hsl(0 0% 8%)", borderBottom: "1px solid hsl(0 0% 12%)" }}>
+          <h3 className="text-sm font-semibold text-white">Edit Client Profile</h3>
+          <button onClick={onClose} className="text-[hsl(0_0%_40%)] hover:text-white transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Basic info */}
+          <div className="space-y-3">
+            <p className="text-[11px] font-semibold text-[hsl(0_0%_40%)] uppercase tracking-wide">Basic Info</p>
+            <div>
+              <label className="block text-xs text-[hsl(0_0%_50%)] mb-1">Full Name</label>
+              <input type="text" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="e.g. Alex Rivera" className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-[hsl(0_0%_50%)] mb-1">Country</label>
+                <input type="text" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} placeholder="e.g. United States" className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} />
+              </div>
+              <div>
+                <label className="block text-xs text-[hsl(0_0%_50%)] mb-1">Discord</label>
+                <input type="text" value={form.discord_username} onChange={(e) => setForm({ ...form, discord_username: e.target.value })} placeholder="e.g. username" className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} />
+              </div>
+            </div>
+          </div>
+
+          {/* Portfolio */}
+          <div className="space-y-3" style={{ borderTop: "1px solid hsl(0 0% 12%)", paddingTop: "1.25rem" }}>
+            <p className="text-[11px] font-semibold text-[hsl(0_0%_40%)] uppercase tracking-wide">Portfolio</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-[hsl(0_0%_50%)] mb-1">Initial Portfolio Value ($)</label>
+                <input type="number" value={form.initial_portfolio_value} onChange={(e) => setForm({ ...form, initial_portfolio_value: e.target.value })} placeholder="e.g. 50000" className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} />
+              </div>
+              <div>
+                <label className="block text-xs text-[hsl(0_0%_50%)] mb-1">Risk Tolerance</label>
+                <select value={form.risk_tolerance} onChange={(e) => setForm({ ...form, risk_tolerance: e.target.value })} className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle}>
+                  <option value="conservative">Conservative</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="aggressive">Aggressive</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-[hsl(0_0%_50%)] mb-1">Time Horizon</label>
+              <select value={form.time_horizon} onChange={(e) => setForm({ ...form, time_horizon: e.target.value })} className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle}>
+                <option value="short_term">Short Term (&lt; 1 year)</option>
+                <option value="medium_term">Medium Term (1–3 years)</option>
+                <option value="long_term">Long Term (3+ years)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Goals */}
+          <div className="space-y-3" style={{ borderTop: "1px solid hsl(0 0% 12%)", paddingTop: "1.25rem" }}>
+            <p className="text-[11px] font-semibold text-[hsl(0_0%_40%)] uppercase tracking-wide">Exit Goals ($)</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs text-[hsl(0_0%_50%)] mb-1">Conservative</label>
+                <input type="number" value={form.goal_conservative} onChange={(e) => setForm({ ...form, goal_conservative: e.target.value })} placeholder="e.g. 100000" className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} />
+              </div>
+              <div>
+                <label className="block text-xs text-[hsl(0_0%_50%)] mb-1">Target</label>
+                <input type="number" value={form.goal_moderate} onChange={(e) => setForm({ ...form, goal_moderate: e.target.value })} placeholder="e.g. 250000" className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} />
+              </div>
+              <div>
+                <label className="block text-xs text-[hsl(0_0%_50%)] mb-1">Moonshot</label>
+                <input type="number" value={form.goal_moonshot} onChange={(e) => setForm({ ...form, goal_moonshot: e.target.value })} placeholder="e.g. 1000000" className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none" style={inputStyle} />
+              </div>
+            </div>
+          </div>
+
+          {/* Holdings */}
+          <div className="space-y-3" style={{ borderTop: "1px solid hsl(0 0% 12%)", paddingTop: "1.25rem" }}>
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold text-[hsl(0_0%_40%)] uppercase tracking-wide">Holdings</p>
+              <button onClick={addHolding} className="text-[11px] px-2.5 py-1 rounded-lg flex items-center gap-1" style={{ background: "rgba(247,147,26,0.08)", color: "#F7931A" }}>
+                <Plus className="w-3 h-3" /> Add
+              </button>
+            </div>
+            {holdings.length === 0 && (
+              <p className="text-xs text-[hsl(0_0%_35%)]">No holdings added yet</p>
+            )}
+            {holdings.map((h, idx) => (
+              <div key={idx} className="rounded-xl p-3 space-y-2" style={{ background: "hsl(0 0% 10%)" }}>
+                <div className="flex items-center justify-between">
+                  <select value={h.coingecko_id} onChange={(e) => updateHolding(idx, "coingecko_id", e.target.value)} className="px-2.5 py-1.5 rounded-lg text-xs outline-none" style={inputStyle}>
+                    {KNOWN_ASSETS.map((a) => (
+                      <option key={a.coingecko_id} value={a.coingecko_id}>{a.symbol} — {a.name}</option>
+                    ))}
+                  </select>
+                  <button onClick={() => removeHolding(idx)} className="p-1 rounded hover:bg-red-500/10 text-[hsl(0_0%_35%)] hover:text-red-400 transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-[hsl(0_0%_45%)] mb-1">Amount</label>
+                    <input type="number" value={h.amount || ""} onChange={(e) => updateHolding(idx, "amount", parseFloat(e.target.value) || 0)} placeholder="0.00" className="w-full px-2.5 py-1.5 rounded-lg text-xs outline-none" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[hsl(0_0%_45%)] mb-1">Avg Cost (USD)</label>
+                    <input type="number" value={h.avg_cost || ""} onChange={(e) => updateHolding(idx, "avg_cost", parseFloat(e.target.value) || 0)} placeholder="0.00" className="w-full px-2.5 py-1.5 rounded-lg text-xs outline-none" style={inputStyle} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Notes */}
+          <div style={{ borderTop: "1px solid hsl(0 0% 12%)", paddingTop: "1.25rem" }}>
+            <label className="block text-xs text-[hsl(0_0%_50%)] mb-1">Internal Notes</label>
+            <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} placeholder="Notes visible only to admin..." className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none resize-none" style={inputStyle} />
+          </div>
+
+          {error && <p className="text-xs text-red-400">{error}</p>}
+
+          <button onClick={handleSave} disabled={saving} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "#F7931A", color: "#0A0A0A" }}>
+            {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving…</> : "Save Client Profile"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -563,6 +800,7 @@ export default function AdminClients() {
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [holdingsMap, setHoldingsMap] = useState<Map<string, HoldingAsset[]>>(new Map());
   const [clientsLoading, setClientsLoading] = useState(true);
+  const [editingClient, setEditingClient] = useState<ClientProfile | null>(null);
 
   useEffect(() => {
     loadClientsFromServer().then((apiClients) => {
@@ -595,6 +833,16 @@ export default function AdminClients() {
       setClientsLoading(false);
     });
   }, []);
+
+  function handleClientSaved(updated: ClientProfile, holdings: HoldingAsset[]) {
+    setClients((prev) => prev.map((c) => c.user_id === updated.user_id ? updated : c));
+    setHoldingsMap((prev) => {
+      const next = new Map(prev);
+      next.set(updated.user_id, holdings);
+      return next;
+    });
+    setEditingClient(null);
+  }
 
   const [selected, setSelected] = useState<ClientProfile | null>(null);
 
@@ -707,6 +955,14 @@ export default function AdminClients() {
                     {holdings.length > 0 && ` · ${holdings.map((h) => h.symbol).join(", ")}`}
                   </p>
                 </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditingClient(client); }}
+                  className="p-2 rounded-lg shrink-0 transition-colors hover:bg-[hsl(0_0%_14%)]"
+                  title="Edit client profile"
+                  data-testid={`edit-client-${client.user_id}`}
+                >
+                  <Pencil className="w-3.5 h-3.5 text-[hsl(0_0%_40%)]" />
+                </button>
 
                 {/* Health score */}
                 <div className="shrink-0 flex flex-col items-center gap-1" title={`Health score breakdown:\n${health.breakdown.map((b) => `${b.label}: ${b.pts}/${b.max}`).join("\n")}`}>
@@ -741,6 +997,14 @@ export default function AdminClients() {
             );
           })}
         </div>
+      )}
+      {editingClient && (
+        <EditClientModal
+          client={editingClient}
+          currentHoldings={holdingsMap.get(editingClient.user_id) ?? []}
+          onClose={() => setEditingClient(null)}
+          onSaved={handleClientSaved}
+        />
       )}
     </AdminLayout>
   );

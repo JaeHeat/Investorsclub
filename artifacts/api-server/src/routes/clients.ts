@@ -121,4 +121,56 @@ router.put("/clients/me/profile", async (req: Request, res: Response) => {
   }
 });
 
+const AdminPutProfileBody = z.object({
+  profile: z.record(z.string(), z.unknown()),
+  holdings: z.array(z.record(z.string(), z.unknown())).default([]),
+});
+
+router.put("/clients/:userId/profile", async (req: Request, res: Response) => {
+  if (!requireAdmin(req, res)) return;
+
+  const parsed = AdminPutProfileBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request body" });
+    return;
+  }
+
+  const { profile, holdings } = parsed.data;
+  const userId = String(req.params.userId);
+
+  try {
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+
+    if (!user || user.role !== "client") {
+      res.status(404).json({ error: "Client not found" });
+      return;
+    }
+
+    await db
+      .insert(clientProfilesTable)
+      .values({ userId, data: profile })
+      .onConflictDoUpdate({
+        target: clientProfilesTable.userId,
+        set: { data: profile, updatedAt: new Date() },
+      });
+
+    await db
+      .insert(clientHoldingsTable)
+      .values({ userId, holdings })
+      .onConflictDoUpdate({
+        target: clientHoldingsTable.userId,
+        set: { holdings, updatedAt: new Date() },
+      });
+
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Failed to upsert client profile (admin)");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;
