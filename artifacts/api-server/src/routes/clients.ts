@@ -23,6 +23,7 @@ function requireAdmin(req: Request, res: Response): req is Request & { user: Non
 
 router.get("/clients", async (req: Request, res: Response) => {
   if (!requireAdmin(req, res)) return;
+  res.setHeader("Cache-Control", "no-store");
 
   try {
     const users = await db
