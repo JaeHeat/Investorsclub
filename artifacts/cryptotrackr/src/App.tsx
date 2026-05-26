@@ -26,6 +26,7 @@ import AdminPlans from "@/pages/admin/plans";
 import BroadcastPage from "@/pages/admin/broadcast";
 import AnalyticsPage from "@/pages/admin/analytics";
 import AdminApprovalsPage from "@/pages/admin/approvals";
+import AdminTransactionsPage from "@/pages/admin/transactions";
 import PendingApprovalPage from "@/pages/pending";
 
 const queryClient = new QueryClient();
@@ -160,6 +161,9 @@ function AppRoutes() {
       </Route>
       <Route path="/admin/approvals">
         <ProtectedRoute requireRole="admin"><AdminApprovalsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/transactions">
+        <ProtectedRoute requireRole="admin"><AdminTransactionsPage /></ProtectedRoute>
       </Route>
 
       <Route><Redirect to="/" /></Route>
