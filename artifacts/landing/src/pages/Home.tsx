@@ -40,7 +40,10 @@ export default function Home() {
             <a href="#offerings" className="hover:text-white transition-colors tracking-wide uppercase text-xs">Offerings</a>
             <a href="#faq" className="hover:text-white transition-colors tracking-wide uppercase text-xs">FAQ</a>
           </div>
-          <div>
+          <div className="flex items-center gap-4">
+            <a href="/cryptotrackr/" className="text-xs font-medium text-white/50 hover:text-white transition-colors tracking-wide uppercase">
+              Member Login
+            </a>
             <Button asChild className="bg-white text-[#0C0F1A] hover:bg-white/90 font-semibold px-6 transition-all duration-300">
               <a href="#contact">Book a Strategy Call</a>
             </Button>
