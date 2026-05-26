@@ -307,7 +307,7 @@ function EditClientModal({
 
 // ── Client Detail ──────────────────────────────────────────────────────────
 
-function ClientDetail({ client, serverHoldings, onBack }: { client: ClientProfile; serverHoldings?: HoldingAsset[]; onBack: () => void }) {
+function ClientDetail({ client, serverHoldings, onBack, onEdit }: { client: ClientProfile; serverHoldings?: HoldingAsset[]; onBack: () => void; onEdit: () => void }) {
   const holdings = useMemo(() => serverHoldings ?? getHoldings(client.user_id), [client.user_id, serverHoldings]);
   const coinIds = useMemo(() => holdings.map((h) => h.coingecko_id), [holdings]);
   const { prices, loading: pricesLoading } = usePrices(coinIds);
@@ -430,6 +430,14 @@ function ClientDetail({ client, serverHoldings, onBack }: { client: ClientProfil
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}>
             {tier}
           </span>
+          <button
+            onClick={onEdit}
+            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors hover:bg-[hsl(0_0%_14%)]"
+            style={{ border: "1px solid hsl(0 0% 16%)", color: "hsl(0 0% 60%)" }}
+          >
+            <Pencil className="w-3 h-3" />
+            Edit Client
+          </button>
         </div>
       </div>
 
@@ -859,14 +867,29 @@ export default function AdminClients() {
 
   if (selected) {
     return (
-      <ClientDetail
-        client={selected}
-        serverHoldings={holdingsMap.get(selected.user_id)}
-        onBack={() => {
-          setSelected(null);
-          window.history.pushState({}, "", window.location.pathname);
-        }}
-      />
+      <>
+        <ClientDetail
+          client={selected}
+          serverHoldings={holdingsMap.get(selected.user_id)}
+          onBack={() => {
+            setSelected(null);
+            window.history.pushState({}, "", window.location.pathname);
+          }}
+          onEdit={() => setEditingClient(selected)}
+        />
+        {editingClient && (
+          <EditClientModal
+            client={editingClient}
+            currentHoldings={holdingsMap.get(editingClient.user_id) ?? []}
+            onClose={() => setEditingClient(null)}
+            onSaved={(updated, holdings) => {
+              handleClientSaved(updated, holdings);
+              setSelected(updated);
+              setEditingClient(null);
+            }}
+          />
+        )}
+      </>
     );
   }
 
