@@ -25,6 +25,8 @@ import CycleIntelligence from "@/pages/admin/cycle";
 import AdminPlans from "@/pages/admin/plans";
 import BroadcastPage from "@/pages/admin/broadcast";
 import AnalyticsPage from "@/pages/admin/analytics";
+import AdminApprovalsPage from "@/pages/admin/approvals";
+import PendingApprovalPage from "@/pages/pending";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +51,7 @@ function ProtectedRoute({
   const { user, loading } = useAuth();
   if (loading) return <LoadingScreen />;
   if (!user) return <Redirect to="/" />;
+  if (user.role === "pending") return <Redirect to="/pending" />;
   if (requireRole && user.role !== requireRole) return <Redirect to="/" />;
   return <>{children}</>;
 }
@@ -59,6 +62,7 @@ function RootRoute() {
 
   if (user) {
     if (user.role === "admin") return <Redirect to="/admin" />;
+    if (user.role === "pending") return <Redirect to="/pending" />;
     if (user.role === "client") {
       if (!clientProfile?.onboarding_completed) return <Redirect to="/onboarding" />;
       return <Redirect to="/portal" />;
@@ -126,6 +130,16 @@ function AppRoutes() {
         <ProtectedRoute requireRole="client"><EVPage /></ProtectedRoute>
       </Route>
 
+      <Route path="/pending">
+        {() => {
+          const { user, loading } = useAuth();
+          if (loading) return <LoadingScreen />;
+          if (!user) return <Redirect to="/" />;
+          if (user.role !== "pending") return <Redirect to="/" />;
+          return <PendingApprovalPage />;
+        }}
+      </Route>
+
       <Route path="/admin">
         <ProtectedRoute requireRole="admin"><AdminDashboard /></ProtectedRoute>
       </Route>
@@ -143,6 +157,9 @@ function AppRoutes() {
       </Route>
       <Route path="/admin/analytics">
         <ProtectedRoute requireRole="admin"><AnalyticsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/approvals">
+        <ProtectedRoute requireRole="admin"><AdminApprovalsPage /></ProtectedRoute>
       </Route>
 
       <Route><Redirect to="/" /></Route>

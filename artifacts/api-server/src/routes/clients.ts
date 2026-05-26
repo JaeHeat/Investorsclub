@@ -174,4 +174,72 @@ router.put("/clients/:userId/profile", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/admin/pending-users", async (req: Request, res: Response) => {
+  if (!requireAdmin(req, res)) return;
+  res.setHeader("Cache-Control", "no-store");
+
+  try {
+    const users = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.role, "pending"));
+
+    res.json({
+      users: users.map((u) => ({
+        id: u.id,
+        email: u.email,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        profileImageUrl: u.profileImageUrl,
+        createdAt: u.createdAt.toISOString(),
+      })),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to list pending users");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+const ApproveUserBody = z.object({
+  role: z.enum(["client", "admin"]),
+});
+
+router.put("/admin/users/:userId/approve", async (req: Request, res: Response) => {
+  if (!requireAdmin(req, res)) return;
+
+  const parsed = ApproveUserBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request body" });
+    return;
+  }
+
+  const userId = String(req.params.userId);
+  const { role } = parsed.data;
+
+  try {
+    const [user] = await db
+      .update(usersTable)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(usersTable.id, userId))
+      .returning();
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      profileImageUrl: user.profileImageUrl,
+      role: user.role,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to approve user");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

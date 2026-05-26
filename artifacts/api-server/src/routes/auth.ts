@@ -57,23 +57,23 @@ function getSafeReturnTo(value: unknown): string {
   return value;
 }
 
-function determineRole(claims: Record<string, unknown>): "admin" | "client" {
+function isAdmin(claims: Record<string, unknown>): boolean {
   const adminUsername = process.env.ADMIN_REPLIT_USERNAME;
   const username = claims.username as string | undefined;
-  if (adminUsername && username && username === adminUsername) return "admin";
+  if (adminUsername && username && username === adminUsername) return true;
 
   const adminEmails = process.env.ADMIN_EMAILS;
   if (adminEmails) {
     const email = claims.email as string | undefined;
     const list = adminEmails.split(",").map((e) => e.trim().toLowerCase());
-    if (email && list.includes(email.toLowerCase())) return "admin";
+    if (email && list.includes(email.toLowerCase())) return true;
   }
 
-  return "client";
+  return false;
 }
 
 async function upsertUser(claims: Record<string, unknown>) {
-  const incomingRole = determineRole(claims);
+  const admin = isAdmin(claims);
 
   const userData = {
     id: claims.sub as string,
@@ -83,16 +83,20 @@ async function upsertUser(claims: Record<string, unknown>) {
     profileImageUrl: (claims.profile_image_url || claims.picture) as string | null,
   };
 
-  const role = incomingRole;
+  // New users: admins get "admin" role, everyone else starts as "pending"
+  // Existing users: preserve their current role, EXCEPT admin list always wins
+  const insertRole = admin ? "admin" : "pending";
 
   const [user] = await db
     .insert(usersTable)
-    .values({ ...userData, role })
+    .values({ ...userData, role: insertRole })
     .onConflictDoUpdate({
       target: usersTable.id,
       set: {
         ...userData,
-        role,
+        // Admins always get updated to admin role (handles new ADMIN_EMAILS additions)
+        // Non-admins keep their existing role (pending → client promotion managed by admin)
+        ...(admin ? { role: "admin" } : {}),
         updatedAt: new Date(),
       },
     })
@@ -190,7 +194,7 @@ router.get("/callback", async (req: Request, res: Response) => {
       firstName: dbUser.firstName,
       lastName: dbUser.lastName,
       profileImageUrl: dbUser.profileImageUrl,
-      role: (dbUser.role as "admin" | "client") ?? "client",
+      role: (dbUser.role as "admin" | "client" | "pending") ?? "pending",
     },
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
@@ -259,7 +263,7 @@ router.post(
           firstName: dbUser.firstName,
           lastName: dbUser.lastName,
           profileImageUrl: dbUser.profileImageUrl,
-          role: (dbUser.role as "admin" | "client") ?? "client",
+          role: (dbUser.role as "admin" | "client" | "pending") ?? "pending",
         },
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,

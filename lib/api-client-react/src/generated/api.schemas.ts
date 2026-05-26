@@ -14,6 +14,7 @@ export type AuthUserRole = (typeof AuthUserRole)[keyof typeof AuthUserRole];
 export const AuthUserRole = {
   admin: "admin",
   client: "client",
+  pending: "pending",
 } as const;
 
 export interface AuthUser {
@@ -27,6 +28,31 @@ export interface AuthUser {
   /** @nullable */
   profileImageUrl: string | null;
   role: AuthUserRole;
+}
+
+export interface PendingUser {
+  id: string;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  firstName: string | null;
+  /** @nullable */
+  lastName: string | null;
+  /** @nullable */
+  profileImageUrl: string | null;
+  createdAt: string;
+}
+
+export type UserApprovalRole =
+  (typeof UserApprovalRole)[keyof typeof UserApprovalRole];
+
+export const UserApprovalRole = {
+  client: "client",
+  admin: "admin",
+} as const;
+
+export interface UserApproval {
+  role: UserApprovalRole;
 }
 
 export interface AuthUserEnvelope {
@@ -75,4 +101,8 @@ export type HandleBrowserLoginCallbackParams = {
   code?: string;
   state?: string;
   iss?: string;
+};
+
+export type ListPendingUsers200 = {
+  users: PendingUser[];
 };

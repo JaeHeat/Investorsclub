@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type AuthUserRole = (typeof AuthUserRole)[keyof typeof AuthUserRole];
+export type UserApprovalRole =
+  (typeof UserApprovalRole)[keyof typeof UserApprovalRole];
 
-export const AuthUserRole = {
-  admin: "admin",
+export const UserApprovalRole = {
   client: "client",
-  pending: "pending",
+  admin: "admin",
 } as const;

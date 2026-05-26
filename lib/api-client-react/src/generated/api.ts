@@ -17,14 +17,17 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AuthUser,
   AuthUserEnvelope,
   BeginBrowserLoginParams,
   ErrorEnvelope,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
+  ListPendingUsers200,
   LogoutSuccess,
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
+  UserApproval,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -553,6 +556,168 @@ export const useExchangeMobileAuthorizationCode = <
   return useMutation(
     getExchangeMobileAuthorizationCodeMutationOptions(options),
   );
+};
+
+/**
+ * @summary List all users pending approval
+ */
+export const getListPendingUsersUrl = () => {
+  return `/api/admin/pending-users`;
+};
+
+export const listPendingUsers = async (
+  options?: RequestInit,
+): Promise<ListPendingUsers200> => {
+  return customFetch<ListPendingUsers200>(getListPendingUsersUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListPendingUsersQueryKey = () => {
+  return [`/api/admin/pending-users`] as const;
+};
+
+export const getListPendingUsersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPendingUsers>>,
+  TError = ErrorType<ErrorEnvelope>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listPendingUsers>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPendingUsersQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listPendingUsers>>
+  > = ({ signal }) => listPendingUsers({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPendingUsers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPendingUsersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPendingUsers>>
+>;
+export type ListPendingUsersQueryError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary List all users pending approval
+ */
+
+export function useListPendingUsers<
+  TData = Awaited<ReturnType<typeof listPendingUsers>>,
+  TError = ErrorType<ErrorEnvelope>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listPendingUsers>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPendingUsersQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Approve or update the role of a pending user
+ */
+export const getApproveUserUrl = (userId: string) => {
+  return `/api/admin/users/${userId}/approve`;
+};
+
+export const approveUser = async (
+  userId: string,
+  userApproval: UserApproval,
+  options?: RequestInit,
+): Promise<AuthUser> => {
+  return customFetch<AuthUser>(getApproveUserUrl(userId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(userApproval),
+  });
+};
+
+export const getApproveUserMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof approveUser>>,
+    TError,
+    { userId: string; data: BodyType<UserApproval> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof approveUser>>,
+  TError,
+  { userId: string; data: BodyType<UserApproval> },
+  TContext
+> => {
+  const mutationKey = ["approveUser"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof approveUser>>,
+    { userId: string; data: BodyType<UserApproval> }
+  > = (props) => {
+    const { userId, data } = props ?? {};
+
+    return approveUser(userId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ApproveUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof approveUser>>
+>;
+export type ApproveUserMutationBody = BodyType<UserApproval>;
+export type ApproveUserMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Approve or update the role of a pending user
+ */
+export const useApproveUser = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof approveUser>>,
+    TError,
+    { userId: string; data: BodyType<UserApproval> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof approveUser>>,
+  TError,
+  { userId: string; data: BodyType<UserApproval> },
+  TContext
+> => {
+  return useMutation(getApproveUserMutationOptions(options));
 };
 
 /**

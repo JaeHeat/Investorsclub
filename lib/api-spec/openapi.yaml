@@ -128,6 +128,71 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /admin/pending-users:
+    get:
+      tags: [Auth]
+      operationId: listPendingUsers
+      summary: List all users pending approval
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: List of pending users
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [users]
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PendingUser'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /admin/users/{userId}/approve:
+    put:
+      tags: [Auth]
+      operationId: approveUser
+      summary: Approve or update the role of a pending user
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserApproval'
+      responses:
+        '200':
+          description: User approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /mobile-auth/logout:
     post:
       tags: [Auth]
@@ -183,7 +248,32 @@ components:
           type: [string, 'null']
         role:
           type: string
-          enum: [admin, client]
+          enum: [admin, client, pending]
+    PendingUser:
+      type: object
+      required: [id, email, firstName, lastName, profileImageUrl, createdAt]
+      properties:
+        id:
+          type: string
+        email:
+          type: [string, 'null']
+          format: email
+        firstName:
+          type: [string, 'null']
+        lastName:
+          type: [string, 'null']
+        profileImageUrl:
+          type: [string, 'null']
+        createdAt:
+          type: string
+          format: date-time
+    UserApproval:
+      type: object
+      required: [role]
+      properties:
+        role:
+          type: string
+          enum: [client, admin]
     AuthUserEnvelope:
       type: object
       required: [user]

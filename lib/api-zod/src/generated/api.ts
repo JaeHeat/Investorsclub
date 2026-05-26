@@ -33,7 +33,7 @@ export const GetCurrentAuthUserResponse = zod.object({
       firstName: zod.string().nullable(),
       lastName: zod.string().nullable(),
       profileImageUrl: zod.string().nullable(),
-      role: zod.enum(["admin", "client"]),
+      role: zod.enum(["admin", "client", "pending"]),
     }),
     zod.null(),
   ]),
@@ -84,6 +84,56 @@ export const ExchangeMobileAuthorizationCodeBody = zod.object({
 
 export const ExchangeMobileAuthorizationCodeResponse = zod.object({
   token: zod.string(),
+});
+
+/**
+ * @summary List all users pending approval
+ */
+export const ListPendingUsersHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+export const ListPendingUsersResponse = zod.object({
+  users: zod.array(
+    zod.object({
+      id: zod.string(),
+      email: zod.string().email().nullable(),
+      firstName: zod.string().nullable(),
+      lastName: zod.string().nullable(),
+      profileImageUrl: zod.string().nullable(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Approve or update the role of a pending user
+ */
+export const ApproveUserParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const ApproveUserHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+export const ApproveUserBody = zod.object({
+  role: zod.enum(["client", "admin"]),
+});
+
+export const ApproveUserResponse = zod.object({
+  id: zod.string(),
+  email: zod.string().email().nullable(),
+  firstName: zod.string().nullable(),
+  lastName: zod.string().nullable(),
+  profileImageUrl: zod.string().nullable(),
+  role: zod.enum(["admin", "client", "pending"]),
 });
 
 /**
