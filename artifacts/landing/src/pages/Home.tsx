@@ -262,9 +262,21 @@ export default function Home() {
                 {[
                   {
                     name: "Cycle Consultation",
-                    desc: "Private portal access, personalized exit & entry strategy, quarterly 1-on-1 strategy calls, proprietary on-chain signal reports, portfolio allocation review",
+                    desc: "A complete, data-driven system built around your portfolio — from accumulation to exit.",
                     value: "Core",
                     highlight: true,
+                    features: [
+                      "Private client portal",
+                      "Portfolio rebalancing",
+                      "Risk management framework",
+                      "Monthly cycle intel reports",
+                      "Expected value modeling",
+                      "Algorithm probability scores (tops & bottoms)",
+                      "Exit & entry protocol execution",
+                      "Quarterly 1-on-1 strategy calls",
+                      "On-chain signal monitoring",
+                      "Portfolio allocation review",
+                    ],
                   },
                   {
                     name: "Day Trading Mentorship",
@@ -314,7 +326,17 @@ export default function Home() {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-white/45 leading-relaxed">{item.desc}</p>
+                        <p className="text-sm text-white/45 leading-relaxed mb-3">{item.desc}</p>
+                        {item.features && (
+                          <div className="flex flex-wrap gap-2">
+                            {item.features.map((f: string, fi: number) => (
+                              <span key={fi} className="text-[11px] px-2.5 py-1 rounded-full font-medium"
+                                style={{ background: "rgba(247,147,26,0.08)", color: "rgba(247,147,26,0.75)", border: "1px solid rgba(247,147,26,0.15)" }}>
+                                {f}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="shrink-0 text-right pl-4">
                         <span
@@ -415,7 +437,7 @@ export default function Home() {
                 },
                 {
                   q: "What does the consultation actually involve?",
-                  a: "You get access to a private client portal, a personalized exit and entry strategy built around your holdings, quarterly 1-on-1 calls, and ongoing on-chain signal reports. We build your plan together.",
+                  a: "You get access to a private client portal with a complete system: personalized exit and entry protocol execution, portfolio rebalancing recommendations, a risk management framework, monthly cycle intel reports, expected value modeling using our algorithm's probability scores for cycle tops and bottoms, on-chain signal monitoring, portfolio allocation review, and quarterly 1-on-1 strategy calls. It's a full advisory system — not a newsletter.",
                 },
                 {
                   q: "How are the trading signals delivered?",
