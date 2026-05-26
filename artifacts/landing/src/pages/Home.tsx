@@ -399,6 +399,59 @@ export default function Home() {
           </div>
         </section>
 
+        {/* FAQ Section */}
+        <section id="faq" className="py-32 relative">
+          <div className="container mx-auto px-6">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <div className="text-primary font-mono text-sm tracking-widest uppercase mb-4">FAQ</div>
+              <h2 className="text-4xl md:text-5xl font-bold text-white">Common questions.</h2>
+            </div>
+
+            <div className="max-w-2xl mx-auto space-y-3">
+              {[
+                {
+                  q: "Who is this for?",
+                  a: "This is for Bitcoin holders and active traders who want a data-driven plan — not guesswork. Ideal for high-net-worth individuals who take their portfolio seriously and want professional cycle guidance.",
+                },
+                {
+                  q: "What does the consultation actually involve?",
+                  a: "You get access to a private client portal, a personalized exit and entry strategy built around your holdings, quarterly 1-on-1 calls, and ongoing on-chain signal reports. We build your plan together.",
+                },
+                {
+                  q: "How are the trading signals delivered?",
+                  a: "Signals are delivered securely via a private Discord channel — buy/sell alerts, cycle phase updates, and macro commentary in real time.",
+                },
+                {
+                  q: "Do I need to be an active trader?",
+                  a: "No. Most clients are long-term holders who want to protect their wealth at cycle tops and maximize accumulation at cycle bottoms. The day trading mentorship is a bonus for those who want to go deeper.",
+                },
+                {
+                  q: "How do I get started?",
+                  a: "Book a 30-minute strategy call. We'll review your current positioning, explain the process, and determine if there's a fit. There's no obligation.",
+                },
+              ].map((item, i) => (
+                <motion.details
+                  key={i}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.07 }}
+                  className="group rounded-2xl overflow-hidden cursor-pointer"
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+                >
+                  <summary className="flex items-center justify-between gap-4 px-7 py-5 list-none select-none">
+                    <span className="text-white font-medium">{item.q}</span>
+                    <span className="text-white/30 text-xl shrink-0 transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <div className="px-7 pb-6 pt-1">
+                    <p className="text-white/55 text-sm leading-relaxed">{item.a}</p>
+                  </div>
+                </motion.details>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Contact / Calendar Section */}
         <section id="contact" className="py-32 bg-[#0A0C14] border-t border-white/5 relative">
           <div className="absolute left-0 bottom-0 w-1/2 h-1/2 bg-primary/5 blur-[100px] pointer-events-none" />
