@@ -234,110 +234,100 @@ export default function Home() {
         {/* Offerings Section */}
         <section id="offerings" className="py-32 bg-[#0A0C14] border-y border-white/5">
           <div className="container mx-auto px-6">
-            <div className="text-center max-w-3xl mx-auto mb-24">
-              <div className="text-primary font-mono text-sm tracking-widest uppercase mb-4">Services</div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Consulting Offerings</h2>
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <div className="text-primary font-mono text-sm tracking-widest uppercase mb-4">The Package</div>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Everything included.</h2>
               <p className="text-xl text-white/60 font-light">
-                Tailored solutions for active traders and passive accumulators seeking maximum upside with defined risk.
+                One engagement. Everything you need to navigate the Bitcoin cycle with precision.
               </p>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8 items-stretch">
-              {/* Signals */}
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
+            <div className="max-w-3xl mx-auto">
+              {/* Value stack */}
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="bg-[#0C0F1A] border border-white/5 rounded-3xl p-10 flex flex-col h-[600px]"
+                transition={{ duration: 0.5 }}
+                className="rounded-3xl overflow-hidden"
+                style={{ border: "1px solid rgba(247,147,26,0.2)", background: "linear-gradient(160deg, #13100A 0%, #0C0F1A 100%)" }}
               >
-                <div className="mb-8">
-                  <div className="text-white/40 font-mono text-sm uppercase tracking-wider mb-4">Tier 1</div>
-                  <h3 className="text-2xl font-bold mb-2 text-white">Trading Signals</h3>
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-3xl font-bold text-white">$1,200</span>
-                    <span className="text-white/40">/ year</span>
-                  </div>
-                  <p className="text-white/60 font-light text-sm">For self-directed investors who just want the data.</p>
+                {/* Header */}
+                <div className="px-8 pt-8 pb-6" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="text-primary font-mono text-xs tracking-widest uppercase mb-2">Bitcoin Cycle Consultation</div>
+                  <p className="text-white/50 text-sm">Private client engagement — application required</p>
                 </div>
-                <ul className="space-y-5 mb-auto">
-                  {["Regular buy/sell alerts", "Macro market updates", "Cycle phase identification", "Delivered securely via Telegram"].map((feature, i) => (
-                    <li key={i} className="flex items-start gap-4">
-                      <CheckCircle2 className="w-5 h-5 text-white/20 shrink-0 mt-0.5" />
-                      <span className="text-white/80 text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button asChild variant="outline" className="w-full h-12 mt-8 border-white/10 hover:bg-white/5 hover:text-white">
-                  <a href="#contact">Book a Strategy Call</a>
-                </Button>
-              </motion.div>
 
-              {/* Flagship */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="bg-gradient-to-b from-[#1A150D] to-[#0C0F1A] border border-primary/30 rounded-3xl p-10 relative shadow-[0_0_50px_rgba(247,147,26,0.1)] flex flex-col h-[650px] lg:-mt-6 lg:z-10"
-              >
-                <div className="absolute top-0 right-10 -translate-y-1/2 bg-primary text-[#0C0F1A] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase shadow-lg">
-                  The Core Product
-                </div>
-                <div className="mb-8">
-                  <div className="text-primary font-mono text-sm uppercase tracking-wider mb-4">Flagship</div>
-                  <h3 className="text-3xl font-bold mb-4 text-white">Cycle Consultation</h3>
-                  <p className="text-white/70 font-light text-sm leading-relaxed">
-                    The premier consulting service for high-net-worth individuals requiring a bespoke approach to cycle management.
-                  </p>
-                </div>
-                <ul className="space-y-5 mb-auto">
-                  {[
-                    "Private client portal access",
-                    "Personalized exit & entry strategy",
-                    "Quarterly 1-on-1 strategy calls",
-                    "Proprietary on-chain signal reports",
-                    "Portfolio allocation review",
-                    "Direct access to partners"
-                  ].map((feature, i) => (
-                    <li key={i} className="flex items-start gap-4">
-                      <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                      <span className="text-white font-medium">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button asChild className="w-full h-14 mt-8 bg-primary text-[#0C0F1A] hover:bg-primary/90 text-base font-semibold shadow-[0_0_20px_rgba(247,147,26,0.2)]">
-                  <a href="#contact">Book a Strategy Call</a>
-                </Button>
-              </motion.div>
+                {/* Line items */}
+                {[
+                  {
+                    name: "Cycle Consultation",
+                    desc: "Private portal access, personalized exit & entry strategy, quarterly 1-on-1 strategy calls, proprietary on-chain signal reports, portfolio allocation review",
+                    value: "Core",
+                    highlight: true,
+                  },
+                  {
+                    name: "Day Trading Mentorship",
+                    desc: "Direct coaching, technical analysis mastery, risk management frameworks, live trade breakdowns",
+                    value: "$5,000 value",
+                    highlight: false,
+                  },
+                  {
+                    name: "Trading Signals Access",
+                    desc: "Regular buy/sell alerts, macro market updates, cycle phase identification — delivered securely via Telegram",
+                    value: "$1,200/yr value",
+                    highlight: false,
+                  },
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -12 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.1 + i * 0.1 }}
+                    className="flex items-start gap-5 px-8 py-6"
+                    style={{ borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : undefined }}
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      <CheckCircle2 className="w-5 h-5" style={{ color: item.highlight ? "#F7931A" : "rgba(247,147,26,0.5)" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1 flex-wrap">
+                        <span className="text-white font-semibold">{item.name}</span>
+                        {item.highlight && (
+                          <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full"
+                            style={{ background: "rgba(247,147,26,0.15)", color: "#F7931A" }}>
+                            Included
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-white/45 leading-relaxed">{item.desc}</p>
+                    </div>
+                    <div className="shrink-0 text-right pl-4">
+                      <span
+                        className="text-sm font-semibold whitespace-nowrap"
+                        style={{ color: item.highlight ? "#F7931A" : "rgba(255,255,255,0.35)" }}
+                      >
+                        {item.value}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
 
-              {/* Mentorship */}
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="bg-[#0C0F1A] border border-white/5 rounded-3xl p-10 flex flex-col h-[600px]"
-              >
-                <div className="mb-8">
-                  <div className="text-white/40 font-mono text-sm uppercase tracking-wider mb-4">Specialized</div>
-                  <h3 className="text-2xl font-bold mb-2 text-white">Trading Mentorship</h3>
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-3xl font-bold text-white">$5,000</span>
+                {/* Total value row */}
+                <div
+                  className="px-8 py-5 flex items-center justify-between"
+                  style={{ background: "rgba(247,147,26,0.04)", borderTop: "1px solid rgba(247,147,26,0.15)" }}
+                >
+                  <div>
+                    <div className="text-white/40 text-xs uppercase tracking-widest font-mono mb-0.5">Total value</div>
+                    <div className="text-white font-semibold">$6,200+ included</div>
                   </div>
-                  <p className="text-white/60 font-light text-sm">Hands-on mentorship for those who want to actively trade the volatility.</p>
+                  <Button asChild className="h-12 px-8 text-sm font-semibold"
+                    style={{ background: "#F7931A", color: "#0C0F1A" }}>
+                    <a href="#contact">Book a Strategy Call</a>
+                  </Button>
                 </div>
-                <ul className="space-y-5 mb-auto">
-                  {["Direct mentorship & coaching", "Technical analysis mastery", "Risk management frameworks", "Live trade breakdowns"].map((feature, i) => (
-                    <li key={i} className="flex items-start gap-4">
-                      <CheckCircle2 className="w-5 h-5 text-white/20 shrink-0 mt-0.5" />
-                      <span className="text-white/80 text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button asChild variant="outline" className="w-full h-12 mt-8 border-white/10 hover:bg-white/5 hover:text-white">
-                  <a href="#contact">Book a Strategy Call</a>
-                </Button>
               </motion.div>
             </div>
           </div>
