@@ -32,7 +32,7 @@ export default function Home() {
                 <path d="M12 2L2 22h20L12 2Z" fill="currentColor"/>
               </svg>
             </div>
-            <span className="font-bold text-xl tracking-tight text-white">Bitcoin Daily<span className="text-white/50 font-normal"> Advisory</span></span>
+            <span className="font-bold text-xl tracking-tight text-white">Bitcoin Daily</span>
           </div>
           <div className="hidden lg:flex items-center gap-10 text-sm text-white/60 font-medium">
             <a href="#philosophy" className="hover:text-white transition-colors tracking-wide uppercase text-xs">Philosophy</a>
@@ -67,7 +67,7 @@ export default function Home() {
             >
               <motion.div variants={fadeIn} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm font-medium mb-8 backdrop-blur-sm">
                 <ShieldCheck className="w-4 h-4" />
-                <span className="tracking-wide">Private Advisory for High-Net-Worth Investors</span>
+                <span className="tracking-wide">Private Consulting for High-Net-Worth Investors</span>
               </motion.div>
               
               <motion.h1 variants={fadeIn} className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tighter leading-[1.05] mb-8 text-white">
@@ -116,7 +116,7 @@ export default function Home() {
                     Most investors hold through the top and watch their net worth collapse by 80% during the bear market. They let emotion override logic.
                   </p>
                   <p>
-                    At Bitcoin Daily Advisory, we believe in a methodical approach. By analyzing on-chain metrics, miner behavior, and global liquidity, we identify high-probability pivot points in the cycle.
+                    At Bitcoin Daily, we believe in a methodical approach. By analyzing on-chain metrics, miner behavior, and global liquidity, we identify high-probability pivot points in the cycle.
                   </p>
                   <p className="text-white/80 font-normal pl-4 border-l-2 border-primary">
                     "Clients don't guess; they follow a plan. We provide the map."
@@ -236,7 +236,7 @@ export default function Home() {
           <div className="container mx-auto px-6">
             <div className="text-center max-w-3xl mx-auto mb-24">
               <div className="text-primary font-mono text-sm tracking-widest uppercase mb-4">Services</div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Advisory Offerings</h2>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Consulting Offerings</h2>
               <p className="text-xl text-white/60 font-light">
                 Tailored solutions for active traders and passive accumulators seeking maximum upside with defined risk.
               </p>
@@ -288,14 +288,14 @@ export default function Home() {
                   <div className="text-primary font-mono text-sm uppercase tracking-wider mb-4">Flagship</div>
                   <h3 className="text-3xl font-bold mb-4 text-white">Cycle Consultation</h3>
                   <p className="text-white/70 font-light text-sm leading-relaxed">
-                    The premier advisory service for high-net-worth individuals requiring a bespoke approach to cycle management.
+                    The premier consulting service for high-net-worth individuals requiring a bespoke approach to cycle management.
                   </p>
                 </div>
                 <ul className="space-y-5 mb-auto">
                   {[
                     "Private client portal access",
                     "Personalized exit & entry strategy",
-                    "Quarterly 1-on-1 advisory calls",
+                    "Quarterly 1-on-1 strategy calls",
                     "Proprietary on-chain signal reports",
                     "Portfolio allocation review",
                     "Direct access to partners"
@@ -411,7 +411,7 @@ export default function Home() {
                 <div>
                   <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-tight">Secure your <br/>private briefing.</h2>
                   <p className="text-lg text-white/60 font-light mb-10">
-                    Discuss your current positioning and discover how Bitcoin Daily Advisory can help you navigate the coming cycle with precision.
+                    Discuss your current positioning and discover how Bitcoin Daily can help you navigate the coming cycle with precision.
                   </p>
                   
                   <div className="space-y-6 mb-12">
@@ -421,7 +421,7 @@ export default function Home() {
                       </div>
                       <div>
                         <div className="text-white font-medium">30-Minute Strategy Call</div>
-                        <div className="text-sm text-white/40">Directly with our senior advisors</div>
+                        <div className="text-sm text-white/40">Directly with our senior consultants</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
