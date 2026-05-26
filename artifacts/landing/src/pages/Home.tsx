@@ -271,47 +271,61 @@ export default function Home() {
                     desc: "Direct coaching, technical analysis mastery, risk management frameworks, live trade breakdowns",
                     value: "$5,000 value",
                     highlight: false,
+                    bonus: true,
                   },
                   {
                     name: "Trading Signals Access",
-                    desc: "Regular buy/sell alerts, macro market updates, cycle phase identification — delivered securely via Telegram",
+                    desc: "Regular buy/sell alerts, macro market updates, cycle phase identification — delivered securely via Discord",
                     value: "$1,200/yr value",
                     highlight: false,
+                    bonus: true,
                   },
                 ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -12 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: 0.1 + i * 0.1 }}
-                    className="flex items-start gap-5 px-8 py-6"
-                    style={{ borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : undefined }}
-                  >
-                    <div className="mt-0.5 shrink-0">
-                      <CheckCircle2 className="w-5 h-5" style={{ color: item.highlight ? "#F7931A" : "rgba(247,147,26,0.5)" }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1 flex-wrap">
-                        <span className="text-white font-semibold">{item.name}</span>
-                        {item.highlight && (
-                          <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full"
-                            style={{ background: "rgba(247,147,26,0.15)", color: "#F7931A" }}>
-                            Included
-                          </span>
-                        )}
+                  <div key={i}>
+                    {/* Bonus section divider before first bonus */}
+                    {i === 1 && (
+                      <div className="flex items-center gap-4 px-8 py-3"
+                        style={{ background: "rgba(124,107,240,0.06)", borderTop: "1px solid rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                        <span className="text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full"
+                          style={{ background: "rgba(124,107,240,0.2)", color: "#A89CF7" }}>
+                          Bonuses
+                        </span>
+                        <span className="text-xs text-white/30">Included at no extra cost</span>
                       </div>
-                      <p className="text-sm text-white/45 leading-relaxed">{item.desc}</p>
-                    </div>
-                    <div className="shrink-0 text-right pl-4">
-                      <span
-                        className="text-sm font-semibold whitespace-nowrap"
-                        style={{ color: item.highlight ? "#F7931A" : "rgba(255,255,255,0.35)" }}
-                      >
-                        {item.value}
-                      </span>
-                    </div>
-                  </motion.div>
+                    )}
+                    <motion.div
+                      initial={{ opacity: 0, x: -12 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: 0.1 + i * 0.1 }}
+                      className="flex items-start gap-5 px-8 py-6"
+                      style={{ borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : undefined }}
+                    >
+                      <div className="mt-0.5 shrink-0">
+                        <CheckCircle2 className="w-5 h-5" style={{ color: item.highlight ? "#F7931A" : "rgba(124,107,240,0.7)" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-1 flex-wrap">
+                          <span className="text-white font-semibold">{item.name}</span>
+                          {item.bonus && (
+                            <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full"
+                              style={{ background: "rgba(124,107,240,0.15)", color: "#A89CF7" }}>
+                              Bonus
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-white/45 leading-relaxed">{item.desc}</p>
+                      </div>
+                      <div className="shrink-0 text-right pl-4">
+                        <span
+                          className="text-sm font-semibold whitespace-nowrap"
+                          style={{ color: item.highlight ? "#F7931A" : "rgba(255,255,255,0.35)" }}
+                        >
+                          {item.value}
+                        </span>
+                      </div>
+                    </motion.div>
+                  </div>
                 ))}
 
                 {/* Total value row */}
