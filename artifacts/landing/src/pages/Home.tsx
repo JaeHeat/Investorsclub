@@ -357,7 +357,7 @@ export default function Home() {
                   {
                     step: "03",
                     title: "Execution & Monitoring",
-                    desc: "As the cycle progresses, we hold quarterly reviews. When our on-chain indicators signal a cycle top is forming, we initiate the exit protocol."
+                    desc: "As the cycle progresses, we hold quarterly reviews. When our on-chain indicators signal a cycle top forming, we initiate the exit protocol. When they signal a cycle bottom, we execute the entry protocol."
                   }
                 ].map((item, i) => (
                   <motion.div 
