@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowRight, ShieldCheck, Target, TrendingUp, LineChart, Lock,
   BarChart4, BrainCircuit, Activity, ChevronDown, CheckCircle2,
-  CalendarDays, PlaySquare, Mail, AlertTriangle, ArrowUpRight
+  CalendarDays, PlaySquare, Mail, AlertTriangle, ArrowUpRight, Menu, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -20,7 +20,18 @@ const staggerContainer = {
   }
 };
 
+const NAV_LINKS = [
+  { href: "#philosophy", label: "Philosophy" },
+  { href: "#edge", label: "Our Edge" },
+  { href: "#offerings", label: "Offerings" },
+  { href: "#faq", label: "FAQ" },
+];
+
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  function closeMenu() { setMobileMenuOpen(false); }
+
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground font-sans">
       {/* Navigation */}
@@ -34,13 +45,16 @@ export default function Home() {
             </div>
             <span className="font-bold text-xl tracking-tight text-white">Bitcoin Daily</span>
           </div>
+
+          {/* Desktop nav */}
           <div className="hidden lg:flex items-center gap-10 text-sm text-white/60 font-medium">
-            <a href="#philosophy" className="hover:text-white transition-colors tracking-wide uppercase text-xs">Philosophy</a>
-            <a href="#edge" className="hover:text-white transition-colors tracking-wide uppercase text-xs">Our Edge</a>
-            <a href="#offerings" className="hover:text-white transition-colors tracking-wide uppercase text-xs">Offerings</a>
-            <a href="#faq" className="hover:text-white transition-colors tracking-wide uppercase text-xs">FAQ</a>
+            {NAV_LINKS.map(({ href, label }) => (
+              <a key={href} href={href} className="hover:text-white transition-colors tracking-wide uppercase text-xs">{label}</a>
+            ))}
           </div>
-          <div className="flex items-center gap-4">
+
+          {/* Desktop right actions */}
+          <div className="hidden lg:flex items-center gap-4">
             <a href="/cryptotrackr/" className="text-xs font-medium text-white/50 hover:text-white transition-colors tracking-wide uppercase">
               Member Login
             </a>
@@ -48,7 +62,51 @@ export default function Home() {
               <a href="#contact">Book a Strategy Call</a>
             </Button>
           </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className="lg:hidden p-2 rounded-lg text-white/60 hover:text-white transition-colors"
+            onClick={() => setMobileMenuOpen((o) => !o)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
+
+        {/* Mobile menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="lg:hidden overflow-hidden border-t border-white/5"
+              style={{ background: "#0C0F1A" }}
+            >
+              <div className="container mx-auto px-6 py-4 flex flex-col gap-1">
+                {NAV_LINKS.map(({ href, label }) => (
+                  <a
+                    key={href}
+                    href={href}
+                    onClick={closeMenu}
+                    className="py-3 text-sm font-medium text-white/60 hover:text-white transition-colors tracking-wide uppercase border-b border-white/5 last:border-0"
+                  >
+                    {label}
+                  </a>
+                ))}
+                <div className="pt-4 flex flex-col gap-3">
+                  <a href="/cryptotrackr/" className="text-xs font-medium text-white/50 tracking-wide uppercase text-center py-2">
+                    Member Login
+                  </a>
+                  <Button asChild className="w-full bg-white text-[#0C0F1A] hover:bg-white/90 font-semibold">
+                    <a href="#contact" onClick={closeMenu}>Book a Strategy Call</a>
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       <main>
@@ -58,7 +116,6 @@ export default function Home() {
           <div className="absolute inset-0 z-0">
             <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full mix-blend-screen" />
             <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 blur-[120px] rounded-full mix-blend-screen" />
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
           </div>
 
           <div className="container mx-auto px-6 relative z-10">

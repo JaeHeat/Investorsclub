@@ -22,7 +22,7 @@ export default function PendingApprovalPage() {
         <div className="flex items-center justify-center gap-2 mb-3">
           <Bitcoin size={18} style={{ color: "#F7931A" }} />
           <span className="text-sm font-medium tracking-wider uppercase" style={{ color: "#F7931A" }}>
-            Bitcoin Daily Advisory
+            Bitcoin Daily Consulting
           </span>
         </div>
 

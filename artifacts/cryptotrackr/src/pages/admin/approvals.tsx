@@ -51,6 +51,7 @@ function useAdminApprovals() {
 export default function AdminApprovalsPage() {
   const { pendingUsers, loading, error, load, approve } = useAdminApprovals();
   const [approving, setApproving] = useState<string | null>(null);
+  const [approveError, setApproveError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   if (!loaded) {
@@ -59,8 +60,11 @@ export default function AdminApprovalsPage() {
 
   async function handleApprove(userId: string, role: "client" | "admin") {
     setApproving(userId);
+    setApproveError(null);
     try {
       await approve(userId, role);
+    } catch {
+      setApproveError("Failed to approve user — please try again.");
     } finally {
       setApproving(null);
     }
@@ -107,6 +111,15 @@ export default function AdminApprovalsPage() {
             style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#EF4444" }}
           >
             {error}
+          </div>
+        )}
+
+        {approveError && (
+          <div
+            className="rounded-lg px-4 py-3 text-sm mb-4"
+            style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#EF4444" }}
+          >
+            {approveError}
           </div>
         )}
 
