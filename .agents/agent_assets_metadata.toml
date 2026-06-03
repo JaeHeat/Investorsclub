@@ -1,8 +1,13 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "mY3ShrtwaJ8s_fLK9Fed5"
 uri = "file://attached_assets/generated_images/btc_hero.png"
 type = "image"
 title = "generated_image"
+
+[[outputs]]
+id = "E_8Y6-dzUUukTAuDDasxF"
+uri = "file://.local/outputs/Bitcoin-Daily---Client-Onboarding.pdf"
+type = "pdf"
+title = "Bitcoin Daily — Client Onboarding (PDF)"

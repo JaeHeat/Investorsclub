@@ -17,13 +17,13 @@ export default function Slide1Title() {
       <Bg />
       <div style={{ position: "absolute", top: "5vh", left: "5vw", display: "flex", alignItems: "center", gap: "0.8vw", zIndex: 10 }}>
         <div style={{ width: "1.8vw", height: "1.8vw", backgroundColor: ORANGE, borderRadius: "0.35vw", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1vw", fontWeight: 700, color: BG }}>₿</div>
-        <div style={{ fontSize: "1.1vw", fontWeight: 700, letterSpacing: "-0.02em" }}>CryptoTrackr</div>
+        <div style={{ fontSize: "1.1vw", fontWeight: 700, letterSpacing: "-0.02em" }}>Bitcoin Daily</div>
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)", zIndex: 10 }}>2026</div>
 
       <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", maxWidth: "70vw" }}>
         <div style={{ display: "inline-flex", alignItems: "center", padding: "0.6vh 1.4vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: ORANGE, fontSize: "0.95vw", fontWeight: 600, marginBottom: "4vh", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
-          ₿ Client Onboarding · May 2026
+          ₿ Client Onboarding · June 2026
         </div>
         <h1 style={{ fontSize: "6.5vw", fontWeight: 900, margin: "0 0 2vh 0", lineHeight: 1.05, letterSpacing: "-0.04em" }}>
           Welcome to<br /><span style={{ color: ORANGE }}>Bitcoin Daily</span>

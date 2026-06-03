@@ -1,9 +1,9 @@
 export default function Slide12BearFloors() {
   const scenarios = [
-    { label: "Bear Floor", name: "Already Bottomed", price: "$74,500", drop: "-41% from ATH", color: "#06b6d4", badge: "Floor confirmed", note: "Cycle bottom established. Accumulation phase active." },
-    { label: "Mild Bear", name: "Soft Landing", price: "$62,000", drop: "-51% from ATH", color: "#22c55e", badge: "Possible", note: "Orderly correction with healthy on-chain demand." },
-    { label: "Standard Bear", name: "Historical Average", price: "$48,000", drop: "-62% from ATH", color: "#F7931A", badge: "Base case", note: "Aligns with 2017-style correction. Full cycle reset." },
-    { label: "Deep Bear", name: "Capitulation", price: "$28,000", drop: "-78% from ATH", color: "#ef4444", badge: "Tail risk", note: "Black swan event required. Full position protection mode." },
+    { label: "Current Level", name: "Prior ATH Support", price: "$69,000", drop: "-45% from ATH", color: "#06b6d4", badge: "Where we are", note: "BTC is holding the Nov 2021 prior-cycle ATH as support. Accumulation phase beginning." },
+    { label: "Mild Bear", name: "Soft Landing", price: "$55,000", drop: "-56% from ATH", color: "#22c55e", badge: "Possible", note: "Orderly correction into next key support. On-chain demand remains healthy." },
+    { label: "Standard Bear", name: "Historical Average", price: "$44,000", drop: "-65% from ATH", color: "#F7931A", badge: "Base case", note: "Aligns with 2017 and 2018-style corrections. Full cycle reset into deep value." },
+    { label: "Deep Bear", name: "Capitulation", price: "$26,000", drop: "-79% from ATH", color: "#ef4444", badge: "Tail risk", note: "Black swan event required. Full capital protection mode activated." },
   ];
 
   return (
@@ -13,7 +13,7 @@ export default function Slide12BearFloors() {
 
       <div style={{ position: "absolute", top: "5vh", left: "5vw", display: "flex", alignItems: "center", gap: "0.8vw", zIndex: 10 }}>
         <div style={{ width: "1.8vw", height: "1.8vw", backgroundColor: "#F7931A", borderRadius: "0.35vw", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1vw", fontWeight: 700, color: "#0C0F1A" }}>₿</div>
-        <div style={{ fontSize: "1.1vw", fontWeight: 700 }}>CryptoTrackr</div>
+        <div style={{ fontSize: "1.1vw", fontWeight: 700 }}>Bitcoin Daily</div>
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
       <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
@@ -21,7 +21,7 @@ export default function Slide12BearFloors() {
 
       <div style={{ position: "relative", zIndex: 10, width: "82vw" }}>
         <div style={{ textAlign: "center", marginBottom: "4vh" }}>
-          <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, marginBottom: "2vh", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Downside Planning</div>
+          <div style={{ display: "inline-flex", padding: "0.5vh 1.2vw", backgroundColor: "rgba(247,147,26,0.12)", border: "1px solid rgba(247,147,26,0.3)", borderRadius: "2vw", color: "#F7931A", fontSize: "0.9vw", fontWeight: 600, marginBottom: "2vh", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Downside Planning · ATH $126K</div>
           <h2 style={{ fontSize: "4.5vw", fontWeight: 800, margin: 0, lineHeight: 1.1, letterSpacing: "-0.03em" }}>We plan for every<br /><span style={{ color: "rgba(255,255,255,0.45)" }}>downside scenario.</span></h2>
         </div>
         <div style={{ display: "flex", gap: "2vw" }}>

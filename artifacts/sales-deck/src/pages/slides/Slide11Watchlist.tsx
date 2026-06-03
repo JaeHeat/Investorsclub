@@ -1,10 +1,10 @@
 export default function Slide11Watchlist() {
   const signals = [
-    { name: "Pi Cycle Top Indicator", status: "Neutral", color: "#06b6d4", desc: "Moving average convergence nearing historical peak zone." },
-    { name: "MVRV Z-Score", status: "Elevated", color: "#F7931A", desc: "Market value vs. realized value approaching caution territory." },
-    { name: "Fear & Greed Index", status: "Greed", color: "#a855f7", desc: "Sentiment elevated — historically precedes distribution phase." },
-    { name: "Hash Rate Trend", status: "Bullish", color: "#22c55e", desc: "Network security at all-time highs, supporting price floor." },
-    { name: "Exchange Reserves", status: "Declining", color: "#22c55e", desc: "BTC moving off exchanges — typical accumulation behavior." },
+    { name: "MVRV Z-Score", status: "Buy Zone", color: "#22c55e", desc: "Score at 0.8 — below 1.0 is the historical accumulation signal. Deep value territory." },
+    { name: "NUPL (Net Unrealized P/L)", status: "Fear Phase", color: "#06b6d4", desc: "NUPL at 0.18 — sitting in the Fear zone, consistent with late bear / early accumulation." },
+    { name: "Fear & Greed Index", status: "Extreme Fear", color: "#06b6d4", desc: "Index at 22 — historically one of the strongest long-term buy signals in Bitcoin." },
+    { name: "Puell Multiple", status: "Miner Lows", color: "#F7931A", desc: "At 0.48 — below 0.5 confirms miner capitulation territory. Reliable cycle bottom marker." },
+    { name: "Exchange Reserves", status: "Declining", color: "#22c55e", desc: "BTC moving off exchanges consistently — smart money accumulating quietly." },
   ];
 
   return (
@@ -14,7 +14,7 @@ export default function Slide11Watchlist() {
 
       <div style={{ position: "absolute", top: "5vh", left: "5vw", display: "flex", alignItems: "center", gap: "0.8vw", zIndex: 10 }}>
         <div style={{ width: "1.8vw", height: "1.8vw", backgroundColor: "#F7931A", borderRadius: "0.35vw", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1vw", fontWeight: 700, color: "#0C0F1A" }}>₿</div>
-        <div style={{ fontSize: "1.1vw", fontWeight: 700 }}>CryptoTrackr</div>
+        <div style={{ fontSize: "1.1vw", fontWeight: 700 }}>Bitcoin Daily</div>
       </div>
       <div style={{ position: "absolute", top: "5vh", right: "5vw", fontSize: "1vw", color: "rgba(255,255,255,0.45)" }}>2026</div>
       <div style={{ position: "absolute", bottom: "5vh", left: "5vw", fontSize: "0.85vw", color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>BITCOIN DAILY CONSULTING, LLC.</div>
