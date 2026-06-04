@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Check, X, UserCheck, Clock, Loader2, ChevronLeft } from "lucide-react";
 import { Link } from "wouter";
@@ -18,7 +18,7 @@ function useAdminApprovals() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     if (!user) return;
     try {
       setLoading(true);
@@ -32,7 +32,11 @@ function useAdminApprovals() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   async function approve(userId: string, role: "client" | "admin") {
     const res = await fetch(`/api/admin/users/${userId}/approve`, {
@@ -45,18 +49,13 @@ function useAdminApprovals() {
     setPendingUsers((prev) => prev.filter((u) => u.id !== userId));
   }
 
-  return { pendingUsers, loading, error, load, approve };
+  return { pendingUsers, loading, error, approve };
 }
 
 export default function AdminApprovalsPage() {
-  const { pendingUsers, loading, error, load, approve } = useAdminApprovals();
+  const { pendingUsers, loading, error, approve } = useAdminApprovals();
   const [approving, setApproving] = useState<string | null>(null);
   const [approveError, setApproveError] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
-
-  if (!loaded) {
-    load().then(() => setLoaded(true));
-  }
 
   async function handleApprove(userId: string, role: "client" | "admin") {
     setApproving(userId);

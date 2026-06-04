@@ -156,6 +156,9 @@ function EditClientModal({
         onboarding_completed: true,
         joined_at: client.joined_at,
         high_water_mark: client.high_water_mark,
+        experience_level: client.experience_level ?? null,
+        custody: client.custody ?? null,
+        monthly_dca_budget: client.monthly_dca_budget ?? null,
       };
 
       const res = await fetch(`/api/clients/${client.user_id}/profile`, {
@@ -832,6 +835,9 @@ export default function AdminClients() {
         initial_portfolio_value: c.profile?.initial_portfolio_value ?? null,
         high_water_mark: c.profile?.high_water_mark ?? null,
         joined_at: c.profile?.joined_at ?? c.createdAt ?? null,
+        experience_level: c.profile?.experience_level ?? null,
+        custody: c.profile?.custody ?? null,
+        monthly_dca_budget: c.profile?.monthly_dca_budget ?? null,
       }));
       const map = new Map<string, HoldingAsset[]>(
         apiClients.map((c) => [c.id, c.holdings as HoldingAsset[]])

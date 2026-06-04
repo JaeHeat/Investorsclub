@@ -66,6 +66,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         onboarding_completed: false,
         initial_portfolio_value: null,
         high_water_mark: null,
+        experience_level: null,
+        custody: null,
+        monthly_dca_budget: null,
       });
       setClientProfile(getClientProfile(userId));
     } else {

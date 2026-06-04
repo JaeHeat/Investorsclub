@@ -124,6 +124,7 @@ export default function OnboardingPage() {
     risk_tolerance: "",
     time_horizon: "",
     notes: "",
+    monthly_dca_budget: "",
   });
 
   const [holdingRows, setHoldingRows] = useState<HoldingRow[]>([]);
@@ -178,13 +179,17 @@ export default function OnboardingPage() {
     if (s === 1) {
       if (!form.full_name.trim()) errors.full_name = "Full name is required";
       if (!form.country.trim()) errors.country = "Country is required";
+      if (!form.experience_level) errors.experience_level = "Select your experience level";
     }
     if (s === 2) {
-      if (!form.in_crypto) {
-        const cash = parseFloat(form.cash_amount);
-        if (!form.cash_amount || isNaN(cash) || cash < 0)
-          errors.cash_amount = "Enter your total investable capital";
-      }
+      const hasValidHoldings = holdingRows.some((r) => parseFloat(r.amount) > 0);
+      if (!hasValidHoldings && !form.cash_amount.trim())
+        errors.cash_amount = "Enter your total capital — add holdings above or enter a cash amount below";
+      if (!form.custody)
+        errors.custody = "Select how you currently hold your crypto";
+      const dca = parseFloat(form.monthly_dca_budget);
+      if (!form.monthly_dca_budget || isNaN(dca) || dca < 0)
+        errors.monthly_dca_budget = "Enter your monthly DCA budget";
     }
     if (s === 3) {
       const cv = parseFloat(form.goal_conservative);
@@ -252,6 +257,9 @@ export default function OnboardingPage() {
       onboarding_completed: true,
       initial_portfolio_value: portfolioTotal || null,
       high_water_mark: portfolioTotal || null,
+      experience_level: form.experience_level || null,
+      custody: form.custody || null,
+      monthly_dca_budget: form.monthly_dca_budget ? parseFloat(form.monthly_dca_budget) : null,
     };
 
     upsertClientProfile(profileData);
@@ -433,6 +441,34 @@ export default function OnboardingPage() {
                     />
                   </div>
                   <p className="text-[10px] text-[hsl(0_0%_35%)] mt-1.5">Used to set up your private Discord channel</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
+                    Experience level <span className="text-red-400">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: "beginner",     label: "Beginner",     desc: "Less than 2 years" },
+                      { value: "intermediate", label: "Intermediate", desc: "2–5 years" },
+                      { value: "advanced",     label: "Advanced",     desc: "5+ years" },
+                    ].map((lvl) => (
+                      <button
+                        key={lvl.value}
+                        type="button"
+                        onClick={() => update("experience_level", lvl.value)}
+                        data-testid={`exp-${lvl.value}`}
+                        className="flex-1 p-3 rounded-xl text-center transition-all"
+                        style={{
+                          background: form.experience_level === lvl.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
+                          border: `1px solid ${form.experience_level === lvl.value ? "rgba(247,147,26,0.4)" : stepErrors.experience_level ? "rgba(239,68,68,0.4)" : "hsl(0 0% 16%)"}`,
+                        }}
+                      >
+                        <p className="text-xs font-medium text-white">{lvl.label}</p>
+                        <p className="text-[10px] text-[hsl(0_0%_45%)] mt-0.5">{lvl.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                  <FieldError field="experience_level" />
                 </div>
               </div>
             </div>
@@ -714,7 +750,7 @@ export default function OnboardingPage() {
               <div>
                 <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
                   Cash / dry powder{" "}
-                  <span className="text-[hsl(0_0%_40%)] normal-case font-normal">(optional)</span>
+                  <span className="text-[hsl(0_0%_40%)] normal-case font-normal">(required if no holdings above)</span>
                 </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
@@ -727,13 +763,70 @@ export default function OnboardingPage() {
                     min="0"
                     data-testid="input-cash"
                     className={`${inputClass} pl-7 pr-14`}
-                    style={inputStyle}
+                    style={stepErrors.cash_amount ? errorStyle : inputStyle}
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">USD</span>
                 </div>
                 <p className="text-[10px] text-[hsl(0_0%_35%)] mt-1.5">
                   Stablecoins, fiat reserves, or uninvested capital earmarked for the next cycle
                 </p>
+                <FieldError field="cash_amount" />
+              </div>
+
+              {/* How you hold your crypto */}
+              <div>
+                <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
+                  How do you currently hold your crypto? <span className="text-red-400">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: "exchange",     label: "Exchange",           desc: "Coinbase, Kraken, Binance, etc." },
+                    { value: "self_custody", label: "Hardware wallet",    desc: "Ledger, Trezor, or similar" },
+                    { value: "mixed",        label: "Mix of both",        desc: "Exchange + self-custody" },
+                    { value: "none",         label: "Not in crypto yet",  desc: "Starting from cash" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => update("custody", opt.value)}
+                      className="p-3 rounded-xl text-left transition-all"
+                      style={{
+                        background: form.custody === opt.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
+                        border: `1px solid ${form.custody === opt.value ? "rgba(247,147,26,0.4)" : stepErrors.custody ? "rgba(239,68,68,0.4)" : "hsl(0 0% 16%)"}`,
+                      }}
+                    >
+                      <p className="text-xs font-medium text-white">{opt.label}</p>
+                      <p className="text-[10px] text-[hsl(0_0%_45%)] mt-0.5">{opt.desc}</p>
+                    </button>
+                  ))}
+                </div>
+                <FieldError field="custody" />
+              </div>
+
+              {/* Monthly DCA budget */}
+              <div>
+                <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
+                  Monthly DCA budget during the buy window <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[hsl(0_0%_45%)]">$</span>
+                  <input
+                    type="number"
+                    value={form.monthly_dca_budget}
+                    onChange={(e) => update("monthly_dca_budget", e.target.value)}
+                    placeholder="e.g. 2500"
+                    step="100"
+                    min="0"
+                    data-testid="input-monthly-dca"
+                    className={`${inputClass} pl-7 pr-14`}
+                    style={stepErrors.monthly_dca_budget ? errorStyle : inputStyle}
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[hsl(0_0%_45%)]">/mo</span>
+                </div>
+                <p className="text-[10px] text-[hsl(0_0%_35%)] mt-1.5">
+                  How much you're comfortable investing each month when the accumulation window opens (Oct 2026)
+                </p>
+                <FieldError field="monthly_dca_budget" />
               </div>
             </div>
           )}

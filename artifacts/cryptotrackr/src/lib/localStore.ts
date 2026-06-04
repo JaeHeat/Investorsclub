@@ -50,6 +50,9 @@ function seedIfEmpty() {
       onboarding_completed: true,
       initial_portfolio_value: 150000,
       high_water_mark: 150000,
+      experience_level: "intermediate",
+      custody: "mixed",
+      monthly_dca_budget: 2500,
     },
   ];
 

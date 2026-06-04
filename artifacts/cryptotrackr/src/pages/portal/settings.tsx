@@ -193,6 +193,9 @@ export default function SettingsPage() {
       joined_at: clientProfile?.joined_at ?? null,
       onboarding_completed: clientProfile?.onboarding_completed ?? false,
       discord_role_claimed: clientProfile?.discord_role_claimed ?? false,
+      experience_level: clientProfile?.experience_level ?? null,
+      custody: clientProfile?.custody ?? null,
+      monthly_dca_budget: clientProfile?.monthly_dca_budget ?? null,
     };
     syncProfileToServer(profileForSync, validHoldings);
 

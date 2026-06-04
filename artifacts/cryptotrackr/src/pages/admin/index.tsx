@@ -46,6 +46,9 @@ function mapApiClients(apiClients: AdminClientData[]): { clients: ClientProfile[
     initial_portfolio_value: c.profile?.initial_portfolio_value ?? null,
     high_water_mark: c.profile?.high_water_mark ?? null,
     joined_at: c.profile?.joined_at ?? c.createdAt ?? null,
+    experience_level: c.profile?.experience_level ?? null,
+    custody: c.profile?.custody ?? null,
+    monthly_dca_budget: c.profile?.monthly_dca_budget ?? null,
   }));
   const holdingsMap = new Map<string, HoldingAsset[]>(
     apiClients.map((c) => [c.id, c.holdings as HoldingAsset[]])

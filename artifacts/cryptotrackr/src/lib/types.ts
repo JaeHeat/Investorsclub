@@ -29,6 +29,9 @@ export interface ClientProfile {
   initial_portfolio_value: number | null;
   high_water_mark: number | null;
   joined_at: string | null;
+  experience_level: string | null;
+  custody: string | null;
+  monthly_dca_budget: number | null;
 }
 
 export interface Milestone {
