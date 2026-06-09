@@ -19,6 +19,48 @@ bypasses OIDC with a mock user and seeds demo data. In production that env var i
 
 ---
 
+## Changelog — what shipped in this branch (`feature/portal-launch-prep`)
+
+**4-Year cycle thesis (the product spine)**
+- New flagship **"The 4-Year Cycle"** page (`pages/portal/thesis.tsx`) — thesis + live cycle position + **client-side historical proof** (every halving → new ATH, peak-over-peak) + **plan-vs-hold backtest** + phases-with-actions. Historical proof was previously admin-only.
+- **CycleClock** signature visual (`components/CycleClock.tsx`) + single phase model (`lib/cyclePhase.ts`).
+- **"Today / Your Next Move"** dashboard hero: live phase + the one action + buy-window countdown.
+- **Phase-change alert** banner (in-app; server push is item 3 below).
+- Admin-editable **cycle config** (`lib/cycleConfig.ts`, editor in `pages/admin/cycle.tsx`) + **live Fear & Greed** feed (`hooks/useFearGreed.ts`).
+- Renamed "Cycle Outlook" → **"Cycle Signals"** (detail) and cross-linked with the thesis (overview).
+
+**Delta-style portfolio**
+- Reconstructed **equity curve** from price history with 24H/1W/1M/3M/1Y/ALL tabs (`lib/priceHistory.ts`, `hooks/usePortfolioHistory.ts`, `components/EquityCurve.tsx`); snapshot fallback.
+- **Per-asset sparklines**, **best/worst performer** cards, 4-stat strip, big balance + period-change pill.
+- **Per-coin detail pages** (`pages/portal/asset.tsx`, `/portal/asset/:id`) — price chart + your position.
+- "Prices delayed" indicator; stopped blending cost-basis into current value.
+
+**Analytics & simulations**
+- **Risk-based DCA pacing** (conservative 12mo / moderate 6mo / aggressive 3mo) + **live dip-boosters** (`lib/dcaPlan.ts`).
+- **Monte Carlo probability forecast** + projection fan (`lib/forecast.ts`, `pages/portal/forecast.tsx`, `components/ForecastFan.tsx`).
+- **Bitcoin seasonality** monthly heatmap + quarterly bars (`lib/seasonality.ts`, `pages/portal/seasonality.tsx`).
+
+**Onboarding & personalization**
+- Deeper onboarding (4 steps): added objective, drawdown-reaction (behavioral risk), liquidity timeline; new profile fields editable in Settings; experience/custody/DCA-budget now used.
+
+**Brand, content, legal**
+- Unified brand to **Bitcoin Daily**; real meta/OG description on landing; global disclaimer footer.
+- **Terms of Service** + **Privacy Policy** (`pages/legal/`, public `/terms` `/privacy`) — educational-consultation framing.
+
+**Launch hardening & reliability**
+- **Demo seed gated** behind `VITE_LOCAL_DEMO` → production starts clean (no demo/other-client data).
+- **CSRF** origin-check on mutations, **rate limiting** (login 20/min, global 300/min), tightened profile-PUT validation + 64kb body cap (`api-server/middlewares/`).
+- **Keyless Coinbase price/history fallback** (client + server) for CoinGecko outages — no API key needed.
+- Wired the previously-unused typed **api-client-react** into the auth path; server-side CoinGecko proxy + caching.
+- **Code-split** the ~1MB bundle (lazy routes + vendor chunks); **vitest** + 15 money-math smoke tests.
+
+**Bug fixes**
+- Nested `<a>` (wouter v3) hydration errors; "++" double-plus percent formatting; admin empty-data fallback; deleted dead `localAuth.ts` (hardcoded creds); framer-motion `ease` typing; redundant profile-PUT spam.
+
+> Full per-change detail is in the git history of this branch.
+
+---
+
 ## 1. Stand up the backend and verify the real flow  **(P0 — blocker)**
 
 The OIDC login → onboarding → approval → data-sync path has **never run against a real backend**.
