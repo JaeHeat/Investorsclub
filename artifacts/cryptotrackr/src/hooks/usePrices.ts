@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { fetchSimplePrices } from "@/lib/priceFeed";
 
 export function usePrices(coinIds: string[]): {
   prices: Record<string, number>;
@@ -15,34 +16,31 @@ export function usePrices(coinIds: string[]): {
       return;
     }
 
-    const ids = coinIds.join(",");
+    let cancelled = false;
 
     async function fetchPrices() {
-      try {
-        const res = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
-          { signal: AbortSignal.timeout(8000) }
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        const priceResult: Record<string, number> = {};
-        const changeResult: Record<string, number> = {};
-        for (const id of coinIds) {
-          if (data[id]?.usd) priceResult[id] = data[id].usd;
-          if (data[id]?.usd_24h_change != null) changeResult[id] = data[id].usd_24h_change;
-        }
-        setPrices(priceResult);
-        setChanges24h(changeResult);
-      } catch {
-        // silently keep last known prices
-      } finally {
+      const data = await fetchSimplePrices(coinIds);
+      if (cancelled || !data) {
         setLoading(false);
+        return;
       }
+      const priceResult: Record<string, number> = {};
+      const changeResult: Record<string, number> = {};
+      for (const id of coinIds) {
+        if (data[id]?.usd) priceResult[id] = data[id].usd;
+        if (data[id]?.usd_24h_change != null) changeResult[id] = data[id].usd_24h_change!;
+      }
+      setPrices(priceResult);
+      setChanges24h(changeResult);
+      setLoading(false);
     }
 
     fetchPrices();
     const interval = setInterval(fetchPrices, 60_000);
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [coinIds.join(",")]);
 
   return { prices, changes24h, loading };

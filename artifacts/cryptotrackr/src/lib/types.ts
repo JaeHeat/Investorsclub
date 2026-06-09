@@ -32,6 +32,12 @@ export interface ClientProfile {
   experience_level: string | null;
   custody: string | null;
   monthly_dca_budget: number | null;
+  // Deeper personalization (optional — collected in onboarding, editable in settings)
+  primary_objective?: string | null; // generational_wealth | financial_freedom | retirement | major_purchase | income
+  objective_detail?: string | null; // free-text "what this money is for"
+  drawdown_reaction?: string | null; // buy_more | hold | trim | sell — behavioral risk
+  liquidity_needs?: string | null; // none | within_1yr | 1_3yr | flexible
+  team_note?: string | null; // a personal note set by the Bitcoin Daily team, shown on the client's dashboard
 }
 
 export interface Milestone {

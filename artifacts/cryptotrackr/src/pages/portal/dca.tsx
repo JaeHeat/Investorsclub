@@ -3,10 +3,13 @@ import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHoldings } from "@/lib/localStore";
 import { usePrices } from "@/hooks/usePrices";
+import { useFearGreed } from "@/hooks/useFearGreed";
+import { getCycleConfig } from "@/lib/cycleConfig";
+import { getDcaSchedule, getBoosters } from "@/lib/dcaPlan";
 import { formatUSD } from "@/lib/utils";
 import { getPortfolioPlan, CYCLE_SCENARIOS, calculateProjection } from "@/lib/portfolioPlans";
 import PortalLayout from "@/components/layout/PortalLayout";
-import { RefreshCw, Info } from "lucide-react";
+import { RefreshCw, Info, Gauge, Zap, TrendingDown } from "lucide-react";
 
 const MIN_MONTHLY = 100;
 const MAX_MONTHLY = 50000;
@@ -18,13 +21,17 @@ export default function DcaPage() {
   const [monthlyInput, setMonthlyInput] = useState("500");
 
   useEffect(() => {
-    document.title = "DCA Planner — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "DCA Planner — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   const holdings = useMemo(() => (user ? getHoldings(user.id) : []), [user]);
-  const allCoinIds = useMemo(() => [...new Set(holdings.map((h) => h.coingecko_id))], [holdings]);
+  const allCoinIds = useMemo(
+    () => [...new Set(["bitcoin", ...holdings.map((h) => h.coingecko_id)])],
+    [holdings]
+  );
   const { prices } = usePrices(allCoinIds);
+  const { data: fng } = useFearGreed();
 
   const totalLive = useMemo(() => {
     return holdings.reduce((s, h) => {
@@ -38,8 +45,32 @@ export default function DcaPage() {
   const plan = useMemo(() => getPortfolioPlan(risk, initialValue), [risk, initialValue]);
   const base = totalLive > 0 ? totalLive : initialValue;
 
+  // Risk-based pacing + live dip-boosters
+  const schedule = useMemo(() => getDcaSchedule(risk), [risk]);
+  const cycleConfig = useMemo(() => getCycleConfig(), []);
+  const btcPrice = prices["bitcoin"] ?? null;
+  const drawdownPct = btcPrice ? ((btcPrice - cycleConfig.peakPrice) / cycleConfig.peakPrice) * 100 : null;
+  const { boosters, totalBoostPct } = useMemo(
+    () => getBoosters({ fearGreed: fng?.value ?? null, drawdownPct, risk }),
+    [fng?.value, drawdownPct, risk]
+  );
+
+  // Personalize the planner defaults from the client's saved budget + risk pace.
+  const [initialized, setInitialized] = useState(false);
+  useEffect(() => {
+    if (initialized || !clientProfile) return;
+    if (clientProfile.monthly_dca_budget) {
+      setMonthly(clientProfile.monthly_dca_budget);
+      setMonthlyInput(String(clientProfile.monthly_dca_budget));
+    }
+    setMonths(getDcaSchedule(clientProfile.risk_tolerance).windowMonths);
+    setInitialized(true);
+  }, [clientProfile, initialized]);
+
   const totalDca = monthly * months;
-  const dcaCompoundFactor = 0.5;
+  // Higher risk front-loads into the bottom → more time in market → a higher
+  // effective compounding factor on contributions.
+  const dcaCompoundFactor = risk === "aggressive" ? 0.6 : risk === "conservative" ? 0.4 : 0.5;
 
   const projections = useMemo(() => {
     if (base <= 0) return null;
@@ -95,6 +126,58 @@ export default function DcaPage() {
         <p className="text-sm text-[hsl(0_0%_42%)]">
           See how regular contributions compound your cycle projections.
         </p>
+      </div>
+
+      {/* Risk-based accumulation cadence + live dip-boosters */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
+        <div className="flex items-center gap-2 mb-1">
+          <Gauge className="w-4 h-4" style={{ color: "#F7931A" }} />
+          <h2 className="text-sm font-semibold text-white">Your accumulation cadence</h2>
+          <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}>
+            {risk}
+          </span>
+        </div>
+        <p className="text-xs text-[hsl(0_0%_45%)] mb-4">{schedule.pace}</p>
+
+        {/* Front-loading curve */}
+        <div className="flex items-end gap-1.5 h-20 mb-1.5">
+          {schedule.tranches.map((t) => (
+            <div key={t.label} className="flex-1 flex flex-col items-center justify-end h-full">
+              <span className="text-[10px] font-semibold mb-1" style={{ color: "#F7931A" }}>{t.pct}%</span>
+              <div className="w-full rounded-t" style={{ height: `${t.pct * 1.4}%`, minHeight: 6, background: "linear-gradient(180deg, #F7931A, rgba(247,147,26,0.35))" }} />
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-1.5 mb-4">
+          {schedule.tranches.map((t) => (
+            <p key={t.label} className="flex-1 text-center text-[9px] text-[hsl(0_0%_42%)] leading-tight">{t.monthsLabel}</p>
+          ))}
+        </div>
+
+        {/* Live dip-boosters */}
+        <div className="rounded-xl p-3.5" style={{ background: "hsl(0 0% 9%)" }}>
+          <div className="flex items-center gap-2 mb-2.5">
+            <Zap className="w-3.5 h-3.5" style={{ color: totalBoostPct > 0 ? "#22c55e" : "hsl(0 0% 40%)" }} />
+            <p className="text-xs font-semibold text-white">Live dip-boosters</p>
+            <span className="ml-auto text-xs font-bold" style={{ color: totalBoostPct > 0 ? "#22c55e" : "hsl(0 0% 45%)" }}>
+              {totalBoostPct > 0 ? `+${totalBoostPct}% this month` : "None active"}
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {boosters.map((b) => (
+              <div key={b.id} className="flex items-center gap-2 text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: b.active ? "#22c55e" : "hsl(0 0% 25%)" }} />
+                <span style={{ color: b.active ? "white" : "hsl(0 0% 45%)" }}>{b.label}</span>
+                <span className="text-[hsl(0_0%_38%)] hidden sm:inline">— {b.detail}</span>
+                {b.active && <span className="ml-auto font-semibold text-green-400">+{b.boostPct}%</span>}
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-[hsl(0_0%_32%)] mt-2.5 leading-relaxed flex items-start gap-1.5">
+            <TrendingDown className="w-3 h-3 shrink-0 mt-0.5" />
+            Boosters add to your monthly buy when fear and discounts spike — capped at +{schedule.boosterCapPct}% for your {risk} profile.
+          </p>
+        </div>
       </div>
 
       {/* Controls */}
@@ -182,13 +265,12 @@ export default function DcaPage() {
             <p className="text-xs text-[hsl(0_0%_35%)] mt-1.5 mb-4 leading-relaxed">
               Add your holdings and starting portfolio value in Settings to see personalised DCA projections.
             </p>
-            <Link href="/portal/settings">
-              <a
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-                style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}
-              >
-                Go to Settings
-              </a>
+            <Link
+              href="/portal/settings"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+              style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}
+            >
+              Go to Settings
             </Link>
           </div>
         )}

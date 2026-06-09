@@ -1,18 +1,19 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { 
   ArrowRight, ShieldCheck, Target, TrendingUp, LineChart, Lock,
   BarChart4, BrainCircuit, Activity, ChevronDown, CheckCircle2,
   CalendarDays, PlaySquare, Mail, AlertTriangle, ArrowUpRight, Menu, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useFearGreedView } from "@/hooks/useFearGreedView";
 
-const fadeIn = {
+const fadeIn: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.21, 0.47, 0.32, 0.98] } }
 };
 
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -29,6 +30,17 @@ const NAV_LINKS = [
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const fg = useFearGreedView();
+
+  // Cycle widget values — live Fear & Greed when available, else a sensible static default.
+  const cycle = {
+    zone: fg?.zone ?? "Accumulation Zone",
+    color: fg?.color ?? "#34d399",
+    pct: fg?.value ?? 24,
+    status: fg?.status ?? "Buy",
+    conviction: fg?.conviction ?? "High",
+    live: fg != null,
+  };
 
   function closeMenu() { setMobileMenuOpen(false); }
 
@@ -195,39 +207,47 @@ export default function Home() {
                 <div className="relative bg-[#0C0F1A]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-10 shadow-2xl">
                   <div className="flex items-center justify-between mb-10">
                     <div>
-                      <div className="text-sm text-white/40 font-mono mb-2 uppercase tracking-wider">Cycle Indicator</div>
-                      <div className="text-3xl font-bold text-emerald-400 flex items-center gap-3">
+                      <div className="text-sm text-white/40 font-mono mb-2 uppercase tracking-wider flex items-center gap-2">
+                        Cycle Indicator
+                        {cycle.live && (
+                          <span className="flex items-center gap-1 text-[10px] font-semibold normal-case tracking-normal px-1.5 py-0.5 rounded" style={{ background: "rgba(52,211,153,0.12)", color: "#34d399" }}>
+                            <span className="w-1 h-1 rounded-full" style={{ background: "#34d399" }} />Live
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-3xl font-bold flex items-center gap-3" style={{ color: cycle.color }}>
                         <Activity className="w-8 h-8" />
-                        Accumulation Zone
+                        {cycle.zone}
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-white/60">Current Phase Progress</span>
-                        <span className="text-emerald-400 font-mono">24%</span>
+                        <span className="text-white/60">{cycle.live ? "Fear & Greed Index" : "Current Phase Progress"}</span>
+                        <span className="font-mono" style={{ color: cycle.color }}>{cycle.pct}{cycle.live ? "/100" : "%"}</span>
                       </div>
                       <div className="h-3 w-full bg-[#0A0C14] rounded-full overflow-hidden border border-white/5 relative">
-                        <motion.div 
+                        <motion.div
                           initial={{ width: 0 }}
-                          whileInView={{ width: "24%" }}
+                          whileInView={{ width: `${cycle.pct}%` }}
                           viewport={{ once: true }}
                           transition={{ duration: 1.5, delay: 0.5 }}
-                          className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full" 
+                          className="h-full rounded-full"
+                          style={{ background: cycle.color }}
                         />
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/5">
                       <div className="text-center">
                         <div className="text-xs text-white/40 uppercase mb-1">Status</div>
-                        <div className="text-sm font-semibold text-white">Buy</div>
+                        <div className="text-sm font-semibold text-white">{cycle.status}</div>
                       </div>
                       <div className="text-center border-x border-white/5">
                         <div className="text-xs text-white/40 uppercase mb-1">Conviction</div>
-                        <div className="text-sm font-semibold text-white">High</div>
+                        <div className="text-sm font-semibold text-white">{cycle.conviction}</div>
                       </div>
                       <div className="text-center">
                         <div className="text-xs text-white/40 uppercase mb-1">Timeframe</div>

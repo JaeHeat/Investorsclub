@@ -12,7 +12,7 @@ export default function NotFound() {
       <div className="w-full max-w-sm text-center">
         <div className="flex items-center justify-center gap-2 mb-10">
           <Bitcoin className="w-6 h-6" style={{ color: "#F7931A" }} />
-          <span className="text-base font-semibold text-white tracking-tight">CryptoTrackr</span>
+          <span className="text-base font-semibold text-white tracking-tight">Bitcoin Daily</span>
         </div>
 
         <p className="text-6xl font-bold mb-4" style={{ color: "#F7931A" }}>404</p>

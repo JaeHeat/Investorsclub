@@ -107,8 +107,8 @@ export default function EVPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    document.title = "EV Tool — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "EV Tool — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   const holdings     = useMemo(() => (user ? getHoldings(user.id) : []), [user]);
@@ -369,9 +369,7 @@ export default function EVPage() {
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "#f59e0b" }} />
                   <p className="text-[11px] text-[hsl(0_0%_45%)] leading-relaxed">
                     Add your BTC holdings in{" "}
-                    <Link href="/portal/settings">
-                      <a style={{ color: "#F7931A" }}>Settings</a>
-                    </Link>{" "}
+                    <Link href="/portal/settings" style={{ color: "#F7931A" }}>Settings</Link>{" "}
                     to see your personalised exit EV with exact dollar projections.
                   </p>
                 </div>

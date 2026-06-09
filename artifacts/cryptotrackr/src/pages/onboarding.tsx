@@ -7,19 +7,41 @@ import type { HoldingAsset } from "@/lib/types";
 import {
   Bitcoin, ChevronRight, ChevronLeft, Check, AlertCircle,
   Calendar, ClipboardList, BarChart2, Plus, X, Wallet,
-  MessageCircle, Bell, Users, ExternalLink, Shield,
+  MessageCircle, Bell, Users, ExternalLink, Shield, Compass,
 } from "lucide-react";
 import { updateClientSettings } from "@/lib/localStore";
 
 // ── Update this to your actual Discord server invite URL ──────────────────
 const DISCORD_INVITE_URL = "https://discord.gg/your-invite-code";
 
-const STEPS = 3;
+const STEPS = 4;
 
 const RISK_LEVELS = [
   { value: "conservative", label: "Conservative", description: "Capital preservation first" },
   { value: "moderate", label: "Moderate", description: "Balanced risk/reward" },
   { value: "aggressive", label: "Aggressive", description: "Maximum growth potential" },
+];
+
+const OBJECTIVES = [
+  { value: "generational_wealth", label: "Generational wealth", desc: "Build a lasting nest egg to pass on" },
+  { value: "financial_freedom", label: "Financial freedom", desc: "Escape the 9–5 / work optional" },
+  { value: "retirement", label: "Retirement", desc: "Fund a comfortable retirement" },
+  { value: "major_purchase", label: "A specific goal", desc: "A home, a business, a milestone" },
+  { value: "income", label: "Income & growth", desc: "Grow capital, take some profit along the way" },
+];
+
+const DRAWDOWN_REACTIONS = [
+  { value: "buy_more", label: "Buy more", desc: "A 50% drop is a gift — I'd add aggressively" },
+  { value: "hold", label: "Hold steady", desc: "I'd sit tight and stick to the plan" },
+  { value: "trim", label: "Trim some", desc: "I'd take a little off to sleep at night" },
+  { value: "sell", label: "Protect capital", desc: "I'd sell to limit further losses" },
+];
+
+const LIQUIDITY_OPTIONS = [
+  { value: "none", label: "Not for years", desc: "This is long-term capital" },
+  { value: "1_3yr", label: "In 1–3 years", desc: "I may need some by the next cycle" },
+  { value: "within_1yr", label: "Within 12 months", desc: "I might need access soon" },
+  { value: "flexible", label: "Flexible", desc: "No fixed timeline" },
 ];
 
 const TIME_HORIZONS = [
@@ -125,6 +147,10 @@ export default function OnboardingPage() {
     time_horizon: "",
     notes: "",
     monthly_dca_budget: "",
+    primary_objective: "",
+    objective_detail: "",
+    drawdown_reaction: "",
+    liquidity_needs: "",
   });
 
   const [holdingRows, setHoldingRows] = useState<HoldingRow[]>([]);
@@ -204,6 +230,11 @@ export default function OnboardingPage() {
       if (!form.risk_tolerance) errors.risk_tolerance = "Select a risk tolerance";
       if (!form.time_horizon) errors.time_horizon = "Select a time horizon";
     }
+    if (s === 4) {
+      if (!form.primary_objective) errors.primary_objective = "Pick what this capital is really for";
+      if (!form.drawdown_reaction) errors.drawdown_reaction = "Tell us how you'd react to a big drop";
+      if (!form.liquidity_needs) errors.liquidity_needs = "Let us know your liquidity timeline";
+    }
 
     return errors;
   }
@@ -260,13 +291,17 @@ export default function OnboardingPage() {
       experience_level: form.experience_level || null,
       custody: form.custody || null,
       monthly_dca_budget: form.monthly_dca_budget ? parseFloat(form.monthly_dca_budget) : null,
+      primary_objective: form.primary_objective || null,
+      objective_detail: form.objective_detail || null,
+      drawdown_reaction: form.drawdown_reaction || null,
+      liquidity_needs: form.liquidity_needs || null,
     };
 
     upsertClientProfile(profileData);
     syncProfileToServer(profileData, validHoldings);
 
     refreshClientProfile();
-    setStep(4); // Discord connect step
+    setStep(5); // Discord connect step
     setSubmitting(false);
   }
 
@@ -302,7 +337,7 @@ export default function OnboardingPage() {
       <div className="w-full max-w-lg">
         <div className="flex items-center gap-2 justify-center mb-10">
           <Bitcoin className="w-6 h-6" style={{ color: "#F7931A" }} />
-          <span className="text-lg font-semibold tracking-tight text-white">CryptoTrackr</span>
+          <span className="text-lg font-semibold tracking-tight text-white">Bitcoin Daily</span>
         </div>
 
         {step >= 1 && step <= STEPS && (
@@ -336,6 +371,7 @@ export default function OnboardingPage() {
                   { icon: ClipboardList, label: "Your details",         desc: "Name, country, timezone, and Discord handle" },
                   { icon: Wallet,        label: "Your holdings",        desc: "Each asset, quantity, avg entry price, and any cash / dry powder" },
                   { icon: Calendar,      label: "Investment goals",     desc: "Conservative, target, and moonshot exit values + risk and time horizon" },
+                  { icon: Compass,       label: "Your why & temperament", desc: "What this capital is for, how you handle big drops, and your timeline" },
                 ].map(({ icon: Icon, label, desc }) => (
                   <div
                     key={label}
@@ -969,8 +1005,115 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── STEP 4: Discord connect ───────────────────────────────────── */}
+          {/* ── STEP 4: Your why & temperament ─────────────────────────────── */}
           {step === 4 && (
+            <div data-testid="onboarding-step-4">
+              <h2 className="text-xl font-semibold text-white mb-1">Your why &amp; temperament</h2>
+              <p className="text-sm text-[hsl(0_0%_50%)] mb-6 leading-relaxed">
+                This shapes how we pace your plan and what we surface for you. The more honest, the more personal it gets.
+              </p>
+              <div className="space-y-6">
+                {/* Primary objective */}
+                <div>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
+                    What is this capital really for? <span className="text-red-400">*</span>
+                  </label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {OBJECTIVES.map((o) => (
+                      <button
+                        key={o.value}
+                        type="button"
+                        onClick={() => update("primary_objective", o.value)}
+                        data-testid={`objective-${o.value}`}
+                        className="p-3 rounded-xl text-left transition-all"
+                        style={{
+                          background: form.primary_objective === o.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
+                          border: `1px solid ${form.primary_objective === o.value ? "rgba(247,147,26,0.4)" : stepErrors.primary_objective ? "rgba(239,68,68,0.4)" : "hsl(0 0% 16%)"}`,
+                        }}
+                      >
+                        <p className="text-sm font-medium text-white">{o.label}</p>
+                        <p className="text-[11px] text-[hsl(0_0%_45%)] mt-0.5">{o.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                  <FieldError field="primary_objective" />
+                </div>
+
+                {/* Objective detail */}
+                <div>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-1.5 uppercase tracking-wide">
+                    In your words{" "}
+                    <span className="text-[hsl(0_0%_40%)] normal-case font-normal">(optional)</span>
+                  </label>
+                  <textarea
+                    value={form.objective_detail}
+                    onChange={(e) => update("objective_detail", e.target.value)}
+                    placeholder="e.g. Retire by 50 and buy a place on the coast"
+                    rows={2}
+                    data-testid="input-objective-detail"
+                    className="w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none resize-none"
+                    style={inputStyle}
+                  />
+                  <p className="text-[10px] text-[hsl(0_0%_35%)] mt-1.5">We'll keep your target front and center as you track progress.</p>
+                </div>
+
+                {/* Drawdown reaction */}
+                <div>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
+                    If Bitcoin dropped 50% from here, you'd most likely… <span className="text-red-400">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DRAWDOWN_REACTIONS.map((o) => (
+                      <button
+                        key={o.value}
+                        type="button"
+                        onClick={() => update("drawdown_reaction", o.value)}
+                        data-testid={`drawdown-${o.value}`}
+                        className="p-3 rounded-xl text-left transition-all"
+                        style={{
+                          background: form.drawdown_reaction === o.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
+                          border: `1px solid ${form.drawdown_reaction === o.value ? "rgba(247,147,26,0.4)" : stepErrors.drawdown_reaction ? "rgba(239,68,68,0.4)" : "hsl(0 0% 16%)"}`,
+                        }}
+                      >
+                        <p className="text-xs font-medium text-white">{o.label}</p>
+                        <p className="text-[10px] text-[hsl(0_0%_45%)] mt-0.5">{o.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                  <FieldError field="drawdown_reaction" />
+                </div>
+
+                {/* Liquidity needs */}
+                <div>
+                  <label className="block text-xs font-medium text-[hsl(0_0%_60%)] mb-2.5 uppercase tracking-wide">
+                    When might you need to access this capital? <span className="text-red-400">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {LIQUIDITY_OPTIONS.map((o) => (
+                      <button
+                        key={o.value}
+                        type="button"
+                        onClick={() => update("liquidity_needs", o.value)}
+                        data-testid={`liquidity-${o.value}`}
+                        className="p-3 rounded-xl text-left transition-all"
+                        style={{
+                          background: form.liquidity_needs === o.value ? "rgba(247,147,26,0.1)" : "hsl(0 0% 10%)",
+                          border: `1px solid ${form.liquidity_needs === o.value ? "rgba(247,147,26,0.4)" : stepErrors.liquidity_needs ? "rgba(239,68,68,0.4)" : "hsl(0 0% 16%)"}`,
+                        }}
+                      >
+                        <p className="text-xs font-medium text-white">{o.label}</p>
+                        <p className="text-[10px] text-[hsl(0_0%_45%)] mt-0.5">{o.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                  <FieldError field="liquidity_needs" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── STEP 5: Discord connect ───────────────────────────────────── */}
+          {step === 5 && (
             <div data-testid="onboarding-discord">
               {/* Header */}
               <div className="flex items-center gap-3 mb-6">
@@ -1055,7 +1198,7 @@ export default function OnboardingPage() {
                   <button
                     type="button"
                     data-testid="button-discord-continue"
-                    onClick={() => setStep(5)}
+                    onClick={() => setStep(6)}
                     className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold"
                     style={{ background: "#F7931A", color: "#0A0A0A" }}
                   >
@@ -1069,7 +1212,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   data-testid="button-skip-discord"
-                  onClick={() => setStep(5)}
+                  onClick={() => setStep(6)}
                   className="w-full mt-3 py-2 text-sm text-center transition-colors"
                   style={{ color: "hsl(0 0% 38%)" }}
                 >
@@ -1079,8 +1222,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── STEP 5: Done ──────────────────────────────────────────────── */}
-          {step === 5 && (
+          {/* ── STEP 6: Done ──────────────────────────────────────────────── */}
+          {step === 6 && (
             <div data-testid="onboarding-complete" className="text-center">
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5"

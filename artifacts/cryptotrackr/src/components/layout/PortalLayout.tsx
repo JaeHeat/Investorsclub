@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { getReports, getReadReports } from "@/lib/localStore";
 import { Link, useLocation } from "wouter";
-import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, PieChart, LogOut, Menu, X, TrendingDown, TrendingUp, RefreshCw, Eye, Shield, Settings, BookOpen, Calculator, Zap } from "lucide-react";
+import { Bitcoin, LayoutDashboard, Target, Map, FileText, MessageSquare, Activity, PieChart, LogOut, Menu, X, TrendingDown, TrendingUp, RefreshCw, Eye, Shield, Settings, BookOpen, Calculator, Zap, Sparkles, CalendarDays, Repeat } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const NAV_GROUPS = [
@@ -15,12 +15,20 @@ const NAV_GROUPS = [
   {
     label: "Strategy",
     items: [
-      { icon: Activity,        label: "Cycle Outlook",   href: "/portal/cycle" },
+      { icon: Repeat,          label: "The 4-Year Cycle", href: "/portal/thesis" },
+      { icon: Activity,        label: "Cycle Signals",   href: "/portal/cycle" },
       { icon: PieChart,        label: "Portfolio Plan",  href: "/portal/plan" },
       { icon: TrendingUp,      label: "Entry Strategy",  href: "/portal/entry" },
       { icon: TrendingDown,    label: "Exit Strategy",   href: "/portal/exit" },
       { icon: RefreshCw,       label: "DCA Planner",     href: "/portal/dca" },
       { icon: Zap,             label: "EV Tool",          href: "/portal/ev" },
+    ],
+  },
+  {
+    label: "Analytics",
+    items: [
+      { icon: Sparkles,        label: "Probability Forecast", href: "/portal/forecast" },
+      { icon: CalendarDays,    label: "Seasonality",     href: "/portal/seasonality" },
     ],
   },
   {
@@ -59,25 +67,25 @@ function NavItem({ icon: Icon, label, href, location, badge, onClick }: {
 }) {
   const active = href === "/portal" ? location === "/portal" : location.startsWith(href);
   return (
-    <Link key={href} href={href}>
-      <a
-        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all"
-        style={{
-          background: active ? "rgba(247,147,26,0.08)" : "transparent",
-          color: active ? "#F7931A" : "hsl(0 0% 65%)",
-        }}
-        data-testid={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
-        onClick={onClick}
-      >
-        <Icon className="w-4 h-4 shrink-0" />
-        <span className="flex-1">{label}</span>
-        {badge != null && badge > 0 && (
-          <span
-            className="w-2 h-2 rounded-full shrink-0"
-            style={{ background: "#F7931A" }}
-          />
-        )}
-      </a>
+    <Link
+      key={href}
+      href={href}
+      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all"
+      style={{
+        background: active ? "rgba(247,147,26,0.08)" : "transparent",
+        color: active ? "#F7931A" : "hsl(0 0% 65%)",
+      }}
+      data-testid={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
+      onClick={onClick}
+    >
+      <Icon className="w-4 h-4 shrink-0" />
+      <span className="flex-1">{label}</span>
+      {badge != null && badge > 0 && (
+        <span
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{ background: "#F7931A" }}
+        />
+      )}
     </Link>
   );
 }
@@ -121,7 +129,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       >
         <div className="px-5 h-16 flex items-center gap-2.5 shrink-0" style={{ borderBottom: "1px solid hsl(0 0% 10%)" }}>
           <Bitcoin className="w-5 h-5" style={{ color: "#F7931A" }} />
-          <span className="text-sm font-semibold tracking-tight text-white">CryptoTrackr</span>
+          <span className="text-sm font-semibold tracking-tight text-white">Bitcoin Daily</span>
         </div>
 
         <div className="flex-1 py-4 overflow-y-auto">
@@ -154,18 +162,17 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         </div>
 
         <div className="px-3 py-4" style={{ borderTop: "1px solid hsl(0 0% 10%)" }}>
-          <Link href="/portal/settings">
-            <a
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all mb-1"
-              style={{
-                background: location === "/portal/settings" ? "rgba(247,147,26,0.08)" : "transparent",
-                color: location === "/portal/settings" ? "#F7931A" : "hsl(0 0% 65%)",
-              }}
-              data-testid="nav-settings"
-            >
-              <Settings className="w-4 h-4 shrink-0" />
-              Settings
-            </a>
+          <Link
+            href="/portal/settings"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all mb-1"
+            style={{
+              background: location === "/portal/settings" ? "rgba(247,147,26,0.08)" : "transparent",
+              color: location === "/portal/settings" ? "#F7931A" : "hsl(0 0% 65%)",
+            }}
+            data-testid="nav-settings"
+          >
+            <Settings className="w-4 h-4 shrink-0" />
+            Settings
           </Link>
           <button
             onClick={handleSignOut}
@@ -182,7 +189,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <div className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center justify-between px-4" style={{ background: "hsl(0 0% 5%)", borderBottom: "1px solid hsl(0 0% 12%)" }}>
         <div className="flex items-center gap-2">
           <Bitcoin className="w-5 h-5" style={{ color: "#F7931A" }} />
-          <span className="text-sm font-semibold text-white">CryptoTrackr</span>
+          <span className="text-sm font-semibold text-white">Bitcoin Daily</span>
         </div>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="text-[hsl(0_0%_55%)]" data-testid="button-mobile-menu">
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -203,21 +210,21 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                     const active = href === "/portal" ? location === "/portal" : location.startsWith(href);
                     const hasUnread = href === "/portal/reports" && unreadReports > 0;
                     return (
-                      <Link key={href} href={href}>
-                        <a
-                          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all"
-                          onClick={() => setMobileOpen(false)}
-                          style={{
-                            background: active ? "rgba(247,147,26,0.08)" : "transparent",
-                            color: active ? "#F7931A" : "hsl(0 0% 65%)",
-                          }}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span className="flex-1">{label}</span>
-                          {hasUnread && (
-                            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#F7931A" }} />
-                          )}
-                        </a>
+                      <Link
+                        key={href}
+                        href={href}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all"
+                        onClick={() => setMobileOpen(false)}
+                        style={{
+                          background: active ? "rgba(247,147,26,0.08)" : "transparent",
+                          color: active ? "#F7931A" : "hsl(0 0% 65%)",
+                        }}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span className="flex-1">{label}</span>
+                        {hasUnread && (
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#F7931A" }} />
+                        )}
                       </Link>
                     );
                   })}
@@ -226,18 +233,17 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             ))}
             <div>
               <p className="px-4 mb-1 text-[10px] font-semibold uppercase tracking-wider text-[hsl(0_0%_30%)]">Account</p>
-              <Link href="/portal/settings">
-                <a
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all"
-                  onClick={() => setMobileOpen(false)}
-                  style={{
-                    background: location === "/portal/settings" ? "rgba(247,147,26,0.08)" : "transparent",
-                    color: location === "/portal/settings" ? "#F7931A" : "hsl(0 0% 65%)",
-                  }}
-                >
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </a>
+              <Link
+                href="/portal/settings"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all"
+                onClick={() => setMobileOpen(false)}
+                style={{
+                  background: location === "/portal/settings" ? "rgba(247,147,26,0.08)" : "transparent",
+                  color: location === "/portal/settings" ? "#F7931A" : "hsl(0 0% 65%)",
+                }}
+              >
+                <Settings className="w-4 h-4" />
+                Settings
               </Link>
               <button
                 onClick={handleSignOut}
@@ -252,10 +258,26 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       )}
 
       {/* Main content */}
-      <main className="flex-1 lg:ml-60 pt-14 lg:pt-0 min-h-screen">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <main className="flex-1 lg:ml-60 pt-14 lg:pt-0 min-h-screen flex flex-col">
+        <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 flex-1">
           {children}
         </div>
+        {/* Global compliance disclaimer — guarantees coverage on every portal
+            page (incl. the projection-heavy Cycle Outlook and dashboard). */}
+        <footer className="max-w-5xl mx-auto w-full px-4 sm:px-6 pb-8">
+          <div className="border-t pt-4" style={{ borderColor: "hsl(0 0% 11%)" }}>
+            <p className="text-[10px] leading-relaxed text-[hsl(0_0%_32%)]">
+              For educational and informational purposes only — not financial, investment, or tax advice. Projections are
+              scenario estimates based on historical Bitcoin halving cycles; past performance does not guarantee future
+              results, and digital assets can lose substantial value. Make your own decisions and consult a licensed
+              professional before acting.
+            </p>
+            <div className="flex items-center gap-3 mt-2">
+              <Link href="/terms" className="text-[10px] text-[hsl(0_0%_40%)] hover:text-[hsl(0_0%_65%)] transition-colors">Terms</Link>
+              <Link href="/privacy" className="text-[10px] text-[hsl(0_0%_40%)] hover:text-[hsl(0_0%_65%)] transition-colors">Privacy</Link>
+            </div>
+          </div>
+        </footer>
       </main>
     </div>
   );

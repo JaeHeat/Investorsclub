@@ -84,6 +84,10 @@ export default function SettingsPage() {
   const [goalModerate,     setGoalModerate]     = useState("");
   const [goalMoonshot,     setGoalMoonshot]     = useState("");
   const [initValue,       setInitValue]       = useState("");
+  const [primaryObjective, setPrimaryObjective] = useState("");
+  const [objectiveDetail,  setObjectiveDetail]  = useState("");
+  const [drawdownReaction, setDrawdownReaction] = useState("");
+  const [liquidityNeeds,   setLiquidityNeeds]   = useState("");
 
   // ── Holdings ────────────────────────────────────────────────────────────────
   const [holdingRows,    setHoldingRows]    = useState<HoldingRow[]>([]);
@@ -97,8 +101,8 @@ export default function SettingsPage() {
   const [saved,          setSaved]          = useState(false);
 
   useEffect(() => {
-    document.title = "Settings — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Settings — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   // Sync profile fields once on first load
@@ -122,6 +126,10 @@ export default function SettingsPage() {
           ? String(clientProfile.initial_portfolio_value)
           : ""
       );
+      setPrimaryObjective(clientProfile.primary_objective ?? "");
+      setObjectiveDetail(clientProfile.objective_detail ?? "");
+      setDrawdownReaction(clientProfile.drawdown_reaction ?? "");
+      setLiquidityNeeds(clientProfile.liquidity_needs ?? "");
       setProfileLoaded(true);
     }
   }, [clientProfile, profileLoaded]);
@@ -159,6 +167,10 @@ export default function SettingsPage() {
       goal_moderate: goalModerate || null,
       goal_moonshot: goalMoonshot || null,
       initial_portfolio_value: initValue ? Number(initValue) : undefined,
+      primary_objective: primaryObjective || null,
+      objective_detail: objectiveDetail || null,
+      drawdown_reaction: drawdownReaction || null,
+      liquidity_needs: liquidityNeeds || null,
     });
 
     const validHoldings: HoldingAsset[] = holdingRows
@@ -196,6 +208,11 @@ export default function SettingsPage() {
       experience_level: clientProfile?.experience_level ?? null,
       custody: clientProfile?.custody ?? null,
       monthly_dca_budget: clientProfile?.monthly_dca_budget ?? null,
+      primary_objective: primaryObjective || null,
+      objective_detail: objectiveDetail || null,
+      drawdown_reaction: drawdownReaction || null,
+      liquidity_needs: liquidityNeeds || null,
+      team_note: clientProfile?.team_note ?? null,
     };
     syncProfileToServer(profileForSync, validHoldings);
 
@@ -592,6 +609,61 @@ export default function SettingsPage() {
                 >
                   <p className="text-sm font-semibold" style={{ color: timeHorizon === t.value ? "#F7931A" : "white" }}>{t.label}</p>
                   <p className="text-xs text-[hsl(0_0%_45%)] mt-0.5">{t.desc}</p>
+                </button>
+              ))}
+            </div>
+          </InputRow>
+
+          <InputRow label="What this capital is for">
+            <div className="space-y-2">
+              {[
+                { value: "generational_wealth", label: "Generational wealth" },
+                { value: "financial_freedom", label: "Financial freedom" },
+                { value: "retirement", label: "Retirement" },
+                { value: "major_purchase", label: "A specific goal" },
+                { value: "income", label: "Income & growth" },
+              ].map((o) => (
+                <button key={o.value} onClick={() => { setPrimaryObjective(o.value); markDirty(); }}
+                  className="w-full rounded-xl px-4 py-2.5 text-left transition-all"
+                  style={{ background: primaryObjective === o.value ? "rgba(247,147,26,0.08)" : "hsl(0 0% 10%)", border: primaryObjective === o.value ? "1px solid #F7931A" : "1px solid hsl(0 0% 16%)" }}>
+                  <p className="text-sm font-semibold" style={{ color: primaryObjective === o.value ? "#F7931A" : "white" }}>{o.label}</p>
+                </button>
+              ))}
+            </div>
+          </InputRow>
+
+          <InputRow label="In your words">
+            <textarea value={objectiveDetail} onChange={(e) => { setObjectiveDetail(e.target.value); markDirty(); }} rows={2}
+              placeholder="What hitting your target would mean…"
+              className="w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-[hsl(0_0%_30%)] outline-none resize-none"
+              style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 16%)" }} />
+          </InputRow>
+
+          <InputRow label="If BTC dropped 50%, you'd…">
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: "buy_more", label: "Buy more" }, { value: "hold", label: "Hold steady" },
+                { value: "trim", label: "Trim some" }, { value: "sell", label: "Protect capital" },
+              ].map((o) => (
+                <button key={o.value} onClick={() => { setDrawdownReaction(o.value); markDirty(); }}
+                  className="rounded-xl px-3 py-2.5 text-center transition-all"
+                  style={{ background: drawdownReaction === o.value ? "rgba(247,147,26,0.08)" : "hsl(0 0% 10%)", border: drawdownReaction === o.value ? "1px solid #F7931A" : "1px solid hsl(0 0% 16%)" }}>
+                  <p className="text-xs font-semibold" style={{ color: drawdownReaction === o.value ? "#F7931A" : "white" }}>{o.label}</p>
+                </button>
+              ))}
+            </div>
+          </InputRow>
+
+          <InputRow label="Liquidity timeline">
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: "none", label: "Not for years" }, { value: "1_3yr", label: "1–3 years" },
+                { value: "within_1yr", label: "Within 12 months" }, { value: "flexible", label: "Flexible" },
+              ].map((o) => (
+                <button key={o.value} onClick={() => { setLiquidityNeeds(o.value); markDirty(); }}
+                  className="rounded-xl px-3 py-2.5 text-center transition-all"
+                  style={{ background: liquidityNeeds === o.value ? "rgba(247,147,26,0.08)" : "hsl(0 0% 10%)", border: liquidityNeeds === o.value ? "1px solid #F7931A" : "1px solid hsl(0 0% 16%)" }}>
+                  <p className="text-xs font-semibold" style={{ color: liquidityNeeds === o.value ? "#F7931A" : "white" }}>{o.label}</p>
                 </button>
               ))}
             </div>

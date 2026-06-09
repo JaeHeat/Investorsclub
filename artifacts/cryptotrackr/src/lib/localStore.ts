@@ -19,7 +19,7 @@ function uid() {
 
 // ── Seed data on first load ────────────────────────────────────────────────
 
-const SEED_KEY = "cryptotrackr-seeded-v8";
+const SEED_KEY = "cryptotrackr-seeded-v10";
 
 function seedIfEmpty() {
   if (localStorage.getItem(SEED_KEY)) return;
@@ -37,15 +37,15 @@ function seedIfEmpty() {
       timezone: "America/New_York",
       btc_holdings: 1.8,
       avg_cost_basis: 35000,
-      investment_goal: "5x",
+      investment_goal: "500000",
       risk_tolerance: "moderate",
       time_horizon: "2_3_years",
       notes: "Looking to exit near the cycle top and re-enter in the bear market. Comfortable with medium drawdowns but wants to protect the $150K base.",
       discord_username: null,
       discord_role_claimed: false,
-      goal_conservative: null,
-      goal_moderate: null,
-      goal_moonshot: null,
+      goal_conservative: "250000",
+      goal_moderate: "500000",
+      goal_moonshot: "1000000",
       joined_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
       onboarding_completed: true,
       initial_portfolio_value: 150000,
@@ -53,6 +53,11 @@ function seedIfEmpty() {
       experience_level: "intermediate",
       custody: "mixed",
       monthly_dca_budget: 2500,
+      primary_objective: "financial_freedom",
+      objective_detail: "Step back from full-time work by 50 and live off the stack.",
+      drawdown_reaction: "hold",
+      liquidity_needs: "1_3yr",
+      team_note: "Alex — your front-loaded buy plan is set for the Oct window. Given your 2–3yr liquidity note, we've kept 15% in stables so you're never a forced seller. Let's review exit tranches on our next call.",
     },
   ];
 
@@ -165,7 +170,12 @@ function seedIfEmpty() {
   localStorage.setItem(SEED_KEY, "1");
 }
 
-seedIfEmpty();
+// Demo seed data (the "Alex Rivera" client, demo broadcasts/reports/roadmap)
+// only loads in local-demo mode. In production each client starts clean and
+// their data comes from the server — they never see demo or other clients' data.
+if (import.meta.env.VITE_LOCAL_DEMO) {
+  seedIfEmpty();
+}
 
 // ── Client Profiles ────────────────────────────────────────────────────────
 
@@ -356,7 +366,8 @@ export function updateClientSettings(
   updates: Partial<Pick<ClientProfile,
     "risk_tolerance" | "investment_goal" | "initial_portfolio_value" |
     "full_name" | "timezone" | "country" | "btc_holdings" | "avg_cost_basis" | "discord_username" | "discord_role_claimed" | "time_horizon" |
-    "goal_conservative" | "goal_moderate" | "goal_moonshot"
+    "goal_conservative" | "goal_moderate" | "goal_moonshot" |
+    "primary_objective" | "objective_detail" | "drawdown_reaction" | "liquidity_needs" | "team_note"
   >>
 ): void {
   const all = read<ClientProfile[]>("ct-profiles", []);
@@ -396,7 +407,7 @@ const FIXED_STORE_KEYS = [
 ];
 
 /**
- * Removes all CryptoTrackr data from localStorage.
+ * Removes all Bitcoin Daily data from localStorage.
  * Call this on logout so that sensitive client data does not persist
  * in the browser for the next person who uses the same device.
  */

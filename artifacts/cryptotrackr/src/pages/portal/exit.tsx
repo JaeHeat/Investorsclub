@@ -20,8 +20,8 @@ export default function ExitStrategyPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    document.title = "Exit Strategy — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Exit Strategy — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   const holdings = useMemo(() => (user ? getHoldings(user.id) : []), [user]);

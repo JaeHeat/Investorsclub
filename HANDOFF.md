@@ -1,0 +1,131 @@
+# Bitcoin Daily — Launch Handoff
+
+This document is for the Replit agent (or any engineer) completing the **production launch**.
+The front-end and client experience are built and verified; the items below require live
+infrastructure (a database, OIDC, secrets) that can't be set up or tested locally.
+
+---
+
+## Context: what's already done
+
+The client portal (`artifacts/cryptotrackr`), marketing site (`artifacts/landing`), sales deck,
+and Express API (`artifacts/api-server`) are built. All money-math is unit-tested
+(`pnpm --filter @workspace/cryptotrackr run test`, 15 tests). Everything typechecks and builds.
+
+**Everything to date was verified in local-demo mode** via `VITE_LOCAL_DEMO=admin|client`, which
+bypasses OIDC with a mock user and seeds demo data. In production that env var is **unset**, so:
+- No demo data seeds (the "Alex Rivera" client, demo broadcasts/reports/roadmap). Clients start clean. ✅ already gated.
+- Real auth runs via Replit OIDC against the API server + Postgres.
+
+---
+
+## 1. Stand up the backend and verify the real flow  **(P0 — blocker)**
+
+The OIDC login → onboarding → approval → data-sync path has **never run against a real backend**.
+
+**Steps:**
+1. Provision PostgreSQL (Neon or Replit DB); set `DATABASE_URL`.
+2. Push the schema: `pnpm --filter @workspace/db run push` (Drizzle; tables in `lib/db/src/schema`).
+3. Set the env vars (see checklist below): `REPL_ID`, `ISSUER_URL`, `ADMIN_EMAILS` (or `ADMIN_REPLIT_USERNAME`), `ALLOWED_ORIGINS`, `COINGECKO_API_KEY`.
+4. Build + run the API: `pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/api-server run start` (needs `PORT`).
+5. Build the client (`PORT`, `BASE_PATH` required by the vite config) and serve it on the **same origin** as the API, or set `VITE_API_BASE_URL` to the API origin.
+6. **Verify end-to-end with a real account:**
+   - First OIDC login → user is created as `pending` → lands on `/pending`.
+   - Approve in `/admin/approvals` (you must be in `ADMIN_EMAILS`) → role becomes `client`.
+   - Onboarding wizard saves → `PUT /api/clients/me/profile` persists profile + holdings.
+   - Reload → profile/holdings load from server (`GET /api/clients/me/profile`).
+   - Admin `/admin/clients` lists the real client.
+   - Confirm **no** demo data appears and `VITE_LOCAL_DEMO` is unset.
+
+---
+
+## 2. Server-sync the admin-curated content  **(P0 — blocker for the admin to function)**
+
+Today the admin's curation lives in **per-browser localStorage**, so admin edits do **not** reach
+clients in production. Build DB-backed endpoints so they do. Mirror the existing
+`artifacts/cryptotrackr/src/lib/profileApi.ts` pattern (load from server, fall back to localStorage).
+
+| Content | Current (localStorage) | Needs |
+|---|---|---|
+| **Cycle config** (peak, dates, on-chain readings) | `lib/cycleConfig.ts` | one global row table; `GET /api/cycle-config` (public) + `PUT` (admin). Admin editor is `pages/admin/cycle.tsx → CycleConfigEditor`; client reads in `pages/portal/thesis.tsx`, `cycle.tsx`, `index.tsx`. |
+| **Broadcasts** | `localStore.ts` ct-broadcasts | table (global + optional per-user); admin create/delete, client read. Shown on dashboard. |
+| **Reports / Roadmap** | ct-reports / ct-roadmap | tables (global + per-user); admin create, client read. |
+| **Team note (per client)** | `client_profiles.data.team_note` (already JSONB) | just add an admin UI to set it via existing `PUT /api/clients/:userId/profile`; client already renders it on the dashboard. |
+
+Lower priority (client-owned, fine as localStorage but nicer server-side): watchlist, trade journal,
+price alerts, milestones, bear checklist, portfolio snapshots.
+
+---
+
+## 3. Push notifications — "the product reaches out"  **(P1)**
+
+The client already shows an **in-app banner** when the cycle phase shifts. For real outreach:
+- A scheduled job (daily) computes the live phase (`lib/cyclePhase.ts → getCyclePhase`) from the BTC
+  drawdown vs. the cycle config peak; on a phase change or when the buy-zone date arrives, send:
+  - **Discord** webhook (a `discord-webhook` integration exists in the workspace), and/or
+  - **Email** to clients.
+
+---
+
+## 4. Placeholders to replace  **(P1)**
+
+- **Discord invite:** `artifacts/cryptotrackr/src/pages/onboarding.tsx` → `DISCORD_INVITE_URL` is still `https://discord.gg/your-invite-code`.
+- **Social image:** both `index.html` files reference `/favicon.svg` for `og:image`. Add a real **1200×630 PNG** to each app's `public/` (or root) and update the `og:image` / `twitter:image` tags in `artifacts/landing/index.html` and `artifacts/cryptotrackr/index.html`.
+
+---
+
+## 5. Price-feed reliability  **(done — no key required)**
+
+CoinGecko's free tier rate-limits under load, so there is now a **keyless fallback chain** that
+works in dev and prod:
+- **Client** (`lib/priceFeed.ts`, `lib/priceHistory.ts`): proxy → direct CoinGecko → **Coinbase** (`lib/priceFallback.ts`) → last-known.
+- **Server proxy** (`routes/prices.ts`, `routes/history.ts`): CoinGecko (cached, serve-stale) → **Coinbase** (`lib/priceFallback.ts`).
+
+Coinbase's public Exchange API needs no key, is CORS-enabled and US-reachable, and covers the major
+coins (BNB and a few others aren't listed → those keep their last-known value). Verified live.
+
+`COINGECKO_API_KEY` is **optional** — if you ever get one, set it to raise CoinGecko's limits
+(`lib/coingecko.ts`), but it's not required.
+
+---
+
+## 6. Legal review  **(P1)**
+
+Terms of Service and Privacy Policy are drafted at `/terms` and `/privacy`
+(`artifacts/cryptotrackr/src/pages/legal/`), framed as an **educational consultation service — not
+advice; opinions based on historical data**. **Have counsel review** the projection, forecast, and
+"plan vs. hold" backtest claims for your jurisdiction, and fill in company name / governing law.
+
+---
+
+## Security (already in place — verify in prod)
+
+- Session cookie: `HttpOnly` + `Secure` + `SameSite=Lax` (confirm HTTPS terminates correctly).
+- CSRF: Origin/Referer check on all mutations (`middlewares/csrf.ts`) — set `ALLOWED_ORIGINS`.
+- Rate limiting: `/api/login` 20/min, global 300/min (`middlewares/rateLimit.ts`).
+- Profile PUT validation tightened (flat primitives, ≤40 keys, holdings to known shape, 64kb body cap).
+- Admin endpoints gated by `requireAdmin`.
+
+---
+
+## Env var checklist (API server)
+
+```
+DATABASE_URL=postgres://...
+PORT=...
+REPL_ID=...                  # Replit OIDC client id
+ISSUER_URL=https://replit.com/oidc   # default
+ADMIN_EMAILS=you@example.com         # comma-sep; first-login admins
+ALLOWED_ORIGINS=https://app.yourdomain.com   # for CSRF + CORS
+COINGECKO_API_KEY=...                # OPTIONAL — Coinbase keyless fallback covers outages
+```
+
+Client build: `PORT`, `BASE_PATH` (vite config requires them); optional `VITE_API_BASE_URL` if the
+API is on a different origin. **Do NOT set `VITE_LOCAL_DEMO` in production.**
+
+## Final checks before launch
+```
+pnpm run typecheck
+pnpm --filter @workspace/cryptotrackr run test
+pnpm run build
+```

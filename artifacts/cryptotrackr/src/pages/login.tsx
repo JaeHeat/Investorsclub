@@ -21,7 +21,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center mb-10">
           <div className="flex items-center gap-2 mb-8">
             <Bitcoin className="w-7 h-7" style={{ color: "#F7931A" }} />
-            <span className="text-xl font-semibold tracking-tight text-white">CryptoTrackr</span>
+            <span className="text-xl font-semibold tracking-tight text-white">Bitcoin Daily</span>
           </div>
           <h1 className="text-2xl font-semibold text-white mb-1">Sign in</h1>
           <p className="text-sm text-[hsl(0_0%_45%)]">Access your Bitcoin consulting portal</p>

@@ -126,8 +126,8 @@ export default function PlanPage() {
   const { user, clientProfile } = useAuth();
 
   useEffect(() => {
-    document.title = "Portfolio Plan — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Portfolio Plan — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   const holdings = useMemo(() => getHoldings(user?.id ?? ""), [user?.id]);

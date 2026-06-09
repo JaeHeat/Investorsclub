@@ -18,8 +18,8 @@ export default function ReportsPage() {
   const [selected, setSelected] = useState<Report | null>(null);
 
   useEffect(() => {
-    document.title = "Reports — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Reports — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   useEffect(() => {

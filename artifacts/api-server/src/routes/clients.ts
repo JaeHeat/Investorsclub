@@ -81,9 +81,29 @@ router.get("/clients/me/profile", async (req: Request, res: Response) => {
   }
 });
 
+// Profile is a flat bag of primitive values (matches the ClientProfile shape);
+// reject nested objects, oversized strings, and absurd key counts so a client
+// can't bloat their own row. Holdings must match the known asset shape.
+const profileSchema = z
+  .record(z.string().max(64), z.union([z.string().max(2000), z.number(), z.boolean(), z.null()]))
+  .refine((o) => Object.keys(o).length <= 40, { message: "too many profile fields" });
+
+const holdingSchema = z
+  .object({
+    coingecko_id: z.string().min(1).max(64),
+    symbol: z.string().min(1).max(16),
+    name: z.string().max(64),
+    amount: z.number().finite().nonnegative(),
+    avg_cost: z.number().finite().nonnegative(),
+    manual_price: z.number().finite().nonnegative().nullable().optional(),
+  })
+  .strip();
+
+const holdingsSchema = z.array(holdingSchema).max(100).default([]);
+
 const PutProfileBody = z.object({
-  profile: z.record(z.string(), z.unknown()),
-  holdings: z.array(z.record(z.string(), z.unknown())).default([]),
+  profile: profileSchema,
+  holdings: holdingsSchema,
 });
 
 router.put("/clients/me/profile", async (req: Request, res: Response) => {
@@ -123,8 +143,8 @@ router.put("/clients/me/profile", async (req: Request, res: Response) => {
 });
 
 const AdminPutProfileBody = z.object({
-  profile: z.record(z.string(), z.unknown()),
-  holdings: z.array(z.record(z.string(), z.unknown())).default([]),
+  profile: profileSchema,
+  holdings: holdingsSchema,
 });
 
 router.put("/clients/:userId/profile", async (req: Request, res: Response) => {

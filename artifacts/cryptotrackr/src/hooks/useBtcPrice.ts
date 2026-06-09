@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { fetchSimplePrices } from "@/lib/priceFeed";
 
 export function useBtcPrice() {
   const [price, setPrice] = useState<number | null>(null);
@@ -6,23 +7,26 @@ export function useBtcPrice() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchPrice() {
-      try {
-        const res = await fetch(
-          "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
-        );
-        const data = await res.json();
+      const data = await fetchSimplePrices(["bitcoin"]);
+      if (cancelled) return;
+      if (data?.bitcoin?.usd != null) {
         setPrice(data.bitcoin.usd);
-      } catch {
+        setError(null);
+      } else {
         setError("Failed to fetch BTC price");
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     }
 
     fetchPrice();
     const interval = setInterval(fetchPrice, 60_000);
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
   return { price, loading, error };

@@ -25,8 +25,8 @@ export default function WatchlistPage() {
   const [removeConfirm, setRemoveConfirm] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Watchlist — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Watchlist — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   useEffect(() => {

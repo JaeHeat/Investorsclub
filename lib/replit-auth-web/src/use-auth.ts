@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import type { AuthUser } from "@workspace/api-client-react";
+import { getCurrentAuthUser, type AuthUser } from "@workspace/api-client-react";
 
 export type { AuthUser };
 
@@ -11,18 +11,29 @@ interface AuthState {
   logout: () => void;
 }
 
+// Local-demo bypass: when VITE_LOCAL_DEMO is set to "admin" or "client",
+// skip the OIDC backend entirely and return a mock user. Never active in a
+// real deployment (production uses the Replit OIDC flow via /api/auth/user).
+const DEMO_ROLE = (import.meta.env.VITE_LOCAL_DEMO as string | undefined)?.trim();
+const DEMO_USER: AuthUser | null =
+  DEMO_ROLE === "admin"
+    ? { id: "admin-1", email: "admin@cryptotrackr.com", firstName: "Demo", lastName: "Admin", profileImageUrl: null, role: "admin" }
+    : DEMO_ROLE === "client"
+      ? { id: "client-1", email: "client@cryptotrackr.com", firstName: "Alex", lastName: "Rivera", profileImageUrl: null, role: "client" }
+      : null;
+
 export function useAuth(): AuthState {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(DEMO_USER);
+  const [isLoading, setIsLoading] = useState(!DEMO_USER);
 
   useEffect(() => {
+    if (DEMO_USER) return;
     let cancelled = false;
 
-    fetch("/api/auth/user", { credentials: "include" })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<{ user: AuthUser | null }>;
-      })
+    // Typed call via the generated API client (@workspace/api-client-react)
+    // instead of a hand-rolled fetch — keeps the request shape in sync with
+    // the OpenAPI spec.
+    getCurrentAuthUser({ credentials: "include" })
       .then((data) => {
         if (!cancelled) {
           setUser(data.user ?? null);

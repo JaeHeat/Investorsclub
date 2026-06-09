@@ -46,7 +46,7 @@ const CHECKLIST = [
   {
     id: "track-on-chain",
     label: "Set price alerts for re-entry levels",
-    description: "Define your re-entry prices now, before emotion takes over. Use TradingView or CryptoTrackr alerts. The best buys come at the worst headlines.",
+    description: "Define your re-entry prices now, before emotion takes over. Use TradingView or Bitcoin Daily alerts. The best buys come at the worst headlines.",
     priority: "medium" as const,
   },
   {
@@ -65,8 +65,8 @@ const PRIORITY_CONFIG = {
 
 export default function BearProtectionPage() {
   useEffect(() => {
-    document.title = "Bear Protection — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Bear Protection — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
   const { user } = useAuth();
   const [checked, setChecked] = useState<Record<string, boolean>>({});

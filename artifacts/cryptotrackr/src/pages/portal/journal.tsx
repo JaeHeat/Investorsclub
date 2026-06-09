@@ -41,8 +41,8 @@ export default function TradeJournalPage() {
   const [filter, setFilter] = useState<"all" | "buy" | "sell">("all");
 
   useEffect(() => {
-    document.title = "Trade Journal — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Trade Journal — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   useEffect(() => {

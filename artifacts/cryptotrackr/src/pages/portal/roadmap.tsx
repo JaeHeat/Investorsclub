@@ -52,8 +52,8 @@ export default function RoadmapPage() {
   const [items, setItems] = useState<RoadmapItem[]>([]);
 
   useEffect(() => {
-    document.title = "Roadmap — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Roadmap — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   useEffect(() => {

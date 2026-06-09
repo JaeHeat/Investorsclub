@@ -276,8 +276,8 @@ export default function TaxPage() {
   const country = COUNTRIES.find((c) => c.code === selectedCode)!;
 
   useEffect(() => {
-    document.title = "Tax Estimator — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Tax Estimator — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   // Reset income when switching to a country that doesn't need it

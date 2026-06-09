@@ -18,6 +18,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Track which users we've already migrated to the server this session so the
+// localStorage→server backfill runs at most once per user — not on every
+// profile load / page navigation (which otherwise re-PUTs identical data).
+const syncedThisSession = new Set<string>();
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { user, isLoading, login, logout } = useReplitAuth();
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
@@ -74,8 +79,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setClientProfile(cp);
       // Auto-sync to server if the client has completed onboarding but
-      // their data isn't on the server yet (e.g. signed up before this migration)
-      if (cp.onboarding_completed) {
+      // their data isn't on the server yet (e.g. signed up before this
+      // migration) — once per user per session, not on every load.
+      if (cp.onboarding_completed && !syncedThisSession.has(userId)) {
+        syncedThisSession.add(userId);
         const holdings = getHoldings(userId);
         syncProfileToServer(cp, holdings);
       }

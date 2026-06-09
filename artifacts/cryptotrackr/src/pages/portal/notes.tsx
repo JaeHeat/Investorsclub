@@ -16,8 +16,8 @@ export default function NotesPage() {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   useEffect(() => {
-    document.title = "Notes — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Notes — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   useEffect(() => {

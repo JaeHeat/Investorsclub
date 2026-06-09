@@ -135,8 +135,8 @@ export default function EntryStrategyPage() {
   const { user, clientProfile } = useAuth();
 
   useEffect(() => {
-    document.title = "Entry Strategy — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Entry Strategy — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   const holdings = useMemo(() => (user ? getHoldings(user.id) : []), [user]);

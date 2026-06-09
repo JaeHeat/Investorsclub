@@ -6,16 +6,28 @@ import {
 } from "@/lib/localStore";
 import type { Milestone, Broadcast, PortfolioSnapshot, HoldingAsset } from "@/lib/types";
 import { usePrices } from "@/hooks/usePrices";
+import { usePortfolioHistory, CHART_RANGES, type ChartRange } from "@/hooks/usePortfolioHistory";
+import { EquityCurve } from "@/components/EquityCurve";
+import { Sparkline } from "@/components/Sparkline";
+import { CycleClock } from "@/components/CycleClock";
+import { getCycleConfig } from "@/lib/cycleConfig";
+import { getCyclePhase } from "@/lib/cyclePhase";
+import type { EquityPoint } from "@/lib/priceHistory";
 import { formatUSD, formatPct, MILESTONE_PCTS } from "@/lib/utils";
 import PortalLayout from "@/components/layout/PortalLayout";
 import {
-  TrendingUp, TrendingDown, RefreshCw, Bitcoin, X, Radio, ArrowRight,
+  TrendingUp, TrendingDown, RefreshCw, X, Radio, ArrowRight, Compass, Quote, Award, AlertTriangle,
 } from "lucide-react";
+
+const OBJECTIVE_LABELS: Record<string, string> = {
+  generational_wealth: "Generational wealth",
+  financial_freedom: "Financial freedom",
+  retirement: "Retirement",
+  major_purchase: "A specific goal",
+  income: "Income & growth",
+};
 import { Link } from "wouter";
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell,
-} from "recharts";
+import { PieChart, Pie, Cell } from "recharts";
 
 // ── Asset colours ─────────────────────────────────────────────────────────────
 const ASSET_COLORS: Record<string, string> = {
@@ -30,55 +42,39 @@ function assetColor(id: string, idx: number) {
   return ASSET_COLORS[id] ?? ["#10b981","#06b6d4","#f59e0b","#ec4899","#8b5cf6"][idx % 5];
 }
 
-// ── Time-range filter ─────────────────────────────────────────────────────────
-type Range = "1M" | "3M" | "ALL";
-function filterSnapshots(snaps: PortfolioSnapshot[], range: Range): PortfolioSnapshot[] {
-  if (range === "ALL") return snaps;
-  const days = range === "1M" ? 30 : 90;
-  const cutoff = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
-  const filtered = snaps.filter((s) => s.date >= cutoff);
-  return filtered.length >= 2 ? filtered : snaps.slice(-2);
-}
-
-// ── Custom chart tooltip ──────────────────────────────────────────────────────
-function ChartTooltip({ active, payload, label }: {
-  active?: boolean; payload?: { value: number }[]; label?: string;
-}) {
-  if (!active || !payload?.length) return null;
-  const val = payload[0].value;
-  const date = label ? new Date(label).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
-  return (
-    <div
-      className="rounded-xl px-3 py-2 text-sm shadow-xl"
-      style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)" }}
-    >
-      <p className="text-[hsl(0_0%_45%)] text-xs mb-0.5">{date}</p>
-      <p className="text-white font-semibold">{formatUSD(val)}</p>
-    </div>
-  );
+// ── Snapshot fallback → equity points (used when live history is unavailable) ──
+function snapshotsToCurve(snaps: PortfolioSnapshot[], range: ChartRange): EquityPoint[] {
+  let chosen = snaps;
+  if (range !== "ALL" && range !== "1Y") {
+    const days = range === "24H" ? 2 : range === "1W" ? 7 : range === "1M" ? 31 : 90;
+    const cutoff = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    const filtered = snaps.filter((s) => s.date >= cutoff);
+    chosen = filtered.length >= 2 ? filtered : snaps.slice(-2);
+  }
+  return chosen.map((s) => ({ t: new Date(s.date).getTime(), value: s.value }));
 }
 
 // ── Holdings row ──────────────────────────────────────────────────────────────
 function HoldingRow({
-  holding, price, change24h, allocation, colorHex,
+  holding, price, change24h, allocation, colorHex, spark,
 }: {
   holding: HoldingAsset;
   price: number | null;
   change24h: number | null;
   allocation: number;
   colorHex: string;
+  spark?: number[];
 }) {
   const currentValue = price != null ? holding.amount * price : null;
   const costBasis = holding.amount * holding.avg_cost;
   const pnl = currentValue != null ? currentValue - costBasis : null;
   const pnlPct = pnl != null && costBasis > 0 ? (pnl / costBasis) * 100 : null;
   const isUp = pnl !== null && pnl >= 0;
+  const sparkUp = spark && spark.length >= 2 ? spark[spark.length - 1] >= spark[0] : true;
+  const sparkColor = sparkUp ? "#22c55e" : "#ef4444";
 
   return (
-    <div
-      className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors"
-      style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 11%)" }}
-    >
+    <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors cursor-pointer bg-[hsl(0_0%_7%)] border border-[hsl(0_0%_11%)] hover:bg-[hsl(0_0%_9%)] hover:border-[hsl(0_0%_18%)]">
       {/* Asset icon */}
       <div
         className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold"
@@ -109,8 +105,15 @@ function HoldingRow({
         </div>
       </div>
 
-      {/* Prices + P&L */}
-      <div className="flex-shrink-0 text-right min-w-[90px]">
+      {/* Sparkline */}
+      {spark && spark.length >= 2 && (
+        <div className="flex-shrink-0 hidden sm:block">
+          <Sparkline points={spark} color={sparkColor} />
+        </div>
+      )}
+
+      {/* Value + P&L */}
+      <div className="flex-shrink-0 text-right min-w-[92px]">
         <p className="text-sm font-semibold text-white">
           {currentValue != null ? formatUSD(currentValue) : price != null ? formatUSD(price) : "—"}
         </p>
@@ -118,20 +121,12 @@ function HoldingRow({
           className="text-xs font-medium mt-0.5"
           style={{ color: pnlPct === null ? "hsl(0 0% 40%)" : isUp ? "#22c55e" : "#ef4444" }}
         >
-          {pnl != null && pnlPct != null
-            ? `${isUp ? "+" : ""}${formatPct(pnlPct)}`
-            : "—"}
-        </p>
-      </div>
-
-      {/* 24h */}
-      <div className="flex-shrink-0 text-right min-w-[60px] hidden sm:block">
-        <p className="text-[10px] text-[hsl(0_0%_38%)] mb-0.5">24h</p>
-        <p
-          className="text-xs font-semibold"
-          style={{ color: change24h == null ? "hsl(0 0% 40%)" : change24h >= 0 ? "#22c55e" : "#ef4444" }}
-        >
-          {change24h != null ? `${change24h >= 0 ? "+" : ""}${change24h.toFixed(2)}%` : "—"}
+          {pnl != null && pnlPct != null ? formatPct(pnlPct) : "—"}
+          {change24h != null && (
+            <span className="text-[hsl(0_0%_38%)] font-normal ml-1.5 hidden md:inline">
+              · {change24h >= 0 ? "+" : ""}{change24h.toFixed(1)}% 24h
+            </span>
+          )}
         </p>
       </div>
     </div>
@@ -145,7 +140,8 @@ export default function PortalIndex() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
-  const [range, setRange] = useState<Range>("ALL");
+  const [range, setRange] = useState<ChartRange>("1M");
+  const [phaseChanged, setPhaseChanged] = useState<boolean>(false);
 
   function dismissBroadcast(id: string) {
     setDismissedIds((prev) => {
@@ -188,24 +184,62 @@ export default function PortalIndex() {
     [holdings]
   );
 
+  // Only a live feed price or an explicit manual price counts as "current" —
+  // never fall back to avg_cost (cost basis), which would silently distort the
+  // live valuation during a price-feed outage.
+  const pricedHoldings = useMemo(
+    () => holdings.filter((h) => (prices[h.coingecko_id] ?? h.manual_price) != null),
+    [holdings, prices]
+  );
+
   const totalCurrentValue = useMemo(() => {
-    if (holdings.length === 0) return null;
-    const hasSomePrices = holdings.some((h) => prices[h.coingecko_id] != null);
-    if (!hasSomePrices) return null;
-    return holdings.reduce(
-      (s, h) => s + h.amount * (prices[h.coingecko_id] ?? h.manual_price ?? h.avg_cost),
+    if (pricedHoldings.length === 0) return null;
+    return pricedHoldings.reduce(
+      (s, h) => s + h.amount * (prices[h.coingecko_id] ?? h.manual_price)!,
       0
     );
-  }, [holdings, prices]);
+  }, [pricedHoldings, prices]);
 
-  const gainLoss = totalCurrentValue !== null ? totalCurrentValue - totalCostBasis : null;
-  const returnPct = totalCostBasis > 0 && gainLoss !== null ? (gainLoss / totalCostBasis) * 100 : null;
+  // Compare against the cost basis of the same priced subset so gain/loss is
+  // like-for-like even if a coin is temporarily unpriced.
+  const pricedCostBasis = useMemo(
+    () => pricedHoldings.reduce((s, h) => s + h.amount * h.avg_cost, 0),
+    [pricedHoldings]
+  );
+
+  const gainLoss = totalCurrentValue !== null ? totalCurrentValue - pricedCostBasis : null;
+  const returnPct = pricedCostBasis > 0 && gainLoss !== null ? (gainLoss / pricedCostBasis) * 100 : null;
   const isPositive = gainLoss !== null && gainLoss >= 0;
   const initialValue = clientProfile?.initial_portfolio_value ?? 0;
   const hasHoldings = holdings.length > 0;
+  // Some holdings have no live price after the feed settled → values are stale/partial.
+  const pricesDelayed = !pricesLoading && hasHoldings && pricedHoldings.length < holdings.length;
 
   const btcPrice = prices["bitcoin"] ?? null;
   const btcChange24h = changes24h["bitcoin"] ?? null;
+
+  // Live cycle position → the one move for right now
+  const cycleConfig = useMemo(() => getCycleConfig(), []);
+  const cycleDrawdown = btcPrice ? ((btcPrice - cycleConfig.peakPrice) / cycleConfig.peakPrice) * 100 : null;
+  const phase = useMemo(
+    () => getCyclePhase(cycleDrawdown, {
+      peakTime: new Date(cycleConfig.peakDateISO).getTime(),
+      buyZoneTime: new Date(cycleConfig.buyZoneDateISO).getTime(),
+    }),
+    [cycleDrawdown, cycleConfig.peakDateISO, cycleConfig.buyZoneDateISO]
+  );
+  const daysToBuyZone = Math.ceil((new Date(cycleConfig.buyZoneDateISO).getTime() - Date.now()) / 86400000);
+
+  // "The product reaches out": flag when the cycle phase has shifted since the
+  // client last looked. Only act once the live price has settled so we don't
+  // fire on the loading fallback. (Server-side email/Discord push is separate.)
+  useEffect(() => {
+    if (!user || cycleDrawdown === null) return;
+    const key = `ct-phase-seen-${user.id}`;
+    const prev = localStorage.getItem(key);
+    if (prev && prev !== String(phase.id)) setPhaseChanged(true);
+    localStorage.setItem(key, String(phase.id));
+  }, [user, cycleDrawdown, phase.id]);
 
   useEffect(() => {
     if (user && totalCurrentValue !== null && totalCurrentValue > 0) {
@@ -225,26 +259,31 @@ export default function PortalIndex() {
     [broadcasts, dismissedIds]
   );
 
-  // Chart data
-  const chartData = useMemo(
-    () => filterSnapshots(snapshots, range).map((s) => ({ date: s.date, value: s.value })),
-    [snapshots, range]
+  // Live reconstructed equity curve from each holding's price history; falls
+  // back to saved portfolio snapshots when history is unavailable.
+  const { points: historyPoints, perCoin, loading: historyLoading } = usePortfolioHistory(
+    holdings, range, totalCurrentValue
   );
-  const chartUp =
-    chartData.length >= 2
-      ? chartData[chartData.length - 1].value >= chartData[0].value
-      : true;
-  const chartColor = chartUp ? "#22c55e" : "#ef4444";
-
-  // Period change
-  const periodChange =
-    chartData.length >= 2
-      ? chartData[chartData.length - 1].value - chartData[0].value
-      : null;
+  const curve = useMemo<EquityPoint[]>(
+    () => (historyPoints.length >= 2 ? historyPoints : snapshotsToCurve(snapshots, range)),
+    [historyPoints, snapshots, range]
+  );
+  const curveUp = curve.length >= 2 ? curve[curve.length - 1].value >= curve[0].value : true;
+  const curveColor = curveUp ? "#22c55e" : "#ef4444";
+  const periodChange = curve.length >= 2 ? curve[curve.length - 1].value - curve[0].value : null;
   const periodChangePct =
-    periodChange !== null && chartData[0].value > 0
-      ? (periodChange / chartData[0].value) * 100
-      : null;
+    periodChange !== null && curve[0].value > 0 ? (periodChange / curve[0].value) * 100 : null;
+
+  // Per-coin sparkline series (downsampled to ~32 points)
+  const sparkById = useMemo(() => {
+    const out: Record<string, number[]> = {};
+    for (const [id, series] of Object.entries(perCoin)) {
+      if (series.length < 2) continue;
+      const step = Math.max(1, Math.floor(series.length / 32));
+      out[id] = series.filter((_, i) => i % step === 0).map((p) => p.price);
+    }
+    return out;
+  }, [perCoin]);
 
   // Holdings allocation %
   const holdingsWithAlloc = useMemo(() => {
@@ -264,14 +303,131 @@ export default function PortalIndex() {
     [holdingsWithAlloc]
   );
 
+  // Best / worst performer (all-time return)
+  const performers = useMemo(() => {
+    const withPnl = holdings
+      .map((h, i) => {
+        const price = prices[h.coingecko_id] ?? h.manual_price ?? null;
+        const cost = h.amount * h.avg_cost;
+        const cur = price != null ? h.amount * price : null;
+        const pct = cur != null && cost > 0 ? ((cur - cost) / cost) * 100 : null;
+        return pct == null ? null : { holding: h, pct, colorHex: assetColor(h.coingecko_id, i) };
+      })
+      .filter(Boolean) as { holding: HoldingAsset; pct: number; colorHex: string }[];
+    if (withPnl.length < 2) return null;
+    return {
+      best: withPnl.reduce((a, b) => (b.pct > a.pct ? b : a)),
+      worst: withPnl.reduce((a, b) => (b.pct < a.pct ? b : a)),
+    };
+  }, [holdings, prices]);
+
   return (
     <PortalLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-white">Portfolio</h1>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <h1 className="text-2xl font-semibold text-white">Portfolio</h1>
+          {pricesDelayed && (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: "rgba(245,158,11,0.12)", color: "#f59e0b" }}
+              title="Live prices unavailable for some assets — values shown exclude them and may be delayed."
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#f59e0b" }} />
+              Prices delayed
+            </span>
+          )}
+        </div>
         <p className="text-sm text-[hsl(0_0%_45%)] mt-0.5">
           Welcome back, {clientProfile?.full_name?.split(" ")[0] || "there"}
         </p>
       </div>
+
+      {/* Today / your next move — the cycle position drives the one action */}
+      <Link href="/portal/thesis" className="block mb-4">
+        <div
+          className="rounded-2xl p-5 flex items-center gap-5 transition-colors hover:border-[hsl(0_0%_20%)]"
+          style={{ background: "linear-gradient(180deg, hsl(0 0% 8.5%), hsl(0 0% 6.5%))", border: "1px solid hsl(0 0% 12%)" }}
+        >
+          <div className="shrink-0">
+            <CycleClock phaseId={phase.id} size={116} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] uppercase tracking-wide text-[hsl(0_0%_45%)] mb-1">Where we are · your next move</p>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="w-2 h-2 rounded-full" style={{ background: phase.color }} />
+              <h2 className="text-lg font-semibold text-white">{phase.label}</h2>
+            </div>
+            <p className="text-sm text-[hsl(0_0%_60%)] leading-relaxed">{phase.action}</p>
+            <div className="flex items-center gap-3 mt-3 flex-wrap">
+              {daysToBuyZone > 0 && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(247,147,26,0.1)", color: "#F7931A" }}>
+                  Buy window opens in ~{daysToBuyZone} days
+                </span>
+              )}
+              <span className="text-xs font-medium text-[hsl(0_0%_42%)] inline-flex items-center gap-1">
+                See the 4-year cycle &amp; the proof <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
+          </div>
+        </div>
+      </Link>
+
+      {/* Phase-change alert — the product proactively flags a cycle shift */}
+      {phaseChanged && (
+        <div className="rounded-2xl p-4 mb-4 flex items-start gap-3" style={{ background: `${phase.color}12`, border: `1px solid ${phase.color}40` }}>
+          <span className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style={{ background: phase.color }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-white">The cycle has shifted to {phase.label}</p>
+            <p className="text-xs text-[hsl(0_0%_55%)] mt-0.5 leading-relaxed">{phase.action}</p>
+          </div>
+          <button onClick={() => setPhaseChanged(false)} className="shrink-0 text-[hsl(0_0%_35%)] hover:text-white transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Personal focus + note from the team */}
+      {(clientProfile?.primary_objective || clientProfile?.team_note) && (
+        <div className="grid lg:grid-cols-2 gap-4 mb-4">
+          {clientProfile?.primary_objective && (() => {
+            const target = parseFloat(String(clientProfile.goal_moderate ?? clientProfile.investment_goal ?? "")) || 0;
+            const towardValue = totalCurrentValue ?? (initialValue > 0 ? initialValue : null);
+            const progress = towardValue && target > 0 ? Math.min(100, (towardValue / target) * 100) : null;
+            return (
+              <div className="rounded-2xl p-4" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 13%)" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Compass className="w-4 h-4" style={{ color: "#F7931A" }} />
+                  <p className="text-xs uppercase tracking-wide text-[hsl(0_0%_45%)]">Your focus</p>
+                </div>
+                <p className="text-sm font-semibold text-white">{OBJECTIVE_LABELS[clientProfile.primary_objective] ?? "Your goal"}</p>
+                {clientProfile.objective_detail && (
+                  <p className="text-xs text-[hsl(0_0%_50%)] mt-0.5 italic">"{clientProfile.objective_detail}"</p>
+                )}
+                {progress !== null && (
+                  <div className="mt-3">
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-[hsl(0_0%_45%)]">Toward {formatUSD(target)} target</span>
+                      <span className="font-semibold" style={{ color: "#F7931A" }}>{progress.toFixed(0)}%</span>
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(0 0% 12%)" }}>
+                      <div className="h-full rounded-full" style={{ width: `${progress}%`, background: "#F7931A" }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+          {clientProfile?.team_note && (
+            <div className="rounded-2xl p-4" style={{ background: "rgba(247,147,26,0.05)", border: "1px solid rgba(247,147,26,0.18)" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Quote className="w-4 h-4" style={{ color: "#F7931A" }} />
+                <p className="text-xs uppercase tracking-wide text-[hsl(0_0%_45%)]">A note from your team</p>
+              </div>
+              <p className="text-sm text-[hsl(0_0%_72%)] leading-relaxed">{clientProfile.team_note}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Broadcasts */}
       {visibleBroadcasts.map((b) => (
@@ -314,204 +470,135 @@ export default function PortalIndex() {
           <p className="text-xs text-[hsl(0_0%_45%)] mb-5 max-w-xs leading-relaxed">
             Add your assets in Settings to see live P&L, cycle projections, and milestone tracking.
           </p>
-          <Link href="/portal/settings">
-            <a
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-              style={{ background: "#F7931A", color: "#0A0A0A" }}
-            >
-              Add holdings <ArrowRight className="w-3.5 h-3.5" />
-            </a>
+          <Link
+            href="/portal/settings"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+            style={{ background: "#F7931A", color: "#0A0A0A" }}
+          >
+            Add holdings <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       )}
 
       {hasHoldings && (
         <>
-          {/* ── Hero value ─────────────────────────────────────────────────── */}
+          {/* ── Hero: balance + equity curve + range tabs (Delta-style) ─────── */}
           <div
-            className="rounded-2xl p-6 mb-4"
-            style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 11%)" }}
+            className="rounded-2xl p-5 sm:p-6 mb-4"
+            style={{ background: "linear-gradient(180deg, hsl(0 0% 8.5%), hsl(0 0% 6.5%))", border: "1px solid hsl(0 0% 12%)" }}
           >
-            <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
               <div>
-                <p className="text-xs text-[hsl(0_0%_42%)] uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                  <Bitcoin className="w-3 h-3" style={{ color: "#F7931A" }} />
-                  Total Portfolio Value
-                  {pricesLoading && !totalCurrentValue && (
-                    <RefreshCw className="w-3 h-3 animate-spin ml-1" style={{ color: "#F7931A" }} />
+                <p className="text-xs text-[hsl(0_0%_45%)] uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                  Total balance
+                  {(pricesLoading || historyLoading) && !totalCurrentValue && (
+                    <RefreshCw className="w-3 h-3 animate-spin" style={{ color: "#F7931A" }} />
                   )}
                 </p>
-                <p
-                  className="text-4xl font-bold tracking-tight"
-                  style={{ color: "#F7931A" }}
-                  data-testid="stat-portfolio-value"
-                >
-                  {totalCurrentValue != null
-                    ? formatUSD(totalCurrentValue)
-                    : pricesLoading
-                    ? "Loading…"
-                    : "—"}
+                <p className="text-4xl sm:text-5xl font-bold tracking-tight text-white" data-testid="stat-portfolio-value">
+                  {totalCurrentValue != null ? formatUSD(totalCurrentValue) : pricesLoading ? "Loading…" : "—"}
                 </p>
-                <p className="text-xs text-[hsl(0_0%_40%)] mt-1.5">
-                  {holdings.length} asset{holdings.length !== 1 ? "s" : ""} · Cost basis {formatUSD(totalCostBasis)}
-                </p>
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  {periodChange !== null ? (
+                    <span
+                      className="inline-flex items-center gap-1 text-sm font-semibold px-2.5 py-1 rounded-lg"
+                      style={{ background: curveUp ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: curveUp ? "#22c55e" : "#ef4444" }}
+                    >
+                      {curveUp ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                      {curveUp ? "+" : ""}{formatUSD(periodChange)}
+                      {periodChangePct !== null && ` (${periodChangePct >= 0 ? "+" : ""}${periodChangePct.toFixed(2)}%)`}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-[hsl(0_0%_42%)]">{holdings.length} asset{holdings.length !== 1 ? "s" : ""}</span>
+                  )}
+                  <span className="text-xs text-[hsl(0_0%_38%)]">
+                    {range === "ALL" ? "all time" : range === "24H" ? "past 24h" : `past ${range}`}
+                  </span>
+                </div>
               </div>
 
               {returnPct !== null && (
-                <div
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl"
-                  style={{
-                    background: isPositive ? "rgba(34,197,94,0.07)" : "rgba(239,68,68,0.07)",
-                    border: `1px solid ${isPositive ? "rgba(34,197,94,0.18)" : "rgba(239,68,68,0.18)"}`,
-                  }}
-                  data-testid="return-card"
-                >
-                  {isPositive ? (
-                    <TrendingUp className="w-5 h-5" style={{ color: "#22c55e" }} />
-                  ) : (
-                    <TrendingDown className="w-5 h-5" style={{ color: "#ef4444" }} />
-                  )}
-                  <div>
-                    <p
-                      className="text-lg font-bold leading-none"
-                      style={{ color: isPositive ? "#22c55e" : "#ef4444" }}
-                    >
-                      {isPositive ? "+" : ""}{formatPct(returnPct)}
-                    </p>
-                    <p className="text-xs text-[hsl(0_0%_45%)] mt-0.5">
-                      {isPositive ? "+" : ""}{formatUSD(gainLoss!)} total return
-                    </p>
-                  </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-[hsl(0_0%_42%)] uppercase tracking-wide">All-time return</p>
+                  <p className="text-xl font-bold" style={{ color: isPositive ? "#22c55e" : "#ef4444" }} data-testid="return-card">{formatPct(returnPct)}</p>
+                  <p className="text-[11px] text-[hsl(0_0%_45%)]">{isPositive ? "+" : ""}{formatUSD(gainLoss!)}</p>
                 </div>
               )}
             </div>
 
-            {/* Quick stats row */}
-            <div
-              className="grid grid-cols-3 gap-px mt-5 rounded-xl overflow-hidden"
-              style={{ border: "1px solid hsl(0 0% 11%)" }}
-            >
-              {[
-                {
-                  label: "Invested",
-                  value: formatUSD(totalCostBasis),
-                  sub: "total cost basis",
-                },
-                {
-                  label: "Unrealised P&L",
-                  value: gainLoss != null ? `${gainLoss >= 0 ? "+" : ""}${formatUSD(gainLoss)}` : "—",
-                  sub: returnPct != null ? `${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(2)}%` : undefined,
-                  valueColor: gainLoss != null ? (gainLoss >= 0 ? "#22c55e" : "#ef4444") : undefined,
-                },
-                {
-                  label: "BTC Price",
-                  value: btcPrice ? formatUSD(btcPrice) : "—",
-                  sub: btcChange24h != null
-                    ? `${btcChange24h >= 0 ? "+" : ""}${btcChange24h.toFixed(2)}% (24h)`
-                    : "Live",
-                  valueColor: btcChange24h != null
-                    ? (btcChange24h >= 0 ? "#22c55e" : "#ef4444")
-                    : "#F7931A",
-                },
-              ].map(({ label, value, sub, valueColor }) => (
-                <div
-                  key={label}
-                  className="px-4 py-3"
-                  style={{ background: "hsl(0 0% 9%)" }}
-                >
-                  <p className="text-[10px] text-[hsl(0_0%_38%)] uppercase tracking-wide mb-1">{label}</p>
-                  <p className="text-sm font-semibold" style={{ color: valueColor ?? "white" }}>
-                    {value}
-                  </p>
-                  {sub && <p className="text-[10px] text-[hsl(0_0%_38%)] mt-0.5">{sub}</p>}
+            {/* Equity curve */}
+            <div className="-mx-1.5 mt-4">
+              {curve.length >= 2 ? (
+                <EquityCurve data={curve} color={curveColor} height={210} />
+              ) : (
+                <div className="h-[200px] flex items-center justify-center text-xs text-[hsl(0_0%_35%)]">
+                  Building your equity curve…
                 </div>
+              )}
+            </div>
+
+            {/* Range tabs */}
+            <div className="flex items-center justify-center gap-1 mt-1">
+              {CHART_RANGES.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setRange(r)}
+                  data-testid={`range-${r}`}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                  style={range === r ? { background: "rgba(247,147,26,0.12)", color: "#F7931A" } : { color: "hsl(0 0% 42%)" }}
+                >
+                  {r}
+                </button>
               ))}
             </div>
           </div>
 
-          {/* ── Portfolio chart ─────────────────────────────────────────────── */}
-          {snapshots.length >= 1 && (
-            <div
-              className="rounded-2xl p-5 mb-4"
-              style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 11%)" }}
-            >
-              <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-                <div>
-                  <p className="text-xs text-[hsl(0_0%_42%)] uppercase tracking-wide">Portfolio History</p>
-                  {periodChangePct !== null && (
-                    <p
-                      className="text-sm font-semibold mt-0.5"
-                      style={{ color: periodChangePct >= 0 ? "#22c55e" : "#ef4444" }}
-                    >
-                      {periodChangePct >= 0 ? "+" : ""}{periodChangePct.toFixed(2)}%
-                      <span className="text-[hsl(0_0%_42%)] font-normal text-xs ml-1.5">this period</span>
-                    </p>
-                  )}
-                </div>
-                {/* Range picker */}
-                <div
-                  className="flex items-center rounded-lg p-0.5 gap-0.5"
-                  style={{ background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 14%)" }}
-                >
-                  {(["1M", "3M", "ALL"] as Range[]).map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => setRange(r)}
-                      className="px-3 py-1 rounded-md text-xs font-medium transition-all"
-                      style={
-                        range === r
-                          ? { background: "hsl(0 0% 16%)", color: "white" }
-                          : { color: "hsl(0 0% 42%)" }
-                      }
-                    >
-                      {r}
-                    </button>
-                  ))}
-                </div>
+          {/* ── Stat strip ──────────────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            {[
+              { label: "Invested", value: formatUSD(totalCostBasis), sub: "cost basis" },
+              {
+                label: "Unrealised P&L",
+                value: gainLoss != null ? `${gainLoss >= 0 ? "+" : ""}${formatUSD(gainLoss)}` : "—",
+                sub: returnPct != null ? `${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(2)}%` : undefined,
+                color: gainLoss != null ? (gainLoss >= 0 ? "#22c55e" : "#ef4444") : undefined,
+              },
+              { label: "Holdings", value: String(holdings.length), sub: holdings.length === 1 ? "asset" : "assets" },
+              {
+                label: "BTC",
+                value: btcPrice ? formatUSD(btcPrice) : "—",
+                sub: btcChange24h != null ? `${btcChange24h >= 0 ? "+" : ""}${btcChange24h.toFixed(1)}% 24h` : "live",
+                color: btcChange24h != null ? (btcChange24h >= 0 ? "#22c55e" : "#ef4444") : "#F7931A",
+              },
+            ].map((s) => (
+              <div key={s.label} className="rounded-2xl p-4" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 11%)" }}>
+                <p className="text-[10px] text-[hsl(0_0%_40%)] uppercase tracking-wide mb-1">{s.label}</p>
+                <p className="text-base font-semibold" style={{ color: s.color ?? "white" }}>{s.value}</p>
+                {s.sub && <p className="text-[10px] text-[hsl(0_0%_38%)] mt-0.5">{s.sub}</p>}
               </div>
+            ))}
+          </div>
 
-              <ResponsiveContainer width="100%" height={180}>
-                <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="portfolioGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={chartColor} stopOpacity={0.18} />
-                      <stop offset="100%" stopColor={chartColor} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.04)"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 10, fill: "hsl(0 0% 35%)" }}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(d) =>
-                      new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                    }
-                    interval="preserveStartEnd"
-                  />
-                  <YAxis
-                    tick={{ fontSize: 10, fill: "hsl(0 0% 35%)" }}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                    width={42}
-                  />
-                  <Tooltip content={<ChartTooltip />} cursor={{ stroke: "rgba(255,255,255,0.08)", strokeWidth: 1 }} />
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke={chartColor}
-                    strokeWidth={2}
-                    fill="url(#portfolioGrad)"
-                    dot={false}
-                    activeDot={{ r: 4, fill: chartColor, strokeWidth: 0 }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+          {/* ── Best / worst performer ──────────────────────────────────────── */}
+          {performers && (
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {[
+                { label: "Best performer", p: performers.best, icon: Award },
+                { label: "Needs attention", p: performers.worst, icon: AlertTriangle },
+              ].map(({ label, p, icon: Icon }) => (
+                <div key={label} className="rounded-2xl p-4 flex items-center gap-3" style={{ background: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 11%)" }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: `${p.colorHex}18`, color: p.colorHex }}>
+                    {p.holding.symbol.slice(0, 3)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] text-[hsl(0_0%_40%)] uppercase tracking-wide flex items-center gap-1">
+                      <Icon className="w-3 h-3" style={{ color: p.pct >= 0 ? "#22c55e" : "#ef4444" }} />{label}
+                    </p>
+                    <p className="text-sm font-semibold text-white truncate">{p.holding.name}</p>
+                  </div>
+                  <p className="text-sm font-bold shrink-0" style={{ color: p.pct >= 0 ? "#22c55e" : "#ef4444" }}>{formatPct(p.pct)}</p>
+                </div>
+              ))}
             </div>
           )}
 
@@ -522,10 +609,9 @@ export default function PortalIndex() {
           >
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs text-[hsl(0_0%_42%)] uppercase tracking-wide">Holdings</p>
-              <div className="flex items-center gap-4 text-[10px] text-[hsl(0_0%_35%)] hidden sm:flex">
-                <span>Allocation</span>
-                <span className="w-[90px] text-right">Value / Return</span>
-                <span className="w-[60px] text-right">24h</span>
+              <div className="flex items-center gap-6 text-[10px] text-[hsl(0_0%_35%)] hidden sm:flex">
+                <span>Trend</span>
+                <span className="w-[92px] text-right">Value / Return</span>
               </div>
             </div>
 
@@ -533,14 +619,16 @@ export default function PortalIndex() {
               {/* Holdings list */}
               <div className="flex-1 flex flex-col gap-2">
                 {holdingsWithAlloc.map(({ holding, alloc, colorHex }) => (
-                  <HoldingRow
-                    key={holding.coingecko_id}
-                    holding={holding}
-                    price={prices[holding.coingecko_id] ?? holding.manual_price ?? null}
-                    change24h={changes24h[holding.coingecko_id] ?? null}
-                    allocation={alloc}
-                    colorHex={colorHex}
-                  />
+                  <Link key={holding.coingecko_id} href={`/portal/asset/${holding.coingecko_id}`} className="block">
+                    <HoldingRow
+                      holding={holding}
+                      price={prices[holding.coingecko_id] ?? holding.manual_price ?? null}
+                      change24h={changes24h[holding.coingecko_id] ?? null}
+                      allocation={alloc}
+                      colorHex={colorHex}
+                      spark={sparkById[holding.coingecko_id]}
+                    />
+                  </Link>
                 ))}
               </div>
 
@@ -590,7 +678,7 @@ export default function PortalIndex() {
                   {isPositive ? "+" : ""}{formatUSD(gainLoss)}
                   {returnPct !== null && (
                     <span className="text-xs font-normal ml-1.5 text-[hsl(0_0%_40%)]">
-                      ({isPositive ? "+" : ""}{formatPct(returnPct)})
+                      ({formatPct(returnPct)})
                     </span>
                   )}
                 </p>

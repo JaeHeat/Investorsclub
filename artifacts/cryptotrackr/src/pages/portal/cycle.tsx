@@ -1,8 +1,11 @@
 import { useMemo, useEffect, useState } from "react";
+import { Link } from "wouter";
 import PortalLayout from "@/components/layout/PortalLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHoldings, getPriceAlerts, addPriceAlert, deletePriceAlert, triggerPriceAlert } from "@/lib/localStore";
 import { usePrices } from "@/hooks/usePrices";
+import { useFearGreed, fearGreedStatus, fearGreedDetail } from "@/hooks/useFearGreed";
+import { getCycleConfig, isoToLocalDate, type CycleConfig } from "@/lib/cycleConfig";
 import { formatUSD, getMilestoneTier } from "@/lib/utils";
 import type { PriceAlert } from "@/lib/types";
 import {
@@ -10,8 +13,6 @@ import {
   BOTTOM_SIGNALS,
   DCA_SCHEDULE,
   KEY_DATES,
-  CURRENT_CYCLE_PEAK,
-  CURRENT_CYCLE_PEAK_DATE,
   getCurrentCyclePhase,
   getDaysUntil,
   getDaysSince,
@@ -32,24 +33,38 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 // ── Cycle Phase Indicator ──────────────────────────────────────────────────
 
 const HALVING_PHASES = [
-  { id: 1, label: "Accumulation",  desc: "Post-bear bottom. Low prices, low attention. Smart money loads.", color: "#22c55e",  months: "0–6 months post-halving",   icon: "⬇" },
-  { id: 2, label: "Early Bull",    desc: "Price recovers. Narratives build. Volume picks up gradually.",  color: "#84cc16",  months: "6–18 months",               icon: "↗" },
-  { id: 3, label: "Mid Bull",      desc: "Mainstream interest. FOMO begins. Alts start outperforming.",  color: "#eab308",  months: "18–28 months",              icon: "↑" },
-  { id: 4, label: "Late Bull",     desc: "Euphoria. Parabolic price action. Everyone is a genius.",       color: "#f97316",  months: "28–36 months",              icon: "⬆" },
-  { id: 5, label: "Distribution",  desc: "Smart money exits. Volatility spikes. Top is being set.",      color: "#ef4444",  months: "36–40 months",              icon: "⚠" },
-  { id: 6, label: "Bear Market",   desc: "Price corrects 70–80%+. Capitulation. Cycle resets.",          color: "#6b7280",  months: "40–48 months",              icon: "↓" },
+  { id: 1, label: "Accumulation",  desc: "Post-bear bottom. Low prices, low attention. Smart money loads.", color: "#22c55e",  months: "0–6 months post-halving",   icon: "⬇", strategy: "Accumulate aggressively", sentiment: "Despair / Disbelief", next: "Early Bull" },
+  { id: 2, label: "Early Bull",    desc: "Price recovers. Narratives build. Volume picks up gradually.",  color: "#84cc16",  months: "6–18 months",               icon: "↗", strategy: "Hold core, add on dips",  sentiment: "Hope / Optimism",     next: "Mid Bull" },
+  { id: 3, label: "Mid Bull",      desc: "Mainstream interest. FOMO begins. Alts start outperforming.",  color: "#eab308",  months: "18–28 months",              icon: "↑", strategy: "Hold, let winners run",   sentiment: "Belief / Greed",      next: "Late Bull" },
+  { id: 4, label: "Late Bull",     desc: "Euphoria. Parabolic price action. Everyone is a genius.",       color: "#f97316",  months: "28–36 months",              icon: "⬆", strategy: "Begin scaling out",       sentiment: "Euphoria",            next: "Distribution" },
+  { id: 5, label: "Distribution",  desc: "Smart money exits. Volatility spikes. Top is being set.",      color: "#ef4444",  months: "36–40 months",              icon: "⚠", strategy: "Take profit / raise cash", sentiment: "Complacency",         next: "Bear Market" },
+  { id: 6, label: "Bear Market",   desc: "Price corrects 70–80%+. Capitulation. Cycle resets.",          color: "#6b7280",  months: "40–48 months",              icon: "↓", strategy: "Hold cash, wait to accumulate", sentiment: "Fear / Capitulation", next: "Accumulation" },
 ];
 
-// Current position in the 2024 halving cycle (halving: April 2024)
-// Peak: Oct 2025 (~18 months post-halving). Now May 2026 — ~25 months in = Mid Bull / late bear
-// Based on the cycle data, we're in a drawdown/bear phase from the $126K peak
-function getCurrentPhaseId(): number {
-  // Peak was Oct 2025. We're post-peak now — distribution/bear
+const HALVING_DATE = new Date("2024-04-19T00:00:00Z");
+
+function monthsSinceHalving(): number {
+  return (Date.now() - HALVING_DATE.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+}
+
+// Derive the current cycle phase from real inputs rather than a hardcoded id:
+// a deep live drawdown from the peak dominates (we're in a bear regardless of
+// the calendar), otherwise fall back to the halving-clock mapping.
+function getCurrentPhaseId(drawdownPct: number | null, months: number): number {
+  if (drawdownPct !== null) {
+    if (drawdownPct <= -25) return 6; // Bear Market
+    if (drawdownPct <= -10) return 5; // Distribution / topping
+  }
+  if (months < 6) return 1;
+  if (months < 18) return 2;
+  if (months < 28) return 3;
+  if (months < 36) return 4;
+  if (months < 40) return 5;
   return 6;
 }
 
-function CyclePhaseIndicator() {
-  const currentId = getCurrentPhaseId();
+function CyclePhaseIndicator({ drawdownPct }: { drawdownPct: number | null }) {
+  const currentId = getCurrentPhaseId(drawdownPct, monthsSinceHalving());
   return (
     <Card className="mb-5">
       <div className="flex items-center gap-2 mb-5">
@@ -121,9 +136,9 @@ function CyclePhaseIndicator() {
             </div>
             <p className="text-xs text-[hsl(0_0%_50%)] leading-relaxed">{phase.desc}</p>
             <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-[hsl(0_0%_42%)]">
-              <span className="px-2 py-0.5 rounded" style={{ background: "hsl(0 0% 12%)" }}>Strategy: Accumulate or hold cash</span>
-              <span className="px-2 py-0.5 rounded" style={{ background: "hsl(0 0% 12%)" }}>Sentiment: Fear / Capitulation</span>
-              <span className="px-2 py-0.5 rounded" style={{ background: "hsl(0 0% 12%)" }}>Next: Accumulation (est. Q4 2026)</span>
+              <span className="px-2 py-0.5 rounded" style={{ background: "hsl(0 0% 12%)" }}>Strategy: {phase.strategy}</span>
+              <span className="px-2 py-0.5 rounded" style={{ background: "hsl(0 0% 12%)" }}>Sentiment: {phase.sentiment}</span>
+              <span className="px-2 py-0.5 rounded" style={{ background: "hsl(0 0% 12%)" }}>Next: {phase.next}</span>
             </div>
           </div>
         );
@@ -133,8 +148,6 @@ function CyclePhaseIndicator() {
 }
 
 // ── On-Chain Signals Panel ─────────────────────────────────────────────────
-
-const ONCHAIN_LAST_UPDATED = "May 12, 2026";
 
 const ONCHAIN_SIGNALS = [
   {
@@ -220,16 +233,46 @@ function GaugeBar({ current, min, max, caution, danger }: { current: number; min
   );
 }
 
-function OnChainSignalsPanel() {
+function OnChainSignalsPanel({ config }: { config: CycleConfig }) {
+  const { data: fng, loading: fngLoading } = useFearGreed();
+
+  // Fear & Greed is live; MVRV / NUPL / Puell come from the admin-editable
+  // cycle config (no free real-time source for those).
+  const signals = ONCHAIN_SIGNALS.map((sig) => {
+    if (sig.id === "fear_greed") {
+      if (!fng) return { ...sig, live: false };
+      return {
+        ...sig,
+        value: String(fng.value),
+        current: fng.value,
+        status: fearGreedStatus(fng.value) as SignalStatus,
+        detail: fearGreedDetail(fng.value),
+        live: true,
+      };
+    }
+    const reading = config.onchain[sig.id as "mvrv" | "nupl" | "puell"];
+    if (reading) {
+      return { ...sig, value: String(reading.value), current: reading.value, status: reading.status, live: false };
+    }
+    return { ...sig, live: false };
+  });
+
+  const manualUpdated = isoToLocalDate(config.updatedAtISO).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const updatedLabel = fng
+    ? `F&G live · others updated ${manualUpdated}`
+    : fngLoading
+      ? "Fetching live Fear & Greed…"
+      : `Updated ${manualUpdated} · indicative only`;
+
   return (
     <Card className="mb-5">
       <div className="flex items-center gap-2 mb-5">
         <Activity className="w-4 h-4" style={{ color: "#F7931A" }} />
         <h2 className="text-sm font-semibold text-white">On-Chain Signal Panel</h2>
-        <span className="ml-auto text-[10px] text-[hsl(0_0%_35%)]">Updated {ONCHAIN_LAST_UPDATED} · indicative only</span>
+        <span className="ml-auto text-[10px] text-[hsl(0_0%_35%)]">{updatedLabel}</span>
       </div>
       <div className="grid sm:grid-cols-2 gap-3">
-        {ONCHAIN_SIGNALS.map((sig) => {
+        {signals.map((sig) => {
           const color = STATUS_COLORS[sig.status];
           return (
             <div
@@ -239,7 +282,14 @@ function OnChainSignalsPanel() {
               data-testid={`signal-${sig.id}`}
             >
               <div className="flex items-center justify-between mb-1">
-                <p className="text-xs font-semibold text-[hsl(0_0%_55%)] uppercase tracking-wide">{sig.label}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-semibold text-[hsl(0_0%_55%)] uppercase tracking-wide">{sig.label}</p>
+                  {sig.live && (
+                    <span className="flex items-center gap-1 text-[8px] font-bold px-1 py-0.5 rounded uppercase" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                      <span className="w-1 h-1 rounded-full" style={{ background: "#22c55e" }} />Live
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${color}15`, color }}>
                   {STATUS_LABELS[sig.status]}
                 </span>
@@ -259,7 +309,7 @@ function OnChainSignalsPanel() {
         })}
       </div>
       <div className="mt-4 px-3 py-2 rounded-lg text-[11px] text-[hsl(0_0%_35%)] leading-relaxed" style={{ background: "hsl(0 0% 9%)" }}>
-        Signals are indicative and updated manually. For live on-chain data, reference Glassnode, LookIntoBitcoin, or CryptoQuant directly.
+        Fear &amp; Greed is live from alternative.me. MVRV-Z, NUPL and Puell are curated manually — for live on-chain data, reference Glassnode, LookIntoBitcoin, or CryptoQuant directly.
       </div>
     </Card>
   );
@@ -461,23 +511,24 @@ export default function CyclePage() {
   const { user, clientProfile } = useAuth();
 
   useEffect(() => {
-    document.title = "Cycle Outlook — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Cycle Outlook — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   const holdings = useMemo(() => getHoldings(user?.id ?? ""), [user?.id]);
   const coinIds = useMemo(() => holdings.map((h) => h.coingecko_id), [holdings]);
   const { prices } = usePrices(["bitcoin", ...coinIds]);
 
+  const cycleConfig = useMemo(() => getCycleConfig(), []);
   const btcPrice = prices["bitcoin"] ?? null;
   const currentPhase = useMemo(() => getCurrentCyclePhase(), []);
 
   const drawdownFromPeak = btcPrice
-    ? ((btcPrice - CURRENT_CYCLE_PEAK) / CURRENT_CYCLE_PEAK) * 100
+    ? ((btcPrice - cycleConfig.peakPrice) / cycleConfig.peakPrice) * 100
     : null;
 
-  const daysSincePeak = getDaysSince(CURRENT_CYCLE_PEAK_DATE);
-  const daysUntilBuyZone = getDaysUntil(new Date("2026-10-01"));
+  const daysSincePeak = getDaysSince(new Date(cycleConfig.peakDateISO));
+  const daysUntilBuyZone = getDaysUntil(new Date(cycleConfig.buyZoneDateISO));
   const cashPhasePct = Math.min(100, Math.round((daysSincePeak / 365) * 100));
 
   const initialValue = clientProfile?.initial_portfolio_value ?? 0;
@@ -489,13 +540,14 @@ export default function CyclePage() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <Activity className="w-5 h-5" style={{ color: "#F7931A" }} />
-          <h1 className="text-2xl font-semibold text-white">Cycle Outlook</h1>
+          <h1 className="text-2xl font-semibold text-white">Cycle Signals</h1>
           <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444" }}>
             {currentPhase.label}
           </span>
         </div>
         <p className="text-sm text-[hsl(0_0%_42%)]">
-          Forward projections based on 4 cycles of halving data. Not vibes — history.
+          Live on-chain signals, bear-market floors, key dates, and your accumulation playbook.{" "}
+          <Link href="/portal/thesis" className="font-medium" style={{ color: "#F7931A" }}>Start with The 4-Year Cycle →</Link>
         </p>
       </div>
 
@@ -554,10 +606,10 @@ export default function CyclePage() {
       </Card>
 
       {/* ── Cycle Phase Indicator (NEW) ───────────────────────────────────── */}
-      <CyclePhaseIndicator />
+      <CyclePhaseIndicator drawdownPct={drawdownFromPeak} />
 
       {/* ── On-Chain Signal Panel (NEW) ───────────────────────────────────── */}
-      <OnChainSignalsPanel />
+      <OnChainSignalsPanel config={cycleConfig} />
 
       {/* ── Price Alerts (NEW) ────────────────────────────────────────────── */}
       {user && <PriceAlertsSection userId={user.id} />}

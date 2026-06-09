@@ -1,7 +1,7 @@
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { Component, type ReactNode, type ErrorInfo } from "react";
+import { Component, Suspense, lazy, type ReactNode, type ErrorInfo } from "react";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   constructor(props: { children: ReactNode }) {
@@ -37,33 +37,41 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
     return this.props.children;
   }
 }
-import LoginPage from "@/pages/login";
-import OnboardingPage from "@/pages/onboarding";
-import PortalIndex from "@/pages/portal/index";
-import MilestonesPage from "@/pages/portal/milestones";
-import CyclePage from "@/pages/portal/cycle";
-import RoadmapPage from "@/pages/portal/roadmap";
-import ReportsPage from "@/pages/portal/reports";
-import NotesPage from "@/pages/portal/notes";
-import PlanPage from "@/pages/portal/plan";
-import ExitStrategyPage from "@/pages/portal/exit";
-import EntryStrategyPage from "@/pages/portal/entry";
-import DcaPage from "@/pages/portal/dca";
-import WatchlistPage from "@/pages/portal/watchlist";
-import BearProtectionPage from "@/pages/portal/bear";
-import SettingsPage from "@/pages/portal/settings";
-import TradeJournalPage from "@/pages/portal/journal";
-import TaxPage from "@/pages/portal/tax";
-import EVPage from "@/pages/portal/ev";
-import AdminDashboard from "@/pages/admin/index";
-import AdminClients from "@/pages/admin/clients";
-import CycleIntelligence from "@/pages/admin/cycle";
-import AdminPlans from "@/pages/admin/plans";
-import BroadcastPage from "@/pages/admin/broadcast";
-import AnalyticsPage from "@/pages/admin/analytics";
-import AdminApprovalsPage from "@/pages/admin/approvals";
-import AdminTransactionsPage from "@/pages/admin/transactions";
-import PendingApprovalPage from "@/pages/pending";
+// Routes are lazy-loaded so each page ships in its own chunk — keeps the
+// initial bundle small instead of one ~1MB blob.
+const LoginPage = lazy(() => import("@/pages/login"));
+const OnboardingPage = lazy(() => import("@/pages/onboarding"));
+const PortalIndex = lazy(() => import("@/pages/portal/index"));
+const MilestonesPage = lazy(() => import("@/pages/portal/milestones"));
+const CyclePage = lazy(() => import("@/pages/portal/cycle"));
+const RoadmapPage = lazy(() => import("@/pages/portal/roadmap"));
+const ReportsPage = lazy(() => import("@/pages/portal/reports"));
+const NotesPage = lazy(() => import("@/pages/portal/notes"));
+const PlanPage = lazy(() => import("@/pages/portal/plan"));
+const ExitStrategyPage = lazy(() => import("@/pages/portal/exit"));
+const EntryStrategyPage = lazy(() => import("@/pages/portal/entry"));
+const DcaPage = lazy(() => import("@/pages/portal/dca"));
+const ForecastPage = lazy(() => import("@/pages/portal/forecast"));
+const SeasonalityPage = lazy(() => import("@/pages/portal/seasonality"));
+const AssetPage = lazy(() => import("@/pages/portal/asset"));
+const ThesisPage = lazy(() => import("@/pages/portal/thesis"));
+const TermsPage = lazy(() => import("@/pages/legal/terms"));
+const PrivacyPage = lazy(() => import("@/pages/legal/privacy"));
+const WatchlistPage = lazy(() => import("@/pages/portal/watchlist"));
+const BearProtectionPage = lazy(() => import("@/pages/portal/bear"));
+const SettingsPage = lazy(() => import("@/pages/portal/settings"));
+const TradeJournalPage = lazy(() => import("@/pages/portal/journal"));
+const TaxPage = lazy(() => import("@/pages/portal/tax"));
+const EVPage = lazy(() => import("@/pages/portal/ev"));
+const AdminDashboard = lazy(() => import("@/pages/admin/index"));
+const AdminClients = lazy(() => import("@/pages/admin/clients"));
+const CycleIntelligence = lazy(() => import("@/pages/admin/cycle"));
+const AdminPlans = lazy(() => import("@/pages/admin/plans"));
+const BroadcastPage = lazy(() => import("@/pages/admin/broadcast"));
+const AnalyticsPage = lazy(() => import("@/pages/admin/analytics"));
+const AdminApprovalsPage = lazy(() => import("@/pages/admin/approvals"));
+const AdminTransactionsPage = lazy(() => import("@/pages/admin/transactions"));
+const PendingApprovalPage = lazy(() => import("@/pages/pending"));
 
 const queryClient = new QueryClient();
 
@@ -148,6 +156,18 @@ function AppRoutes() {
       <Route path="/portal/dca">
         <ProtectedRoute requireRole="client"><DcaPage /></ProtectedRoute>
       </Route>
+      <Route path="/portal/forecast">
+        <ProtectedRoute requireRole="client"><ForecastPage /></ProtectedRoute>
+      </Route>
+      <Route path="/portal/seasonality">
+        <ProtectedRoute requireRole="client"><SeasonalityPage /></ProtectedRoute>
+      </Route>
+      <Route path="/portal/asset/:id">
+        <ProtectedRoute requireRole="client"><AssetPage /></ProtectedRoute>
+      </Route>
+      <Route path="/portal/thesis">
+        <ProtectedRoute requireRole="client"><ThesisPage /></ProtectedRoute>
+      </Route>
       <Route path="/portal/watchlist">
         <ProtectedRoute requireRole="client"><WatchlistPage /></ProtectedRoute>
       </Route>
@@ -202,6 +222,9 @@ function AppRoutes() {
         <ProtectedRoute requireRole="admin"><AdminTransactionsPage /></ProtectedRoute>
       </Route>
 
+      <Route path="/terms"><TermsPage /></Route>
+      <Route path="/privacy"><PrivacyPage /></Route>
+
       <Route><Redirect to="/" /></Route>
     </Switch>
   );
@@ -213,7 +236,9 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <AppRoutes />
+            <Suspense fallback={<LoadingScreen />}>
+              <AppRoutes />
+            </Suspense>
           </WouterRouter>
         </AuthProvider>
       </QueryClientProvider>

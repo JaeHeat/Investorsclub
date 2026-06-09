@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { usePrices } from "@/hooks/usePrices";
 import { formatUSD } from "@/lib/utils";
+import { getCycleConfig, setCycleConfig, isoToLocalDate, type CycleConfig, type SignalStatus } from "@/lib/cycleConfig";
 import {
   HALVING_CYCLES,
   BEAR_SCENARIOS,
@@ -10,8 +11,6 @@ import {
   DCA_SCHEDULE,
   DCA_BOOSTERS,
   KEY_DATES,
-  CURRENT_CYCLE_PEAK,
-  CURRENT_CYCLE_PEAK_DATE,
   NEXT_HALVING_DATE,
   getCurrentCyclePhase,
   getDaysUntil,
@@ -21,8 +20,86 @@ import {
 import {
   Activity, TrendingDown, TrendingUp, Clock, Calendar,
   AlertTriangle, CheckCircle2, Circle, ChevronRight, Info,
-  BarChart3, Zap, Shield, Target,
+  BarChart3, Zap, Shield, Target, Save, Pencil,
 } from "lucide-react";
+
+const STATUS_OPTIONS: SignalStatus[] = ["healthy", "caution", "danger", "fear"];
+
+// ── Admin editor for the cycle config (peak, buy-zone, on-chain readings) ─────
+function CycleConfigEditor() {
+  const [cfg, setCfg] = useState<CycleConfig>(() => getCycleConfig());
+  const [saved, setSaved] = useState(false);
+
+  function patch(p: Partial<CycleConfig>) {
+    setCfg((c) => ({ ...c, ...p }));
+    setSaved(false);
+  }
+  function patchOnchain(key: "mvrv" | "nupl" | "puell", field: "value" | "status", value: number | SignalStatus) {
+    setCfg((c) => ({ ...c, onchain: { ...c.onchain, [key]: { ...c.onchain[key], [field]: value } } }));
+    setSaved(false);
+  }
+  function handleSave() {
+    setCfg(setCycleConfig(cfg));
+    setSaved(true);
+  }
+
+  const inputStyle = "w-full px-2.5 py-2 rounded-lg text-sm text-white bg-[hsl(0,0%,11%)] border border-[hsl(0,0%,18%)] outline-none focus:border-[#F7931A]";
+  const labelStyle = "block text-[10px] text-[hsl(0_0%_40%)] uppercase tracking-wide mb-1";
+
+  return (
+    <div className="rounded-2xl p-5 mb-5" style={{ background: "hsl(0 0% 7%)", border: "1px solid rgba(247,147,26,0.25)" }}>
+      <SectionHeader icon={Pencil} title="Edit Cycle Data" sub="Updates the client Cycle Outlook — peak, buy-zone date, and curated on-chain readings. No code deploy needed." />
+
+      <div className="grid sm:grid-cols-3 gap-3 mb-4">
+        <div>
+          <label className={labelStyle}>Cycle Peak (USD)</label>
+          <input type="number" className={inputStyle} value={cfg.peakPrice}
+            onChange={(e) => patch({ peakPrice: Number(e.target.value) })} data-testid="cfg-peak-price" />
+        </div>
+        <div>
+          <label className={labelStyle}>Peak Date</label>
+          <input type="date" className={inputStyle} value={cfg.peakDateISO}
+            onChange={(e) => patch({ peakDateISO: e.target.value })} data-testid="cfg-peak-date" />
+        </div>
+        <div>
+          <label className={labelStyle}>Buy Zone Opens</label>
+          <input type="date" className={inputStyle} value={cfg.buyZoneDateISO}
+            onChange={(e) => patch({ buyZoneDateISO: e.target.value })} data-testid="cfg-buyzone-date" />
+        </div>
+      </div>
+
+      <p className="text-[11px] font-semibold text-[hsl(0_0%_55%)] uppercase tracking-wide mb-2">On-chain readings (manual)</p>
+      <div className="grid sm:grid-cols-3 gap-3 mb-4">
+        {(["mvrv", "nupl", "puell"] as const).map((key) => (
+          <div key={key} className="rounded-xl p-3" style={{ background: "hsl(0 0% 9%)" }}>
+            <p className="text-xs font-semibold text-white uppercase mb-2">{key}</p>
+            <label className={labelStyle}>Value</label>
+            <input type="number" step="0.01" className={`${inputStyle} mb-2`} value={cfg.onchain[key].value}
+              onChange={(e) => patchOnchain(key, "value", Number(e.target.value))} data-testid={`cfg-${key}-value`} />
+            <label className={labelStyle}>Status</label>
+            <select className={inputStyle} value={cfg.onchain[key].status}
+              onChange={(e) => patchOnchain(key, "status", e.target.value as SignalStatus)} data-testid={`cfg-${key}-status`}>
+              {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button onClick={handleSave} data-testid="cfg-save"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+          style={{ background: "#F7931A", color: "#0A0A0A" }}>
+          <Save className="w-4 h-4" /> Save cycle data
+        </button>
+        {saved && <span className="text-xs font-medium text-green-400">Saved ✓</span>}
+        <span className="ml-auto text-[11px] text-[hsl(0_0%_35%)]">Last updated {cfg.updatedAtISO}</span>
+      </div>
+      <p className="text-[10px] text-[hsl(0_0%_30%)] mt-3 leading-relaxed">
+        Note: stored per-browser (localStorage) in this build — shared server-side sync is the next step.
+      </p>
+    </div>
+  );
+}
 
 function SectionHeader({ icon: Icon, title, sub }: { icon: React.ElementType; title: string; sub?: string }) {
   return (
@@ -157,13 +234,14 @@ export default function CycleIntelligence() {
   const { prices, loading: priceLoading } = usePrices(["bitcoin"]);
   const btcPrice = prices["bitcoin"] ?? null;
   const currentPhase = useMemo(() => getCurrentCyclePhase(), []);
+  const cfg = useMemo(() => getCycleConfig(), []);
 
   const drawdownFromPeak = btcPrice
-    ? ((btcPrice - CURRENT_CYCLE_PEAK) / CURRENT_CYCLE_PEAK) * 100
+    ? ((btcPrice - cfg.peakPrice) / cfg.peakPrice) * 100
     : null;
 
-  const daysSincePeak = getDaysSince(CURRENT_CYCLE_PEAK_DATE);
-  const daysUntilBuyZone = getDaysUntil(new Date("2026-10-01"));
+  const daysSincePeak = getDaysSince(new Date(cfg.peakDateISO));
+  const daysUntilBuyZone = getDaysUntil(new Date(cfg.buyZoneDateISO));
   const daysUntilNextHalving = getDaysUntil(NEXT_HALVING_DATE);
   const cashPhasePct = Math.min(100, Math.round((daysSincePeak / 365) * 100));
 
@@ -181,6 +259,9 @@ export default function CycleIntelligence() {
         </p>
       </div>
 
+      {/* ── Admin editor ───────────────────────────────────────────────────── */}
+      <CycleConfigEditor />
+
       {/* ── Current Position Stats ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         <Card>
@@ -195,7 +276,7 @@ export default function CycleIntelligence() {
           <p className="text-xl font-semibold" style={{ color: drawdownFromPeak !== null && drawdownFromPeak > -60 ? "#f97316" : "#ef4444" }}>
             {drawdownFromPeak !== null ? `${drawdownFromPeak.toFixed(1)}%` : "—"}
           </p>
-          <p className="text-[11px] text-[hsl(0_0%_38%)] mt-1">Peak: {formatUSD(CURRENT_CYCLE_PEAK)} · Oct 2025</p>
+          <p className="text-[11px] text-[hsl(0_0%_38%)] mt-1">Peak: {formatUSD(cfg.peakPrice)} · {isoToLocalDate(cfg.peakDateISO).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</p>
         </Card>
         <Card>
           <p className="text-[11px] text-[hsl(0_0%_40%)] uppercase tracking-wide mb-1.5">Days Since Peak</p>
@@ -274,7 +355,7 @@ export default function CycleIntelligence() {
                       <div
                         className="h-1 rounded-full"
                         style={{
-                          width: `${Math.min(100, Math.max(2, ((btcPrice - s.price) / (CURRENT_CYCLE_PEAK - s.price)) * 100))}%`,
+                          width: `${Math.min(100, Math.max(2, ((btcPrice - s.price) / (cfg.peakPrice - s.price)) * 100))}%`,
                           background: s.color,
                         }}
                       />

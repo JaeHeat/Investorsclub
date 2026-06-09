@@ -27,7 +27,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         <div className="px-5 h-16 flex items-center gap-2.5 shrink-0" style={{ borderBottom: "1px solid hsl(0 0% 10%)" }}>
           <Bitcoin className="w-5 h-5" style={{ color: "#F7931A" }} />
-          <span className="text-sm font-semibold tracking-tight text-white">CryptoTrackr</span>
+          <span className="text-sm font-semibold tracking-tight text-white">Bitcoin Daily</span>
           <span
             className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wide"
             style={{ background: "rgba(247,147,26,0.12)", color: "#F7931A" }}
@@ -41,18 +41,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {NAV_ITEMS.map(({ icon: Icon, label, href }) => {
               const active = href === "/admin" ? location === "/admin" : location.startsWith(href);
               return (
-                <Link key={href} href={href}>
-                  <a
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all"
-                    style={{
-                      background: active ? "rgba(247,147,26,0.08)" : "transparent",
-                      color: active ? "#F7931A" : "hsl(0 0% 65%)",
-                    }}
-                    data-testid={`admin-nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
-                  >
-                    <Icon className="w-4 h-4 shrink-0" />
-                    {label}
-                  </a>
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all"
+                  style={{
+                    background: active ? "rgba(247,147,26,0.08)" : "transparent",
+                    color: active ? "#F7931A" : "hsl(0 0% 65%)",
+                  }}
+                  data-testid={`admin-nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  {label}
                 </Link>
               );
             })}
@@ -75,7 +75,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center justify-between px-4" style={{ background: "hsl(0 0% 5%)", borderBottom: "1px solid hsl(0 0% 12%)" }}>
         <div className="flex items-center gap-2">
           <Bitcoin className="w-5 h-5" style={{ color: "#F7931A" }} />
-          <span className="text-sm font-semibold text-white">CryptoTrackr</span>
+          <span className="text-sm font-semibold text-white">Bitcoin Daily</span>
           <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase" style={{ background: "rgba(247,147,26,0.12)", color: "#F7931A" }}>Admin</span>
         </div>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="text-[hsl(0_0%_55%)]">
@@ -89,18 +89,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {NAV_ITEMS.map(({ icon: Icon, label, href }) => {
               const active = href === "/admin" ? location === "/admin" : location.startsWith(href);
               return (
-                <Link key={href} href={href}>
-                  <a
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
-                    onClick={() => setMobileOpen(false)}
-                    style={{
-                      background: active ? "rgba(247,147,26,0.08)" : "transparent",
-                      color: active ? "#F7931A" : "hsl(0 0% 65%)",
-                    }}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {label}
-                  </a>
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
+                  onClick={() => setMobileOpen(false)}
+                  style={{
+                    background: active ? "rgba(247,147,26,0.08)" : "transparent",
+                    color: active ? "#F7931A" : "hsl(0 0% 65%)",
+                  }}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
                 </Link>
               );
             })}

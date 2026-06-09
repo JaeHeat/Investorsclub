@@ -13,8 +13,8 @@ export default function MilestonesPage() {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
 
   useEffect(() => {
-    document.title = "Milestones — CryptoTrackr";
-    return () => { document.title = "CryptoTrackr"; };
+    document.title = "Milestones — Bitcoin Daily";
+    return () => { document.title = "Bitcoin Daily"; };
   }, []);
 
   useEffect(() => {
@@ -88,9 +88,7 @@ export default function MilestonesPage() {
             <p className="text-sm font-semibold text-white">Set your starting value to unlock targets</p>
             <p className="text-xs text-[hsl(0_0%_50%)] mt-0.5 leading-relaxed">
               Add your starting portfolio value in{" "}
-              <Link href="/portal/settings">
-                <a className="underline underline-offset-2" style={{ color: "#F7931A" }}>Settings</a>
-              </Link>{" "}
+              <Link href="/portal/settings" className="underline underline-offset-2" style={{ color: "#F7931A" }}>Settings</Link>{" "}
               to see personalised milestone targets and progress bars.
             </p>
           </div>

@@ -1,4 +1,5 @@
 import type { ClientProfile, HoldingAsset } from "./types";
+import { getAllClientProfiles, getHoldings } from "./localStore";
 
 export interface ServerProfileData {
   profile: Omit<ClientProfile, "user_id"> | null;
@@ -45,13 +46,38 @@ export async function loadProfileFromServer(): Promise<ServerProfileData | null>
   }
 }
 
+// Map locally-stored client profiles into the admin API shape so the admin
+// dashboard renders the same clients the portal sees.
+function clientsFromLocalStore(): AdminClientData[] {
+  return getAllClientProfiles().map((p) => {
+    const { user_id, full_name, ...rest } = p;
+    const [firstName = null, ...lastParts] = (full_name ?? "").split(" ");
+    return {
+      id: user_id,
+      email: null,
+      firstName: firstName || null,
+      lastName: lastParts.length ? lastParts.join(" ") : null,
+      profileImageUrl: null,
+      createdAt: p.joined_at ?? new Date(0).toISOString(),
+      profile: { full_name, ...rest },
+      holdings: getHoldings(user_id),
+    };
+  });
+}
+
 export async function loadClientsFromServer(): Promise<AdminClientData[]> {
   try {
     const res = await fetch("/api/clients", { credentials: "include" });
-    if (!res.ok) return [];
-    const data = (await res.json()) as { clients: AdminClientData[] };
-    return data.clients ?? [];
+    // Server is the source of truth when reachable (an empty list is a valid
+    // answer — don't mask it with local demo data).
+    if (res.ok) {
+      const data = (await res.json()) as { clients: AdminClientData[] };
+      return data.clients ?? [];
+    }
   } catch {
-    return [];
+    // fall through to the local fallback below
   }
+  // No backend reachable (e.g. local dev without the API server): surface the
+  // clients held in localStorage so the admin views aren't blank.
+  return clientsFromLocalStore();
 }
