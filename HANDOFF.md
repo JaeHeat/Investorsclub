@@ -6,6 +6,67 @@ infrastructure (a database, OIDC, secrets) that can't be set up or tested locall
 
 ---
 
+## 0. Get the code — START HERE
+
+**All work is committed and pushed to GitHub.** Nothing is left uncommitted on the author's machine.
+
+- **Repo:** `https://github.com/JaeHeat/Investorsclub.git`
+- **Branch with all the new work:** `feature/portal-launch-prep`
+- **What's in it:** see the Changelog below (cycle thesis, Delta portfolio, analytics, onboarding, launch hardening, Coinbase price fallback, tests, ToS/Privacy, this handoff).
+
+### Step 1 — pull the branch
+
+**If this Replit workspace is already connected to the repo:**
+```bash
+git fetch origin
+git checkout feature/portal-launch-prep
+git pull origin feature/portal-launch-prep
+```
+
+**If you're starting fresh (no repo yet):**
+```bash
+git clone https://github.com/JaeHeat/Investorsclub.git
+cd Investorsclub
+git checkout feature/portal-launch-prep
+```
+
+### Step 2 — install dependencies
+This is a **pnpm** workspace on **Node 24**:
+```bash
+corepack enable pnpm        # if pnpm isn't already available
+pnpm install
+```
+
+### Step 3 — sanity check (should all pass)
+```bash
+pnpm run typecheck
+pnpm --filter @workspace/cryptotrackr run test     # 15 money-math tests
+```
+
+### Step 4 — merge into `main` (when you're ready to make it the live branch)
+
+**Easiest — via GitHub (recommended, gives a reviewable diff):**
+1. Open: `https://github.com/JaeHeat/Investorsclub/pull/new/feature/portal-launch-prep`
+2. Create the pull request, review, and **Merge**.
+3. Then locally: `git checkout main && git pull origin main`
+
+**Or via the command line:**
+```bash
+git checkout main
+git pull origin main
+git merge feature/portal-launch-prep
+git push origin main
+```
+
+You can also just **do the launch work on `feature/portal-launch-prep` directly** and merge at the end —
+either is fine. Once merged, continue with sections 1–6 below.
+
+> Note: the only "build environment" change is in `pnpm-workspace.yaml` (re-enabled `win32-x64` native
+> binaries so the repo also builds on Windows). It's harmless on Replit/Linux — those binaries are
+> OS-gated and simply won't be installed.
+
+---
+
 ## Context: what's already done
 
 The client portal (`artifacts/cryptotrackr`), marketing site (`artifacts/landing`), sales deck,
