@@ -17,7 +17,8 @@ interface CacheEntry {
 }
 const cache = new Map<string, CacheEntry>();
 
-router.get("/api/prices", async (req, res) => {
+// Mounted under "/api" in routes/index.ts → final path is /api/prices.
+router.get("/prices", async (req, res) => {
   const rawIds = String(req.query.ids ?? "").trim();
   if (!rawIds) {
     res.status(400).json({ error: "ids query param is required" });

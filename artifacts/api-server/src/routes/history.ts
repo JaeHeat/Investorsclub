@@ -18,7 +18,8 @@ interface CacheEntry {
 }
 const cache = new Map<string, CacheEntry>();
 
-router.get("/api/history", async (req, res) => {
+// Mounted under "/api" in routes/index.ts → final path is /api/history.
+router.get("/history", async (req, res) => {
   const id = String(req.query.id ?? "").trim().toLowerCase();
   const days = String(req.query.days ?? "365").trim();
 
