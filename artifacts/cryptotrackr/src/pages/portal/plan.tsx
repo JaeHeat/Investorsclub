@@ -578,7 +578,7 @@ export default function PlanPage() {
                 color: "#627EEA",
                 icon: Layers,
                 role: "Secondary Upside",
-                desc: "ETF-approved, foundational smart contract infrastructure across 4 cycles. Historically outperforms BTC on a percentage basis in strong cycle phases. The L2 ecosystem and institutional DeFi expansion are structural tailwinds.",
+                desc: "ETF-approved, foundational smart contract infrastructure across 4 cycles, and one of only 4 large caps that made a new all-time high last cycle. It beat BTC in the 2021 run and lagged it in the 2025 run — hold it as the strongest secondary asset, not a guaranteed outperformer.",
               },
               {
                 symbol: "SOL",
@@ -587,7 +587,7 @@ export default function PlanPage() {
                 color: "#9945FF",
                 icon: TrendingUp,
                 role: "Asymmetric Upside",
-                desc: "Higher beta than ETH — more volatile, higher ceiling in strong cycles. Proven itself in the 2024 run. Institutional interest growing, Visa and Franklin Templeton on-chain. The upside layer of the foundation.",
+                desc: "Higher beta than ETH — more volatile, higher ceiling. The single best top-100 performer of the last cycle (about 20x from the 2022 bottom), and the reason this sleeve exists. Honest note: winners repeating is the exception, not the rule — this is the portfolio's asymmetric bet, sized accordingly.",
               },
             ].map(({ symbol, name, pct, color, icon: Icon, role, desc }) => (
               <div

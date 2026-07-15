@@ -203,6 +203,12 @@ export const ALT_CATEGORY_COLORS: Record<AltCategory, string> = {
 };
 
 // ── Allocation Grid ───────────────────────────────────────────────────────────
+// EVIDENCE BASE (2026-07-15): every altcoin claim below is audited against the 3-cycle cohort
+// study in research/ALTCOIN_CYCLE_EVIDENCE.md. Key facts: alts beating BTC from the bottom
+// halved every cycle (31% -> 16% -> 6%); the median top-100 alt returns ~half of BTC in every
+// cycle; 0 of 15 winners from the 2018 bottom repeated from the 2022 bottom; no slice of the
+// top 100 beat BTC in all three cycles. Alt sleeves are held for tail convexity, not expected
+// outperformance. Percentages below are the founder's allocation policy — change only with his go.
 
 export interface PortfolioPlan {
   tier: "Starter" | "Core" | "Premium" | "Elite";
@@ -224,7 +230,7 @@ const PLAN_MATRIX: Record<SizeKey, Record<RiskKey, Omit<PortfolioPlan, "tier" | 
     conservative: {
       btcPct: 55, ethPct: 25, solPct: 10, altsPct: 10, numAlts: 2,
       rationale:
-        "Foundation-first with a small top-25 allocation. BTC provides the anchor, ETH adds proven upside, SOL captures the next leg. The alt position is limited to the two highest-conviction picks only.",
+        "Foundation-first with a small top-25 allocation. BTC is the anchor and the highest-probability asset (it beat 83 of 88 top-100 alts last cycle); ETH and SOL are the two majors with the strongest survival evidence. The alt position is limited to the two highest-conviction picks, sized as convexity.",
       bearPhaseNote:
         "In the current bear phase, consider holding 15–20% in stablecoins and DCA'ing into your target allocation progressively. Full deployment into the target split at the confirmed bottom zone (~Oct 2026).",
     },
@@ -238,7 +244,7 @@ const PLAN_MATRIX: Record<SizeKey, Record<RiskKey, Omit<PortfolioPlan, "tier" | 
     aggressive: {
       btcPct: 35, ethPct: 25, solPct: 15, altsPct: 25, numAlts: 5,
       rationale:
-        "Maximum upside posture. SOL and top-25 alts are historically positioned to outperform BTC on a percentage basis in a strong cycle. BTC floor ensures the position doesn't go to zero.",
+        "Maximum upside posture — and an explicit bet on the tails, not the base case. The top-25 basket beat BTC from the 2015 and 2018 bottoms but returned about half of BTC last cycle, and only 6% of top-100 alts beat BTC. This mix is for capturing a SOL-style outlier if one repeats; the BTC floor anchors the downside.",
       bearPhaseNote:
         "20% stablecoin reserve recommended during the bear. DCA weekly into BTC and ETH. Wait until on-chain bottom signals confirm before deploying SOL and alt allocation in full.",
     },
@@ -261,7 +267,7 @@ const PLAN_MATRIX: Record<SizeKey, Record<RiskKey, Omit<PortfolioPlan, "tier" | 
     aggressive: {
       btcPct: 40, ethPct: 25, solPct: 15, altsPct: 20, numAlts: 4,
       rationale:
-        "Leans into the upside cycle. ETH and SOL carry momentum — historically both outperform BTC percentage-wise in strong cycles. Four targeted alt picks, no dilution below rank 5.",
+        "Leans into the upside cycle, eyes open. ETH and SOL are 2 of only 4 large caps that made new highs last cycle, and either can outrun BTC in a strong cycle — but 0 of 15 coins that beat BTC from the 2018 bottom repeated it from the 2022 bottom. This tilt is a tail bet, sized so the BTC core still carries the plan. Four targeted alt picks, no dilution below rank 5.",
       bearPhaseNote:
         "Hold 15% stablecoins now. Deploy BTC and ETH through the bear DCA. Save the SOL and alt deployment for confirmed Phase 1 — buying too early costs you the lowest prices.",
     },
@@ -366,6 +372,12 @@ export const ASSET_CONFIG = {
 // Conservative = weak cycle (2022-style), Base = historical median, Optimistic = 2020-style run.
 // Based on: BTC $200K-$400K peak projection from current ~$83K; ETH/SOL historically
 // outperform BTC on % in strong cycles but underperform in weak ones.
+//
+// !! PENDING REVISION (2026-07-15, research/ALTCOIN_CYCLE_EVIDENCE.md): the 3-cycle cohort
+// study says the BASE (median) case now has alts at ~0.5-0.6x of BTC's multiple, not above it
+// (top-25 basket did 0.57x BTC from the 2022 bottom; 0 of 15 prior winners repeated). Alt
+// outperformance belongs in the OPTIMISTIC scenario only. Proposed data-consistent multipliers
+// are in the evidence file — awaiting founder sign-off because they change client projections.
 
 export interface ScenarioMultipliers {
   btc: number;
